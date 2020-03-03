@@ -23,15 +23,7 @@ dependencyManagement {
 
     dependency 'com.google.guava:guava:28.2-jre'
 
-    dependency 'com.microsoft.aad:adal4j:0.0.2'
-
-    dependency 'com.microsoft.azure:azure-keyvault:1.2.2'
-
-    dependency 'com.squareup.okhttp3:okhttp:4.3.1'
-
     dependency 'commons-cli:commons-cli:1.4'
-
-    dependency 'info.picocli:picocli:4.2.0'
 
     dependency 'io.rest-assured:rest-assured:4.2.0'
 
@@ -65,9 +57,5 @@ dependencyManagement {
     dependency 'org.mockito:mockito-core:3.2.4'
     dependency 'org.mockito:mockito-inline:3.2.4'
     dependency 'org.mockito:mockito-junit-jupiter:3.2.4'
-
-    dependency 'org.web3j:besu:4.5.14'
-    dependency 'org.web3j:core:4.5.14'
-    dependency 'org.web3j:crypto:4.5.14'
   }
 }
