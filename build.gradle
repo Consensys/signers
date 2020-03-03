@@ -28,7 +28,7 @@ plugins {
 }
 
 if (!JavaVersion.current().java11Compatible) {
-  throw new GradleException("Java 11 or later is required to build EthSigner.\n" +
+  throw new GradleException("Java 11 or later is required to build Signers.\n" +
   "  Detected version ${JavaVersion.current()}")
 }
 
@@ -36,12 +36,12 @@ def bintrayUser = project.hasProperty('bintrayUser') ? project.property('bintray
 def bintrayKey = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_KEY')
 def bintrayPackage = bintray.pkg {
   repo = 'pegasys-repo'
-  name = 'ethsigner'
+  name = 'signers'
   userOrg = 'consensys'
   licenses = ['Apache-2.0']
-  websiteUrl = 'https://github.com/PegaSysEng/ethsigner'
-  issueTrackerUrl = 'https://github.com/PegaSysEng/ethsigner/issues'
-  vcsUrl = 'https://github.com/PegaSysEng/ethsigner.git'
+  websiteUrl = 'https://github.com/PegaSysEng/signers'
+  issueTrackerUrl = 'https://github.com/PegaSysEng/signers/issues'
+  vcsUrl = 'https://github.com/PegaSysEng/signers.git'
 
   version {
     name = project.version
@@ -50,7 +50,7 @@ def bintrayPackage = bintray.pkg {
 }
 
 
-group = 'tech.pegasys.ethsigner'
+group = 'tech.pegasys.signers'
 
 defaultTasks 'build', 'checkLicenses', 'javadoc'
 
@@ -93,6 +93,7 @@ allprojects {
   apply plugin: 'io.spring.dependency-management'
   apply plugin: 'jacoco'
   apply plugin: 'net.ltgt.errorprone'
+  apply plugin: 'distribution'
   apply from: "${rootDir}/gradle/versions.gradle"
   apply from: "${rootDir}/gradle/check-licenses.gradle"
 
@@ -191,7 +192,7 @@ allprojects {
    * The properties passed are:
    * - 'test.ethereum.include': allows to run a single Ethereum reference tests. For instance,
    *   running a single general state test can be done with:
-   *    ./gradlew :ethereum:tech.pegasys.ethsigner.ethereum.vm:test -Dtest.single=GeneralStateTest -Dtest.ethereum.include=callcodecallcallcode_101-Frontier
+   *    ./gradlew :ethereum:tech.pegasys.signers.ethereum.vm:test -Dtest.single=GeneralStateTest -Dtest.ethereum.include=callcodecallcallcode_101-Frontier
    *   The meaning being that will be run only the tests for which the value passed as "include"
    *   (which can be a java pattern) matches parts of the test name. Knowing that tests names for
    *   reference tests are of the form:
@@ -246,7 +247,7 @@ subprojects {
     publishing {
       publications {
         mavenJava(MavenPublication) {
-          groupId "tech.pegasys.ethsigner.internal"
+          groupId "tech.pegasys.signers.internal"
           version "${project.version}"
           from components.java
           artifact sourcesJar
@@ -256,8 +257,8 @@ subprojects {
             usage('java-runtime') { fromResolutionResult() }
           }
           pom {
-            name = "Ethsigner - ${project.name}"
-            url = 'http://github.com/PegaSysEng/ethsigner'
+            name = "Signers - ${project.name}"
+            url = 'http://github.com/PegaSysEng/signers'
             licenses {
               license {
                 name = 'The Apache License, Version 2.0'
@@ -265,9 +266,9 @@ subprojects {
               }
             }
             scm {
-              connection = 'scm:git:git://github.com/PegaSysEng/ethsigner.git'
-              developerConnection = 'scm:git:ssh://github.com/PegaSysEng/ethsigner.git'
-              url = 'https://github.com/PegaSysEng/ethsigner'
+              connection = 'scm:git:git://github.com/PegaSysEng/signers.git'
+              developerConnection = 'scm:git:ssh://github.com/PegaSysEng/signers.git'
+              url = 'https://github.com/PegaSysEng/signers'
             }
           }
         }
@@ -335,7 +336,7 @@ subprojects {
 
   task integrationTest(type: Test, dependsOn:["compileTestJava"]){
     group = "verification"
-    description = "Runs the EthSigner integration tests"
+    description = "Runs the Signers integration tests"
 
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
@@ -371,44 +372,15 @@ subprojects {
 
 jar { enabled = false }
 
-apply plugin: 'application'
-mainClassName = "tech.pegasys.ethsigner.EthSignerApp"
-applicationDefaultJvmArgs = [
-  "-Dvertx.disableFileCPResolving=true",
-  // We shutdown log4j ourselves, as otherwise his shutdown hook runs before our own and whatever
-  // happens during shutdown is not logged.
-  "-Dlog4j.shutdownHookEnabled=false"
-]
-
-run {
-  args project.hasProperty("ethsigner.run.args") ? project.property("ethsigner.run.args").toString().split("\\s+") : []
-  doFirst {
-    applicationDefaultJvmArgs = applicationDefaultJvmArgs.collect{it.replace('ETHSIGNER_HOME', "$buildDir/ethsigner")}
-  }
-}
-
-startScripts {
-
-  def shortenWindowsClasspath = { line ->
-    line = line.replaceAll(/^set CLASSPATH=.*$/, "set CLASSPATH=%APP_HOME%/lib/*")
-  }
-
-  doLast {
-    unixScript.text = unixScript.text.replace('ETHSIGNER_HOME', '\$APP_HOME')
-    windowsScript.text = windowsScript.text.replace('ETHSIGNER_HOME', '%~dp0..')
-
-    // Prevent the error originating from the 8191 chars limit on Windows
-    windowsScript.text =
-      windowsScript
-      .readLines()
-      .collect(shortenWindowsClasspath)
-      .join('\r\n')
-  }
+configurations {
+  installedJars { transitive = false }
 }
 
 dependencies {
   errorprone 'com.google.errorprone:error_prone_core'
+  installedJars project(":keystorage:hashicorp")
 }
+
 
 distributions {
   main {
@@ -417,11 +389,15 @@ distributions {
       from("build/reports/license/license-dependency.html") { into "." }
       from("./docs/GettingStartedBinaries.md") { into "." }
       from("./docs/DocsArchive0.8.0.html") { into "." }
+      from(configurations.installedJars) { into "./lib" }
     }
   }
 }
 
-installDist { dependsOn checkLicenses }
+installDist { 
+  // TODO(tmm): This is not installing any files (not immediately required however)
+  dependsOn checkLicenses 
+}
 
 distTar {
   dependsOn checkLicenses
@@ -437,80 +413,6 @@ distZip {
   doFirst {
     delete fileTree(dir: 'build/distributions', include: '*.zip')
   }
-}
-
-// rename the top level dir from ethsigner-<version> to ethsigner and this makes it really
-// simple for use in docker
-tasks.register("dockerDistUntar") {
-  dependsOn distTar
-  dependsOn distZip
-  def dockerBuildDir = "build/docker-ethsigner/"
-  def distTarFile = distTar.outputs.files.singleFile
-  def distTarFileName = distTar.outputs.files.singleFile.name.replace(".tar.gz", "")
-
-  doFirst {
-    new File(dockerBuildDir).mkdir()
-    copy {
-      from tarTree(distTarFile)
-      into(dockerBuildDir)
-    }
-    file("${dockerBuildDir}/${distTarFileName}").renameTo("${dockerBuildDir}/ethsigner")
-  }
-}
-
-task distDocker(type: Exec) {
-  dependsOn dockerDistUntar
-  def dockerBuildVersion = project.hasProperty('release.releaseVersion') ? project.property('release.releaseVersion') : "${rootProject.version}"
-  def imageName = "pegasyseng/ethsigner"
-  def image = project.hasProperty('release.releaseVersion') ? "${imageName}:" + project.property('release.releaseVersion') : "${imageName}:${project.version}"
-  def dockerBuildDir = "build/docker-ethsigner/"
-  workingDir "${dockerBuildDir}"
-
-  doFirst {
-    copy {
-      from file("${projectDir}/docker/Dockerfile")
-      into(workingDir)
-    }
-  }
-
-  executable "sh"
-  args "-c", "docker build --build-arg BUILD_DATE=${buildTime()} --build-arg VERSION=${dockerBuildVersion} --build-arg VCS_REF=${getCheckedOutGitCommitHash()} -t ${image} ."
-}
-
-task testDocker(type: Exec) {
-  dependsOn distDocker
-  def dockerReportsDir = "docker/reports/"
-  def imageName = "pegasyseng/ethsigner"
-  def image = project.hasProperty('release.releaseVersion') ? "${imageName}:" + project.property('release.releaseVersion') : "${imageName}:${project.version}"
-  workingDir "docker"
-
-  doFirst {
-    new File(dockerReportsDir).mkdir()
-  }
-
-  executable "sh"
-  args "-c", "bash test.sh ${image}"
-}
-
-task dockerUpload(type: Exec) {
-  dependsOn distDocker
-  def imageName = "pegasyseng/ethsigner"
-  def image = project.hasProperty('release.releaseVersion') ? "${imageName}:" + project.property('release.releaseVersion') : "${imageName}:${project.version}"
-  def cmd = "docker push '${image}'"
-  def additionalTags = []
-
-  if (project.hasProperty('branch') && project.property('branch') == 'master') {
-    additionalTags.add('develop')
-  }
-
-  if (!(version ==~ /.*-SNAPSHOT/)) {
-    additionalTags.add('latest')
-    additionalTags.add(version.split(/\./)[0..1].join('.'))
-  }
-
-  additionalTags.each { tag -> cmd += " && docker tag '${image}' '${imageName}:${tag.trim()}' && docker push '${imageName}:${tag.trim()}'" }
-  executable "sh"
-  args "-c", cmd
 }
 
 task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
