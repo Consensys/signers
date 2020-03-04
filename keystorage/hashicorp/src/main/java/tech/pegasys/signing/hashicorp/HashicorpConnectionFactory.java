@@ -100,7 +100,7 @@ public class HashicorpConnectionFactory {
         // Tuweni throws an NPE if the trustStorePath has no directory prefix, thus requiring
         // the use of absolutePath.
         httpClientOptions.setTrustOptions(
-            VertxTrustOptions.whitelistClients(
+            VertxTrustOptions.whitelistServers(
                 tlsOptions.getTrustStorePath().toAbsolutePath(), false));
         break;
     }

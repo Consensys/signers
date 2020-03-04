@@ -33,6 +33,7 @@ dependencies {
 
   implementation 'org.apache.tuweni:tuweni-toml'
   implementation 'org.apache.tuweni:tuweni-net'
+  implementation 'org.bouncycastle:bcpkix-jdk15on'
 
   runtimeOnly 'org.apache.logging.log4j:log4j-core'
   runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
