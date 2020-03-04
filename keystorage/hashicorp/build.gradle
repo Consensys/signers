@@ -27,6 +27,7 @@ jar {
 }
 
 dependencies {
+  implementation 'com.google.auto.service:auto-service'
   implementation 'io.vertx:vertx-core'
   implementation 'org.apache.logging.log4j:log4j-api'
 
@@ -35,6 +36,8 @@ dependencies {
 
   runtimeOnly 'org.apache.logging.log4j:log4j-core'
   runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
+
+  annotationProcessor 'com.google.auto.service:auto-service'
 
   testImplementation 'org.assertj:assertj-core'
   testImplementation 'org.junit.jupiter:junit-jupiter-engine'
@@ -52,6 +55,7 @@ dependencies {
   integrationTestImplementation 'org.mockito:mockito-junit-jupiter'
   integrationTestImplementation 'org.mock-server:mockserver-netty'
   integrationTestImplementation sourceSets.testFixtures.output
+
 
   errorprone("com.google.errorprone:error_prone_core")
 }
