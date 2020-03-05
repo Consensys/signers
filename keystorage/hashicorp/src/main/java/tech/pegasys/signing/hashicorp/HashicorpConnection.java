@@ -14,7 +14,6 @@ package tech.pegasys.signing.hashicorp;
 
 import static io.vertx.core.http.HttpMethod.GET;
 
-import javax.net.ssl.SSLException;
 import tech.pegasys.signing.hashicorp.config.KeyDefinition;
 
 import java.util.Map;
@@ -22,6 +21,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import javax.net.ssl.SSLException;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpClient;
@@ -69,7 +69,7 @@ public class HashicorpConnection {
       } else if (underlyingFailure instanceof TimeoutException) {
         throw new HashicorpException(
             "Hashicorp Vault failed to respond within expected timeout.", underlyingFailure);
-      } else if(underlyingFailure instanceof SSLException) {
+      } else if (underlyingFailure instanceof SSLException) {
         throw new HashicorpException("Failed during SSL negotiation.", underlyingFailure);
       }
       throw new HashicorpException(ERROR_HTTP_CLIENT_CALL, underlyingFailure);

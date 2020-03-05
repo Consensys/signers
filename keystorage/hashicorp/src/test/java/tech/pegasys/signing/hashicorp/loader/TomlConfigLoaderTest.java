@@ -15,7 +15,7 @@ package tech.pegasys.signing.hashicorp.loader;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import tech.pegasys.plus.plugin.encryptedstorage.encryption.util.HashicorpConfigUtil;
+import tech.pegasys.signing.hashicorp.HashicorpConfigUtil;
 import tech.pegasys.signing.hashicorp.HashicorpException;
 import tech.pegasys.signing.hashicorp.TrustStoreType;
 import tech.pegasys.signing.hashicorp.config.HashicorpKeyConfig;

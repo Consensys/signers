@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.keystorage.hashicorp.dsl.hashicorp;
+package tech.pegasys.signing.hashicorp.dsl.hashicorp;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.Extension;

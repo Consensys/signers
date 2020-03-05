@@ -10,14 +10,15 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.keystorage.hashicorp.dsl.hashicorp;
+package tech.pegasys.signing.hashicorp.dsl.hashicorp;
 
-import com.github.dockerjava.api.DockerClient;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+
+import com.github.dockerjava.api.DockerClient;
 import org.apache.tuweni.net.tls.TLS;
 
 public class HashicorpNode {

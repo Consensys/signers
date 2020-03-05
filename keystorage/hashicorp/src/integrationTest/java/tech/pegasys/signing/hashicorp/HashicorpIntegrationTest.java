@@ -18,7 +18,7 @@ import static org.mockserver.configuration.ConfigurationProperties.javaKeyStoreF
 import static org.mockserver.configuration.ConfigurationProperties.javaKeyStorePassword;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-import static tech.pegasys.plus.plugin.encryptedstorage.encryption.util.HashicorpConfigUtil.createConfigFile;
+import static tech.pegasys.signing.hashicorp.HashicorpConfigUtil.createConfigFile;
 
 import tech.pegasys.signing.hashicorp.config.HashicorpKeyConfig;
 import tech.pegasys.signing.hashicorp.config.loader.toml.TomlConfigLoader;
