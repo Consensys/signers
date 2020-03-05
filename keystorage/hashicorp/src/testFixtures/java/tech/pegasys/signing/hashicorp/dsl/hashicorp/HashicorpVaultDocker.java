@@ -14,14 +14,6 @@ package tech.pegasys.signing.hashicorp.dsl.hashicorp;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dockerjava.api.DockerClient;
@@ -43,6 +35,17 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.github.dockerjava.core.command.WaitContainerResultCallback;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
+import java.util.AbstractMap;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.assertj.core.api.Assertions;
@@ -97,7 +100,7 @@ public class HashicorpVaultDocker {
     hashicorpVaultDocker.start();
     hashicorpVaultDocker.awaitStartupCompletion();
     hashicorpVaultDocker.postStartup();
-    hashicorpVaultDocker.createSecretKey();
+    hashicorpVaultDocker.addSecretsToVault(Collections.singletonMap("value", SECRET_CONTENT));
     return hashicorpVaultDocker;
   }
 
@@ -154,8 +157,8 @@ public class HashicorpVaultDocker {
           final ExecCreateCmdResponse execCreateCmdResponse =
               getExecCreateCmdResponse(vaultStatusCommand());
           Assertions.assertThat(
-                  runCommandInVaultContainerAndCompareOutput(
-                      execCreateCmdResponse, EXPECTED_FOR_STATUS))
+              runCommandInVaultContainerAndCompareOutput(
+                  execCreateCmdResponse, EXPECTED_FOR_STATUS))
               .isTrue();
         });
     LOG.info("Hashicorp Vault is now responsive");
@@ -169,20 +172,21 @@ public class HashicorpVaultDocker {
     hashicorpRootToken = hashicorpVaultTokens.getRootToken();
   }
 
-  private void createSecretKey() {
+  public void addSecretsToVault(final Map<String, String> entries) {
     LOG.info("creating the secret in vault that contains the private key.");
-
-    waitFor(
-        10,
-        () -> {
-          final ExecCreateCmdResponse execCreateCmdResponse =
-              getExecCreateCmdResponse(vaultPutSecretCommand());
-          Assertions.assertThat(
-                  runCommandInVaultContainerAndCompareOutput(
-                      execCreateCmdResponse, EXPECTED_FOR_SECRET_CREATION))
-              .isTrue();
-        });
-    LOG.info("The secret was created successfully.");
+    for (final Map.Entry<String, String> entry : entries.entrySet()) {
+      waitFor(
+          10,
+          () -> {
+            final ExecCreateCmdResponse execCreateCmdResponse =
+                getExecCreateCmdResponse(vaultPutSecretCommand(entry));
+            Assertions.assertThat(
+                runCommandInVaultContainerAndCompareOutput(
+                    execCreateCmdResponse, EXPECTED_FOR_SECRET_CREATION))
+                .isTrue();
+          });
+      LOG.info("The secret ({}) was created successfully.", entry.getKey());
+    }
   }
 
   private HashicorpVaultTokens initVault() {
@@ -283,42 +287,44 @@ public class HashicorpVaultDocker {
   }
 
   private String[] vaultStatusCommand() {
-    return new String[] {"vault", "status", "-address=" + vaultDefaultUrl()};
+    return new String[]{"vault", "status", "-address=" + vaultDefaultUrl()};
   }
 
   private String[] vaultInitCommand() {
-    return new String[] {
-      "vault",
-      "operator",
-      "init",
-      "-key-shares=1",
-      "-key-threshold=1",
-      "-format=json",
-      "-address=" + vaultDefaultUrl()
+    return new String[]{
+        "vault",
+        "operator",
+        "init",
+        "-key-shares=1",
+        "-key-threshold=1",
+        "-format=json",
+        "-address=" + vaultDefaultUrl()
     };
   }
 
   private String[] vaultEnableSecretEngineCommand() {
-    return new String[] {
-      "vault",
-      "secrets",
-      "enable",
-      "-address=" + vaultDefaultUrl(),
-      "-path=" + SECRET_PATH,
-      "kv-v2",
+    return new String[]{
+        "vault",
+        "secrets",
+        "enable",
+        "-address=" + vaultDefaultUrl(),
+        "-path=" + SECRET_PATH,
+        "kv-v2",
     };
   }
 
-  private String[] vaultPutSecretCommand() {
-    return new String[] {
-      "vault",
-      "kv",
-      "put",
-      "-address=" + vaultDefaultUrl(),
-      VAULT_PUT_RESOURCE,
-      "value=" + SECRET_CONTENT,
+  private String[] vaultPutSecretCommand(Map.Entry<String, String> entry) {
+    final String paramString = String.format("%s=%s", entry.getKey(), entry.getValue());
+    return new String[]{
+        "vault",
+        "kv",
+        "put",
+        "-address=" + vaultDefaultUrl(),
+        VAULT_PUT_RESOURCE,
+        paramString,
     };
   }
+
 
   private String getDockerHostIp() {
     final DefaultDockerClientConfig dockerConfig =
@@ -412,7 +418,7 @@ public class HashicorpVaultDocker {
             "VAULT_LOCAL_CONFIG={\"storage\": {\"inmem\":{}}, "
                 + "\"default_lease_ttl\": \"168h\", \"max_lease_ttl\": \"720h\", "
                 + "\"listener\": {\"tcp\": {"
-                + tcpEnvAddressConfig()
+                + tcpEnvAddressConfig() + ","
                 + tlsEnvConfig()
                 + "}}}",
             "VAULT_SKIP_VERIFY=true");
@@ -423,11 +429,8 @@ public class HashicorpVaultDocker {
               .createContainerCmd(HASHICORP_VAULT_IMAGE)
               .withHostConfig(hostConfig)
               .withEnv(environmentVariables)
-              .withCmd("server");
-
-      if (isTlsEnabled()) {
-        createVault.withVolumes(configVolume);
-      }
+              .withCmd("server")
+              .withVolumes(configVolume);
 
       LOG.info("Creating the Vault Docker container (TLS={})...", isTlsEnabled());
       final CreateContainerResponse vault = createVault.exec();
@@ -445,7 +448,7 @@ public class HashicorpVaultDocker {
 
   private String tlsEnvConfig() {
     if (!isTlsEnabled()) {
-      return ", \"tls_disable\":\"true\"";
+      return "\"tls_disable\":\"true\"";
     }
     final Path containerTlsCertPath =
         CONTAINER_MOUNT_PATH.resolve(
@@ -455,7 +458,7 @@ public class HashicorpVaultDocker {
             hashicorpVaultDockerCertificate.getTlsPrivateKey().getFileName());
 
     return String.format(
-        ", \"tls_min_version\": \"tls12\", \"tls_cert_file\": \"%s\", \"tls_key_file\": \"%s\"",
+        "\"tls_min_version\": \"tls12\", \"tls_cert_file\": \"%s\", \"tls_key_file\": \"%s\"",
         containerTlsCertPath.toString(), containerTlsKeyPath.toString());
   }
 

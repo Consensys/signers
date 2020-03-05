@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 
 import com.github.dockerjava.api.DockerClient;
@@ -87,6 +88,10 @@ public class HashicorpNode {
 
   public Optional<Path> getKnownServerFilePath() {
     return knownServerFile;
+  }
+
+  public void addEntriesToKvStore(final Map<String, String> entries) {
+    hashicorpVaultDocker.addSecretsToVault(entries);
   }
 
   private Path createKnownServerFile() {
