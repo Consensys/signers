@@ -28,6 +28,8 @@ public class HashicorpNode {
   private HashicorpVaultDocker hashicorpVaultDocker;
   private Optional<Path> knownServerFile = Optional.empty();
 
+  private SelfSignedCertificate vaultTlsCertificate;
+
   private HashicorpNode(final DockerClient dockerClient) {
     this(dockerClient, null);
   }
@@ -90,8 +92,8 @@ public class HashicorpNode {
     return knownServerFile;
   }
 
-  public void addEntriesToKvStore(final Map<String, String> entries) {
-    hashicorpVaultDocker.addSecretsToVault(entries);
+  public void addEntriesToKvStore(final Map<String, String> entries, final String path) {
+    hashicorpVaultDocker.addSecretsToVault(entries,path);
   }
 
   private Path createKnownServerFile() {
