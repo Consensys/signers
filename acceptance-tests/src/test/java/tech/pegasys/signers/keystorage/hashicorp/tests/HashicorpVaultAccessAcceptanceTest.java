@@ -21,10 +21,10 @@ import tech.pegasys.signing.hashicorp.config.HashicorpKeyConfig;
 import tech.pegasys.signing.hashicorp.config.loader.toml.TomlConfigLoader;
 import tech.pegasys.signing.hashicorp.dsl.DockerClientFactory;
 import tech.pegasys.signing.hashicorp.dsl.hashicorp.HashicorpNode;
-import tech.pegasys.signing.hashicorp.dsl.hashicorp.HashicorpVaultDocker;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 
 import com.github.dockerjava.api.DockerClient;
 import io.vertx.core.Vertx;
@@ -48,7 +48,13 @@ public class HashicorpVaultAccessAcceptanceTest {
   @Test
   void keyCanBeExtractedFromVault() throws IOException {
     final DockerClient docker = new DockerClientFactory().create();
+
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, false);
+    final String secretKey = "storedSecetKey";
+    final String secretContent = "secretValue";
+    final String hashicorpSecretHttpPath =
+        hashicorpNode.addSecretsToVault(
+            Collections.singletonMap(secretKey, "secretValue"), "acceptanceTestSecret");
 
     // create tomlfile
     final Path configFilePath =
@@ -56,8 +62,8 @@ public class HashicorpVaultAccessAcceptanceTest {
             hashicorpNode.getHost(),
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
-            hashicorpNode.getSigningKeyPath(),
-            null,
+            hashicorpSecretHttpPath,
+            secretKey,
             30_000,
             false,
             null,
@@ -71,13 +77,18 @@ public class HashicorpVaultAccessAcceptanceTest {
 
     final String secretData = connection.fetchKey(config.getKeyDefinition());
 
-    assertThat(secretData).isEqualTo(HashicorpVaultDocker.SECRET_CONTENT);
+    assertThat(secretData).isEqualTo(secretContent);
   }
 
   @Test
   void keyCanBeExtractedFromVaultOverTls() throws IOException {
     final DockerClient docker = new DockerClientFactory().create();
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
+    final String secretKey = "storedSecetKey";
+    final String secretContent = "secretValue";
+    final String hashicorpSecretHttpPath =
+        hashicorpNode.addSecretsToVault(
+            Collections.singletonMap(secretKey, secretContent), "acceptanceTestSecret");
 
     // create tomlfile
     final Path configFilePath =
@@ -85,8 +96,8 @@ public class HashicorpVaultAccessAcceptanceTest {
             hashicorpNode.getHost(),
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
-            hashicorpNode.getSigningKeyPath(),
-            null,
+            hashicorpSecretHttpPath,
+            secretKey,
             30_000,
             true,
             "WHITELIST",
@@ -100,6 +111,6 @@ public class HashicorpVaultAccessAcceptanceTest {
 
     final String secretData = connection.fetchKey(config.getKeyDefinition());
 
-    assertThat(secretData).isEqualTo(HashicorpVaultDocker.SECRET_CONTENT);
+    assertThat(secretData).isEqualTo(secretContent);
   }
 }

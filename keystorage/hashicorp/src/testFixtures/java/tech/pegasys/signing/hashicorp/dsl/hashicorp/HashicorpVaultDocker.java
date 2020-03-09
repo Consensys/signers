@@ -14,6 +14,15 @@ package tech.pegasys.signing.hashicorp.dsl.hashicorp;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dockerjava.api.DockerClient;
@@ -35,15 +44,6 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.github.dockerjava.core.command.WaitContainerResultCallback;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.assertj.core.api.Assertions;
@@ -53,23 +53,11 @@ import org.hamcrest.Matchers;
 
 public class HashicorpVaultDocker {
 
-  public static String SECRET_CONTENT =
-      "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63";
-
   private static final Logger LOG = LogManager.getLogger();
   private static final String HASHICORP_VAULT_IMAGE = "vault:1.2.3";
   private static final String DEFAULT_VAULT_HOST = "localhost";
   private static final int DEFAULT_VAULT_PORT = 8200;
-  // hashicorp kv-v2 /secret/key is accessible from path /v1/secret/data/key.
-
   private static final String VAULT_ROOT_PATH = "secret";
-  private static final String SIGNING_KEY_RESOURCE = "ethsignerSigningKey";
-  private static final String VAULT_PUT_RESOURCE = String.join("/", VAULT_ROOT_PATH, SIGNING_KEY_RESOURCE);
-
-  // *ALL* Hashicorp Http API endpoints are prefixed by "/v1"
-  // KV-V2 insert "data" after the rootpath, and before the signing key path (so, just gotta handle that)
-  private static final String VAULT_SIGNING_KEY_PATH =
-      "/v1/" + VAULT_ROOT_PATH + "/data/" + SIGNING_KEY_RESOURCE;
 
   private static final String EXPECTED_FOR_SECRET_CREATION = "created_time";
   private static final String EXPECTED_FOR_STATUS = "Sealed";
@@ -83,18 +71,14 @@ public class HashicorpVaultDocker {
   private int port;
   private String ipAddress;
   private String hashicorpRootToken;
-  private final MyHashicorpVault vaultCommands;
+  private final HashicorpVaultCommands vaultCommands;
 
   private HashicorpVaultDocker(
       final DockerClient docker,
       final HashicorpVaultDockerCertificate hashicorpVaultDockerCertificate) {
     this.docker = docker;
     this.hashicorpVaultDockerCertificate = hashicorpVaultDockerCertificate;
-    vaultCommands = new MyHashicorpVault(vaultDefaultUrl());
-  }
-
-  public static String getHttpApiPathForSecret(final String secretPath) {
-    return "/v1/" + VAULT_ROOT_PATH + "/data/" + secretPath;
+    vaultCommands = new HashicorpVaultCommands(vaultDefaultUrl());
   }
 
   public static HashicorpVaultDocker createVaultDocker(
@@ -107,8 +91,6 @@ public class HashicorpVaultDocker {
     hashicorpVaultDocker.start();
     hashicorpVaultDocker.awaitStartupCompletion();
     hashicorpVaultDocker.postStartup();
-    hashicorpVaultDocker
-        .addSecretsToVault(Collections.singletonMap("value", SECRET_CONTENT), VAULT_PUT_RESOURCE);
     return hashicorpVaultDocker;
   }
 
@@ -136,10 +118,6 @@ public class HashicorpVaultDocker {
     return hashicorpRootToken;
   }
 
-  public String getVaultSigningKeyPath() {
-    return VAULT_SIGNING_KEY_PATH;
-  }
-
   private void start() {
     LOG.info("Starting Hashicorp Vault Docker container: {}", vaultContainerId);
     docker.startContainerCmd(vaultContainerId).exec();
@@ -153,7 +131,7 @@ public class HashicorpVaultDocker {
 
     final Ports ports = containerResponse.getNetworkSettings().getPorts();
     port = portSpec(ports);
-    LOG.info("Http port for Hashicorp Vault: {}", port);
+    LOG.info("Http port for Dockerised Hashicorp Vault: {}", port);
   }
 
   private void awaitStartupCompletion() {
@@ -165,8 +143,8 @@ public class HashicorpVaultDocker {
           final ExecCreateCmdResponse execCreateCmdResponse =
               getExecCreateCmdResponse(vaultCommands.vaultStatusCommand());
           Assertions.assertThat(
-              runCommandInVaultContainerAndCompareOutput(
-                  execCreateCmdResponse, EXPECTED_FOR_STATUS))
+                  runCommandInVaultContainerAndCompareOutput(
+                      execCreateCmdResponse, EXPECTED_FOR_STATUS))
               .isTrue();
         });
     LOG.info("Hashicorp Vault is now responsive");
@@ -180,21 +158,30 @@ public class HashicorpVaultDocker {
     hashicorpRootToken = hashicorpVaultTokens.getRootToken();
   }
 
-  public void addSecretsToVault(final Map<String, String> entries, final String path) {
+  public String addSecretsToVault(final Map<String, String> entries, final String path) {
     LOG.info("creating the secret in vault that contains the private key.");
+    final String secretPutPath = String.join("/", VAULT_ROOT_PATH, path);
     for (final Map.Entry<String, String> entry : entries.entrySet()) {
       waitFor(
           10,
           () -> {
             final ExecCreateCmdResponse execCreateCmdResponse =
-                getExecCreateCmdResponse(vaultCommands.vaultPutSecretCommand(entry, path));
+                getExecCreateCmdResponse(vaultCommands.vaultPutSecretCommand(entry, secretPutPath));
             Assertions.assertThat(
-                runCommandInVaultContainerAndCompareOutput(
-                    execCreateCmdResponse, EXPECTED_FOR_SECRET_CREATION))
+                    runCommandInVaultContainerAndCompareOutput(
+                        execCreateCmdResponse, EXPECTED_FOR_SECRET_CREATION))
                 .isTrue();
           });
       LOG.info("The secret ({}) was created successfully.", entry.getKey());
     }
+    return getHttpApiPathForSecret(path);
+  }
+
+  public static String getHttpApiPathForSecret(final String secretPath) {
+    // *ALL* Hashicorp Http API endpoints are prefixed by "/v1"
+    // KV-V2 insert "data" after the rootpath, and before the signing key path (so, just gotta
+    // handle that)
+    return "/v1/" + VAULT_ROOT_PATH + "/data/" + secretPath;
   }
 
   private HashicorpVaultTokens initVault() {
@@ -380,7 +367,8 @@ public class HashicorpVaultDocker {
             "VAULT_LOCAL_CONFIG={\"storage\": {\"inmem\":{}}, "
                 + "\"default_lease_ttl\": \"168h\", \"max_lease_ttl\": \"720h\", "
                 + "\"listener\": {\"tcp\": {"
-                + tcpEnvAddressConfig() + ","
+                + tcpEnvAddressConfig()
+                + ","
                 + tlsEnvConfig()
                 + "}}}",
             "VAULT_SKIP_VERIFY=true");

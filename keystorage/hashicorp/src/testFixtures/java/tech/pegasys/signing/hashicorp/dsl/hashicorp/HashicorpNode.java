@@ -28,8 +28,6 @@ public class HashicorpNode {
   private HashicorpVaultDocker hashicorpVaultDocker;
   private Optional<Path> knownServerFile = Optional.empty();
 
-  private SelfSignedCertificate vaultTlsCertificate;
-
   private HashicorpNode(final DockerClient dockerClient) {
     this(dockerClient, null);
   }
@@ -76,10 +74,6 @@ public class HashicorpNode {
     return hashicorpVaultDocker.getIpAddress();
   }
 
-  public String getSigningKeyPath() {
-    return hashicorpVaultDocker.getVaultSigningKeyPath();
-  }
-
   public int getPort() {
     return hashicorpVaultDocker.getPort();
   }
@@ -92,8 +86,11 @@ public class HashicorpNode {
     return knownServerFile;
   }
 
-  public void addEntriesToKvStore(final Map<String, String> entries, final String path) {
-    hashicorpVaultDocker.addSecretsToVault(entries,path);
+  /* Note: Path should be the "subpath" of the secret - not the full HTTP path.
+  The full HTTP Path will be returned.
+   */
+  public String addSecretsToVault(final Map<String, String> entries, final String path) {
+    return hashicorpVaultDocker.addSecretsToVault(entries, path);
   }
 
   private Path createKnownServerFile() {
