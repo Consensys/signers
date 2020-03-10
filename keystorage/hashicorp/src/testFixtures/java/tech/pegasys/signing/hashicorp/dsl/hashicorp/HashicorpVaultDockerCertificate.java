@@ -25,7 +25,6 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import tech.pegasys.signing.hashicorp.dsl.certificates.MySelfSignedCertificate;
 import tech.pegasys.signing.hashicorp.dsl.certificates.SelfSignedCertificate;
 
 /**
@@ -55,7 +54,7 @@ public class HashicorpVaultDockerCertificate {
     this.tlsPrivateKey = tlsPrivateKey;
   }
 
-  public static HashicorpVaultDockerCertificate create(final MySelfSignedCertificate selfSignedCertificate) {
+  public static HashicorpVaultDockerCertificate create(final SelfSignedCertificate selfSignedCertificate) {
     try {
       final Path certificateDirectory = createDestinationCertificateDirectory();
 
@@ -63,7 +62,7 @@ public class HashicorpVaultDockerCertificate {
       selfSignedCertificate.writeCertificateToFile(certPath);
 
       final Path keyPath = certificateDirectory.resolve("privKey.key");
-      selfSignedCertificate.writePrivKeyToFile(keyPath);
+      selfSignedCertificate.writePrivateKeyToFile(keyPath);
 
       return new HashicorpVaultDockerCertificate(
           certificateDirectory, certPath, keyPath);

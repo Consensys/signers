@@ -13,21 +13,15 @@
 package tech.pegasys.signing.hashicorp.dsl.hashicorp;
 
 import com.github.dockerjava.api.DockerClient;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.cert.CertificateEncodingException;
 import java.util.Map;
-import org.apache.tuweni.net.tls.TLS;
-import tech.pegasys.signing.hashicorp.dsl.certificates.MySelfSignedCertificate;
+import tech.pegasys.signing.hashicorp.dsl.certificates.SelfSignedCertificate;
 
 public class HashicorpNode {
 
   private final DockerClient dockerClient;
   private HashicorpVaultDocker hashicorpVaultDocker;
 
-  final MySelfSignedCertificate serverTlsCertificate;
+  final SelfSignedCertificate serverTlsCertificate;
 
   private HashicorpNode(final DockerClient dockerClient) {
     this(dockerClient, null);
@@ -35,7 +29,7 @@ public class HashicorpNode {
 
   private HashicorpNode(
       final DockerClient dockerClient,
-      final MySelfSignedCertificate serverTlsCertificate) {
+      final SelfSignedCertificate serverTlsCertificate) {
     this.dockerClient = dockerClient;
     this.serverTlsCertificate = serverTlsCertificate;
   }
@@ -44,7 +38,7 @@ public class HashicorpNode {
       final DockerClient dockerClient, final boolean withTls) {
     final HashicorpNode hashicorpNode =
         withTls
-            ? new HashicorpNode(dockerClient, MySelfSignedCertificate.generate())
+            ? new HashicorpNode(dockerClient, SelfSignedCertificate.generate())
             : new HashicorpNode(dockerClient);
     hashicorpNode.start();
     return hashicorpNode;
@@ -79,7 +73,7 @@ public class HashicorpNode {
     return serverTlsCertificate != null;
   }
 
-  public MySelfSignedCertificate getServerCertificate() {
+  public SelfSignedCertificate getServerCertificate() {
     return serverTlsCertificate;
   }
 

@@ -50,7 +50,6 @@ import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ThrowingRunnable;
 import org.hamcrest.Matchers;
-import tech.pegasys.signing.hashicorp.dsl.certificates.MySelfSignedCertificate;
 import tech.pegasys.signing.hashicorp.dsl.certificates.SelfSignedCertificate;
 
 public class HashicorpVaultDocker {
@@ -85,7 +84,7 @@ public class HashicorpVaultDocker {
 
   public static HashicorpVaultDocker createVaultDocker(
       final DockerClient docker,
-      final MySelfSignedCertificate tlsCertificate) {
+      final SelfSignedCertificate tlsCertificate) {
     HashicorpVaultDockerCertificate dockerisedTlsCertificate = null;
     if(tlsCertificate != null) {
       dockerisedTlsCertificate = HashicorpVaultDockerCertificate.create(tlsCertificate);

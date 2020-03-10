@@ -12,7 +12,6 @@
  */
 package tech.pegasys.signing.hashicorp.dsl.certificates;
 
-import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -22,15 +21,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.Optional;
-import java.util.StringJoiner;
 import org.apache.tuweni.net.tls.TLS;
 
 public class CertificateHelpers {
@@ -48,7 +44,7 @@ public class CertificateHelpers {
 
   public static void populateFingerprintFile(
       final Path knownHostsPath,
-      final MySelfSignedCertificate selfSignedCert,
+      final SelfSignedCertificate selfSignedCert,
       final Optional<Integer> port)
       throws IOException, CertificateEncodingException {
 
@@ -62,7 +58,7 @@ public class CertificateHelpers {
   }
 
   public static Path createJksTrustStore(
-      final Path parentDir, final MySelfSignedCertificate selfSignedCert, final PrivateKey privKey,
+      final Path parentDir, final SelfSignedCertificate selfSignedCert, final PrivateKey privKey,
       final String password) {
     try {
 
@@ -86,7 +82,7 @@ public class CertificateHelpers {
   }
 
   public static Path createPkcs12TrustStore(
-      final Path parentDir, final MySelfSignedCertificate selfSignedCert, final PrivateKey privKey,
+      final Path parentDir, final SelfSignedCertificate selfSignedCert, final PrivateKey privKey,
       final String password) {
     try {
 
