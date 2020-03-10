@@ -220,7 +220,6 @@ public class HashicorpVaultAccessAcceptanceTest {
     assertThat(secretData).isEqualTo(SECRET_CONTENT);
   }
 
-
   private String fetchSecretFromVault(final Path configFilePath) {
     final HashicorpKeyConfig config = TomlConfigLoader.fromToml(configFilePath, null);
 
