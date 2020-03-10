@@ -24,7 +24,6 @@ import tech.pegasys.signing.hashicorp.dsl.certificates.CertificateHelpers;
 import tech.pegasys.signing.hashicorp.dsl.hashicorp.HashicorpNode;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.CertificateEncodingException;
 import java.util.Collections;
@@ -34,31 +33,42 @@ import com.github.dockerjava.api.DockerClient;
 import io.vertx.core.Vertx;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class HashicorpVaultAccessAcceptanceTest {
 
   private final Vertx vertx = Vertx.vertx();
+  final DockerClient docker = new DockerClientFactory().create();
   private HashicorpNode hashicorpNode;
+
+  private final String SECRET_KEY = "storedSecetKey";
+  private final String SECRET_CONTENT = "secretValue";
 
   @AfterEach
   void cleanup() {
-    vertx.close();
+    try {
+      vertx.close();
+    } catch (final Exception ignored) {
+    }
+
     if (hashicorpNode != null) {
       hashicorpNode.shutdown();
       hashicorpNode = null;
+    }
+
+    try {
+      docker.close();
+    } catch (final Exception ignored) {
     }
   }
 
   @Test
   void keyCanBeExtractedFromVault() throws IOException {
-    final DockerClient docker = new DockerClientFactory().create();
-
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, false);
-    final String secretKey = "storedSecetKey";
-    final String secretContent = "secretValue";
+
     final String hashicorpSecretHttpPath =
         hashicorpNode.addSecretsToVault(
-            Collections.singletonMap(secretKey, "secretValue"), "acceptanceTestSecret");
+            Collections.singletonMap(SECRET_KEY, SECRET_CONTENT), "acceptanceTestSecret");
 
     // create tomlfile
     final Path configFilePath =
@@ -67,34 +77,28 @@ public class HashicorpVaultAccessAcceptanceTest {
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
             hashicorpSecretHttpPath,
-            secretKey,
+            SECRET_KEY,
             30_000,
             false,
             null,
             null,
             null);
 
-    final HashicorpKeyConfig config = TomlConfigLoader.fromToml(configFilePath, null);
+    final String secretData = fetchSecretFromVault(configFilePath);
 
-    final HashicorpConnectionFactory factory = new HashicorpConnectionFactory(vertx);
-    final HashicorpConnection connection = factory.create(config.getConnectionParams());
-
-    final String secretData = connection.fetchKey(config.getKeyDefinition());
-
-    assertThat(secretData).isEqualTo(secretContent);
+    assertThat(secretData).isEqualTo(SECRET_CONTENT);
   }
 
   @Test
-  void keyCanBeExtractedFromVaultOverTls() throws IOException, CertificateEncodingException {
-    final DockerClient docker = new DockerClientFactory().create();
+  void keyCanBeExtractedFromVaultOverTlsUsingWhitelist(@TempDir final Path testDir)
+      throws IOException, CertificateEncodingException {
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
-    final String secretKey = "storedSecetKey";
-    final String secretContent = "secretValue";
+
     final String hashicorpSecretHttpPath =
         hashicorpNode.addSecretsToVault(
-            Collections.singletonMap(secretKey, secretContent), "acceptanceTestSecret");
+            Collections.singletonMap(SECRET_KEY, SECRET_CONTENT), "acceptanceTestSecret");
 
-    final Path fingerprintFile = Files.createTempFile("fingerprint", ".fingerpint");
+    final Path fingerprintFile = testDir.resolve("whitelist.tmp");
     CertificateHelpers.populateFingerprintFile(
         fingerprintFile,
         hashicorpNode.getServerCertificate(),
@@ -107,20 +111,90 @@ public class HashicorpVaultAccessAcceptanceTest {
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
             hashicorpSecretHttpPath,
-            secretKey,
+            SECRET_KEY,
             30_000,
             true,
             "WHITELIST",
             fingerprintFile.toString(),
             null);
 
+    final String secretData = fetchSecretFromVault(configFilePath);
+
+    assertThat(secretData).isEqualTo(SECRET_CONTENT);
+  }
+
+  @Test
+  void canConnectToHashicorpVaultUsingPkcs12Certificate(@TempDir final Path testDir)
+      throws IOException {
+    final String TRUST_STORE_PASSWORD = "password";
+    hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
+
+    final String hashicorpSecretHttpPath =
+        hashicorpNode.addSecretsToVault(
+            Collections.singletonMap(SECRET_KEY, SECRET_CONTENT), "acceptanceTestSecret");
+
+    final Path pkcs12TrustStorePath =
+        CertificateHelpers.createPkcs12TrustStore(
+            testDir, hashicorpNode.getServerCertificate(), TRUST_STORE_PASSWORD);
+
+    // create tomlfile
+    final Path configFilePath =
+        HashicorpConfigUtil.createConfigFile(
+            hashicorpNode.getHost(),
+            hashicorpNode.getPort(),
+            hashicorpNode.getVaultToken(),
+            hashicorpSecretHttpPath,
+            SECRET_KEY,
+            30_000,
+            true,
+            "PKCS12",
+            pkcs12TrustStorePath.toString(),
+            TRUST_STORE_PASSWORD);
+
+    final String secretData = fetchSecretFromVault(configFilePath);
+
+    assertThat(secretData).isEqualTo(SECRET_CONTENT);
+  }
+
+  @Test
+  void canConnectToHashicorpVaultUsingJksCertificate(@TempDir final Path testDir)
+      throws IOException {
+    final String TRUST_STORE_PASSWORD = "password";
+    hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
+
+    final String hashicorpSecretHttpPath =
+        hashicorpNode.addSecretsToVault(
+            Collections.singletonMap(SECRET_KEY, SECRET_CONTENT), "acceptanceTestSecret");
+
+    final Path pkcs12TrustStorePath =
+        CertificateHelpers.createJksTrustStore(
+            testDir, hashicorpNode.getServerCertificate(), TRUST_STORE_PASSWORD);
+
+    // create tomlfile
+    final Path configFilePath =
+        HashicorpConfigUtil.createConfigFile(
+            hashicorpNode.getHost(),
+            hashicorpNode.getPort(),
+            hashicorpNode.getVaultToken(),
+            hashicorpSecretHttpPath,
+            SECRET_KEY,
+            30_000,
+            true,
+            "JKS",
+            pkcs12TrustStorePath.toString(),
+            TRUST_STORE_PASSWORD);
+
+    final String secretData = fetchSecretFromVault(configFilePath);
+
+    assertThat(secretData).isEqualTo(SECRET_CONTENT);
+  }
+
+  private String fetchSecretFromVault(final Path configFilePath) {
     final HashicorpKeyConfig config = TomlConfigLoader.fromToml(configFilePath, null);
 
     final HashicorpConnectionFactory factory = new HashicorpConnectionFactory(vertx);
     final HashicorpConnection connection = factory.create(config.getConnectionParams());
 
-    final String secretData = connection.fetchKey(config.getKeyDefinition());
-
-    assertThat(secretData).isEqualTo(secretContent);
+    return connection.fetchKey(config.getKeyDefinition());
   }
 }

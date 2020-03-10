@@ -129,6 +129,10 @@ public class SelfSignedCertificate {
     return certificate;
   }
 
+  public KeyPair getKeyPair() {
+    return keyPair;
+  }
+
   public void writePrivateKeyToFile(final Path outputFile) throws IOException {
     try (final BufferedWriter writer = Files.newBufferedWriter(outputFile, UTF_8);
         final PemWriter pemWriter = new PemWriter(writer)) {

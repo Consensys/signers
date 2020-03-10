@@ -22,7 +22,6 @@ import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -58,52 +57,47 @@ public class CertificateHelpers {
   }
 
   public static Path createJksTrustStore(
-      final Path parentDir,
-      final SelfSignedCertificate selfSignedCert,
-      final PrivateKey privKey,
-      final String password) {
+      final Path parentDir, final SelfSignedCertificate selfSignedCert, final String password) {
     try {
-
-      final KeyStore ks = KeyStore.getInstance("JKS");
-      ks.load(null, null);
-
-      final Certificate certificate = selfSignedCert.getCertificate();
-      ks.setCertificateEntry("clientCert", certificate);
-      ks.setKeyEntry("client", privKey, password.toCharArray(), new Certificate[] {certificate});
-
-      final Path tempKeystore = parentDir.resolve("keystore.jks");
-      try (final FileOutputStream output = new FileOutputStream(tempKeystore.toFile())) {
-        ks.store(output, password.toCharArray());
-      }
-
-      return tempKeystore;
+      final Path keyStorePath = parentDir.resolve("keystore.jks");
+      createTrustStore("JKS", selfSignedCert, password, keyStorePath);
+      return keyStorePath;
     } catch (final Exception e) {
       throw new RuntimeException("Failed to construct a JKS keystore.");
     }
   }
 
   public static Path createPkcs12TrustStore(
-      final Path parentDir,
-      final SelfSignedCertificate selfSignedCert,
-      final PrivateKey privKey,
-      final String password) {
+      final Path parentDir, final SelfSignedCertificate selfSignedCert, final String password) {
     try {
-
-      final KeyStore ks = KeyStore.getInstance("pkcs12");
-      ks.load(null, null);
-
-      final Certificate certificate = selfSignedCert.getCertificate();
-      ks.setCertificateEntry("clientCert", certificate);
-      ks.setKeyEntry("client", privKey, password.toCharArray(), new Certificate[] {certificate});
-
-      final Path tempKeystore = parentDir.resolve("keystore.jks");
-      try (final FileOutputStream output = new FileOutputStream(tempKeystore.toFile())) {
-        ks.store(output, password.toCharArray());
-      }
-
-      return tempKeystore;
+      final Path keyStorePath = parentDir.resolve("keystore.pfx");
+      createTrustStore("pkcs12", selfSignedCert, password, keyStorePath);
+      return keyStorePath;
     } catch (final Exception e) {
-      throw new RuntimeException("Failed to construct a JKS keystore.");
+      throw new RuntimeException("Failed to construct a PKCS12 keystore.");
+    }
+  }
+
+  private static void createTrustStore(
+      final String keystoreType,
+      final SelfSignedCertificate selfSignedCert,
+      final String password,
+      final Path populatedFile)
+      throws CertificateException, NoSuchAlgorithmException, IOException, KeyStoreException {
+
+    final KeyStore ks = KeyStore.getInstance(keystoreType);
+    ks.load(null, null);
+
+    final Certificate certificate = selfSignedCert.getCertificate();
+    ks.setCertificateEntry("clientCert", certificate);
+    ks.setKeyEntry(
+        "client",
+        selfSignedCert.getKeyPair().getPrivate(),
+        password.toCharArray(),
+        new Certificate[] {certificate});
+
+    try (final FileOutputStream output = new FileOutputStream(populatedFile.toFile())) {
+      ks.store(output, password.toCharArray());
     }
   }
 }
