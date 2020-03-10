@@ -14,12 +14,17 @@ package tech.pegasys.signers.keystorage.hashicorp.tests;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.security.cert.CertificateEncodingException;
+import java.util.Optional;
 import tech.pegasys.signing.hashicorp.HashicorpConfigUtil;
 import tech.pegasys.signing.hashicorp.HashicorpConnection;
 import tech.pegasys.signing.hashicorp.HashicorpConnectionFactory;
 import tech.pegasys.signing.hashicorp.config.HashicorpKeyConfig;
 import tech.pegasys.signing.hashicorp.config.loader.toml.TomlConfigLoader;
 import tech.pegasys.signing.hashicorp.dsl.DockerClientFactory;
+import tech.pegasys.signing.hashicorp.dsl.certificates.CertificateHelpers;
 import tech.pegasys.signing.hashicorp.dsl.hashicorp.HashicorpNode;
 
 import java.io.IOException;
@@ -81,7 +86,7 @@ public class HashicorpVaultAccessAcceptanceTest {
   }
 
   @Test
-  void keyCanBeExtractedFromVaultOverTls() throws IOException {
+  void keyCanBeExtractedFromVaultOverTls() throws IOException, CertificateEncodingException {
     final DockerClient docker = new DockerClientFactory().create();
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
     final String secretKey = "storedSecetKey";
@@ -89,6 +94,11 @@ public class HashicorpVaultAccessAcceptanceTest {
     final String hashicorpSecretHttpPath =
         hashicorpNode.addSecretsToVault(
             Collections.singletonMap(secretKey, secretContent), "acceptanceTestSecret");
+
+    final Path fingerprintFile = Files.createTempFile("fingerprint", ".fingerpint");
+    CertificateHelpers
+        .populateFingerprintFile(fingerprintFile, hashicorpNode.getServerCertificate(),
+            Optional.of(hashicorpNode.getPort()));
 
     // create tomlfile
     final Path configFilePath =
@@ -101,7 +111,7 @@ public class HashicorpVaultAccessAcceptanceTest {
             30_000,
             true,
             "WHITELIST",
-            hashicorpNode.getKnownServerFilePath().get().toString(),
+            fingerprintFile.toString(),
             null);
 
     final HashicorpKeyConfig config = TomlConfigLoader.fromToml(configFilePath, null);

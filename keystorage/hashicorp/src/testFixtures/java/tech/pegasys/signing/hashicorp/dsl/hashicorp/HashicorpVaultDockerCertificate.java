@@ -25,6 +25,8 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import tech.pegasys.signing.hashicorp.dsl.certificates.MySelfSignedCertificate;
+import tech.pegasys.signing.hashicorp.dsl.certificates.SelfSignedCertificate;
 
 /**
  * To run Hashicorp Vault docker in TLS mode, we copy self-signed certificates in a temporary
@@ -53,16 +55,18 @@ public class HashicorpVaultDockerCertificate {
     this.tlsPrivateKey = tlsPrivateKey;
   }
 
-  public static HashicorpVaultDockerCertificate create() {
+  public static HashicorpVaultDockerCertificate create(final MySelfSignedCertificate selfSignedCertificate) {
     try {
-      final SelfSignedCertificate selfSignedCertificate = SelfSignedCertificate.generate();
       final Path certificateDirectory = createDestinationCertificateDirectory();
-      final Path tlsCertificate =
-          copyCertificate(selfSignedCertificate.certificatePath(), certificateDirectory);
-      final Path tlsPrivateKey =
-          copyCertificate(selfSignedCertificate.privateKeyPath(), certificateDirectory);
+
+      final Path certPath = certificateDirectory.resolve("certFile.crt");
+      selfSignedCertificate.writeCertificateToFile(certPath);
+
+      final Path keyPath = certificateDirectory.resolve("privKey.key");
+      selfSignedCertificate.writePrivKeyToFile(keyPath);
+
       return new HashicorpVaultDockerCertificate(
-          certificateDirectory, tlsCertificate, tlsPrivateKey);
+          certificateDirectory, certPath, keyPath);
     } catch (final Exception e) {
       LOG.error("Unable to initialize HashicorpVaultCertificates", e);
       throw new RuntimeException("Unable to initialize HashicorpVaultCertificates", e);
