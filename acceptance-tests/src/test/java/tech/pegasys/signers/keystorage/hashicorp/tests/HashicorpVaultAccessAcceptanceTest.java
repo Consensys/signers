@@ -14,10 +14,6 @@ package tech.pegasys.signers.keystorage.hashicorp.tests;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.security.cert.CertificateEncodingException;
-import java.util.Optional;
 import tech.pegasys.signing.hashicorp.HashicorpConfigUtil;
 import tech.pegasys.signing.hashicorp.HashicorpConnection;
 import tech.pegasys.signing.hashicorp.HashicorpConnectionFactory;
@@ -28,8 +24,11 @@ import tech.pegasys.signing.hashicorp.dsl.certificates.CertificateHelpers;
 import tech.pegasys.signing.hashicorp.dsl.hashicorp.HashicorpNode;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.cert.CertificateEncodingException;
 import java.util.Collections;
+import java.util.Optional;
 
 import com.github.dockerjava.api.DockerClient;
 import io.vertx.core.Vertx;
@@ -96,9 +95,10 @@ public class HashicorpVaultAccessAcceptanceTest {
             Collections.singletonMap(secretKey, secretContent), "acceptanceTestSecret");
 
     final Path fingerprintFile = Files.createTempFile("fingerprint", ".fingerpint");
-    CertificateHelpers
-        .populateFingerprintFile(fingerprintFile, hashicorpNode.getServerCertificate(),
-            Optional.of(hashicorpNode.getPort()));
+    CertificateHelpers.populateFingerprintFile(
+        fingerprintFile,
+        hashicorpNode.getServerCertificate(),
+        Optional.of(hashicorpNode.getPort()));
 
     // create tomlfile
     final Path configFilePath =

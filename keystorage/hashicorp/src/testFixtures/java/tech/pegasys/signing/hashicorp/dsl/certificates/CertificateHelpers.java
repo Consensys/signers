@@ -27,6 +27,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.util.Optional;
+
 import org.apache.tuweni.net.tls.TLS;
 
 public class CertificateHelpers {
@@ -50,15 +51,16 @@ public class CertificateHelpers {
 
     final StringBuilder fingerPrintsToAdd = new StringBuilder();
     final String portFragment = port.map(p -> String.format(":%d", p)).orElse("");
-    final String fingerprint =
-        TLS.certificateHexFingerprint(selfSignedCert.getCertificate());
+    final String fingerprint = TLS.certificateHexFingerprint(selfSignedCert.getCertificate());
     fingerPrintsToAdd.append(String.format("localhost%s %s%n", portFragment, fingerprint));
     fingerPrintsToAdd.append(String.format("127.0.0.1%s %s%n", portFragment, fingerprint));
     Files.writeString(knownHostsPath, fingerPrintsToAdd.toString());
   }
 
   public static Path createJksTrustStore(
-      final Path parentDir, final SelfSignedCertificate selfSignedCert, final PrivateKey privKey,
+      final Path parentDir,
+      final SelfSignedCertificate selfSignedCert,
+      final PrivateKey privKey,
       final String password) {
     try {
 
@@ -67,8 +69,7 @@ public class CertificateHelpers {
 
       final Certificate certificate = selfSignedCert.getCertificate();
       ks.setCertificateEntry("clientCert", certificate);
-      ks.setKeyEntry(
-          "client", privKey, password.toCharArray(), new Certificate[]{certificate});
+      ks.setKeyEntry("client", privKey, password.toCharArray(), new Certificate[] {certificate});
 
       final Path tempKeystore = parentDir.resolve("keystore.jks");
       try (final FileOutputStream output = new FileOutputStream(tempKeystore.toFile())) {
@@ -82,7 +83,9 @@ public class CertificateHelpers {
   }
 
   public static Path createPkcs12TrustStore(
-      final Path parentDir, final SelfSignedCertificate selfSignedCert, final PrivateKey privKey,
+      final Path parentDir,
+      final SelfSignedCertificate selfSignedCert,
+      final PrivateKey privKey,
       final String password) {
     try {
 
@@ -91,8 +94,7 @@ public class CertificateHelpers {
 
       final Certificate certificate = selfSignedCert.getCertificate();
       ks.setCertificateEntry("clientCert", certificate);
-      ks.setKeyEntry(
-          "client", privKey, password.toCharArray(), new Certificate[]{certificate});
+      ks.setKeyEntry("client", privKey, password.toCharArray(), new Certificate[] {certificate});
 
       final Path tempKeystore = parentDir.resolve("keystore.jks");
       try (final FileOutputStream output = new FileOutputStream(tempKeystore.toFile())) {

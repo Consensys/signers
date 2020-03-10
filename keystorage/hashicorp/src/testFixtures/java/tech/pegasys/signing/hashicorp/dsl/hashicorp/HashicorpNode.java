@@ -12,9 +12,11 @@
  */
 package tech.pegasys.signing.hashicorp.dsl.hashicorp;
 
-import com.github.dockerjava.api.DockerClient;
-import java.util.Map;
 import tech.pegasys.signing.hashicorp.dsl.certificates.SelfSignedCertificate;
+
+import java.util.Map;
+
+import com.github.dockerjava.api.DockerClient;
 
 public class HashicorpNode {
 
@@ -28,8 +30,7 @@ public class HashicorpNode {
   }
 
   private HashicorpNode(
-      final DockerClient dockerClient,
-      final SelfSignedCertificate serverTlsCertificate) {
+      final DockerClient dockerClient, final SelfSignedCertificate serverTlsCertificate) {
     this.dockerClient = dockerClient;
     this.serverTlsCertificate = serverTlsCertificate;
   }
@@ -83,5 +84,4 @@ public class HashicorpNode {
   public String addSecretsToVault(final Map<String, String> entries, final String path) {
     return hashicorpVaultDocker.addSecretsToVault(entries, path);
   }
-
 }

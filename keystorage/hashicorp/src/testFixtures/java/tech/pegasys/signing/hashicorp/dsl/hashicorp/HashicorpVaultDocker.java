@@ -14,6 +14,8 @@ package tech.pegasys.signing.hashicorp.dsl.hashicorp;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import tech.pegasys.signing.hashicorp.dsl.certificates.SelfSignedCertificate;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -50,7 +52,6 @@ import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ThrowingRunnable;
 import org.hamcrest.Matchers;
-import tech.pegasys.signing.hashicorp.dsl.certificates.SelfSignedCertificate;
 
 public class HashicorpVaultDocker {
 
@@ -83,10 +84,9 @@ public class HashicorpVaultDocker {
   }
 
   public static HashicorpVaultDocker createVaultDocker(
-      final DockerClient docker,
-      final SelfSignedCertificate tlsCertificate) {
+      final DockerClient docker, final SelfSignedCertificate tlsCertificate) {
     HashicorpVaultDockerCertificate dockerisedTlsCertificate = null;
-    if(tlsCertificate != null) {
+    if (tlsCertificate != null) {
       dockerisedTlsCertificate = HashicorpVaultDockerCertificate.create(tlsCertificate);
     }
 
@@ -149,8 +149,8 @@ public class HashicorpVaultDocker {
           final ExecCreateCmdResponse execCreateCmdResponse =
               getExecCreateCmdResponse(vaultCommands.vaultStatusCommand());
           Assertions.assertThat(
-              runCommandInVaultContainerAndCompareOutput(
-                  execCreateCmdResponse, EXPECTED_FOR_STATUS))
+                  runCommandInVaultContainerAndCompareOutput(
+                      execCreateCmdResponse, EXPECTED_FOR_STATUS))
               .isTrue();
         });
     LOG.info("Hashicorp Vault is now responsive");
@@ -174,8 +174,8 @@ public class HashicorpVaultDocker {
             final ExecCreateCmdResponse execCreateCmdResponse =
                 getExecCreateCmdResponse(vaultCommands.vaultPutSecretCommand(entry, secretPutPath));
             Assertions.assertThat(
-                runCommandInVaultContainerAndCompareOutput(
-                    execCreateCmdResponse, EXPECTED_FOR_SECRET_CREATION))
+                    runCommandInVaultContainerAndCompareOutput(
+                        execCreateCmdResponse, EXPECTED_FOR_SECRET_CREATION))
                 .isTrue();
           });
       LOG.info("The secret ({}) was created successfully.", entry.getKey());

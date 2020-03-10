@@ -14,8 +14,9 @@ package tech.pegasys.signing.hashicorp.dsl.hashicorp;
 
 import static java.nio.file.Files.createTempDirectory;
 
+import tech.pegasys.signing.hashicorp.dsl.certificates.SelfSignedCertificate;
+
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
@@ -25,7 +26,6 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import tech.pegasys.signing.hashicorp.dsl.certificates.SelfSignedCertificate;
 
 /**
  * To run Hashicorp Vault docker in TLS mode, we copy self-signed certificates in a temporary
@@ -54,7 +54,8 @@ public class HashicorpVaultDockerCertificate {
     this.tlsPrivateKey = tlsPrivateKey;
   }
 
-  public static HashicorpVaultDockerCertificate create(final SelfSignedCertificate selfSignedCertificate) {
+  public static HashicorpVaultDockerCertificate create(
+      final SelfSignedCertificate selfSignedCertificate) {
     try {
       final Path certificateDirectory = createDestinationCertificateDirectory();
 
@@ -64,8 +65,7 @@ public class HashicorpVaultDockerCertificate {
       final Path keyPath = certificateDirectory.resolve("privKey.key");
       selfSignedCertificate.writePrivateKeyToFile(keyPath);
 
-      return new HashicorpVaultDockerCertificate(
-          certificateDirectory, certPath, keyPath);
+      return new HashicorpVaultDockerCertificate(certificateDirectory, certPath, keyPath);
     } catch (final Exception e) {
       LOG.error("Unable to initialize HashicorpVaultCertificates", e);
       throw new RuntimeException("Unable to initialize HashicorpVaultCertificates", e);
@@ -80,16 +80,6 @@ public class HashicorpVaultDockerCertificate {
         createTempDirectory(MOUNTABLE_PARENT_DIR, TEMP_DIR_PREFIX, permissions);
     FileUtils.forceDeleteOnExit(certificateDirectory.toFile());
     return certificateDirectory;
-  }
-
-  private static Path copyCertificate(
-      final Path sourceCertificatePath, final Path destinationDirectory) throws IOException {
-    final Set<PosixFilePermission> posixPermissions = PosixFilePermissions.fromString("rw-r--r--");
-    final Path destinationCertificatePath =
-        destinationDirectory.resolve(sourceCertificatePath.getFileName());
-    Files.copy(sourceCertificatePath, destinationCertificatePath);
-    Files.setPosixFilePermissions(destinationCertificatePath, posixPermissions);
-    return destinationCertificatePath;
   }
 
   public Path getCertificateDirectory() {
