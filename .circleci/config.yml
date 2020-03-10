@@ -86,7 +86,7 @@ jobs:
           name: Integration Test
           no_output_timeout: 20m
           command: |
-            ./gradlew --no-daemon --parallel integrationTest --info
+            ./gradlew --no-daemon --parallel integrationTest
       - notify      
       - capture_test_results
       - save_cache:

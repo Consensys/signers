@@ -12,3 +12,4 @@
  */
 
 rootProject.name='signers'
+include 'acceptance-tests'
