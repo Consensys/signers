@@ -133,7 +133,7 @@ public class HashicorpVaultAccessAcceptanceTest {
         hashicorpNode.addSecretsToVault(
             Collections.singletonMap(SECRET_KEY, SECRET_CONTENT), "acceptanceTestSecret");
 
-    final Path pkcs12TrustStorePath =
+    final Path trustStorePath =
         CertificateHelpers.createPkcs12TrustStore(
             testDir, hashicorpNode.getServerCertificate(), TRUST_STORE_PASSWORD);
 
@@ -148,7 +148,7 @@ public class HashicorpVaultAccessAcceptanceTest {
             30_000,
             true,
             "PKCS12",
-            pkcs12TrustStorePath.toString(),
+            trustStorePath.toString(),
             TRUST_STORE_PASSWORD);
 
     final String secretData = fetchSecretFromVault(configFilePath);
@@ -166,7 +166,7 @@ public class HashicorpVaultAccessAcceptanceTest {
         hashicorpNode.addSecretsToVault(
             Collections.singletonMap(SECRET_KEY, SECRET_CONTENT), "acceptanceTestSecret");
 
-    final Path pkcs12TrustStorePath =
+    final Path trustStorePath =
         CertificateHelpers.createJksTrustStore(
             testDir, hashicorpNode.getServerCertificate(), TRUST_STORE_PASSWORD);
 
@@ -181,13 +181,45 @@ public class HashicorpVaultAccessAcceptanceTest {
             30_000,
             true,
             "JKS",
-            pkcs12TrustStorePath.toString(),
+            trustStorePath.toString(),
             TRUST_STORE_PASSWORD);
 
     final String secretData = fetchSecretFromVault(configFilePath);
 
     assertThat(secretData).isEqualTo(SECRET_CONTENT);
   }
+
+  @Test
+  void canConnectToHashicorpVaultUsingPemCertificate(@TempDir final Path testDir)
+      throws IOException, CertificateEncodingException {
+    hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
+
+    final String hashicorpSecretHttpPath =
+        hashicorpNode.addSecretsToVault(
+            Collections.singletonMap(SECRET_KEY, SECRET_CONTENT), "acceptanceTestSecret");
+
+    final Path trustStorePath = testDir.resolve("cert.crt");
+    hashicorpNode.getServerCertificate().writeCertificateToFile(trustStorePath);
+
+    // create tomlfile
+    final Path configFilePath =
+        HashicorpConfigUtil.createConfigFile(
+            hashicorpNode.getHost(),
+            hashicorpNode.getPort(),
+            hashicorpNode.getVaultToken(),
+            hashicorpSecretHttpPath,
+            SECRET_KEY,
+            30_000,
+            true,
+            "PEM",
+            trustStorePath.toString(),
+            null);
+
+    final String secretData = fetchSecretFromVault(configFilePath);
+
+    assertThat(secretData).isEqualTo(SECRET_CONTENT);
+  }
+
 
   private String fetchSecretFromVault(final Path configFilePath) {
     final HashicorpKeyConfig config = TomlConfigLoader.fromToml(configFilePath, null);

@@ -31,17 +31,6 @@ import org.apache.tuweni.net.tls.TLS;
 
 public class CertificateHelpers {
 
-  public static KeyStore loadP12KeyStore(final File pkcsFile, final String password)
-      throws KeyStoreException, NoSuchAlgorithmException, CertificateException {
-    final KeyStore store = KeyStore.getInstance("pkcs12");
-    try (final InputStream keystoreStream = new FileInputStream(pkcsFile)) {
-      store.load(keystoreStream, password.toCharArray());
-    } catch (IOException e) {
-      throw new RuntimeException("Unable to load keystore.", e);
-    }
-    return store;
-  }
-
   public static void populateFingerprintFile(
       final Path knownHostsPath,
       final SelfSignedCertificate selfSignedCert,
