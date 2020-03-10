@@ -130,21 +130,7 @@ jobs:
           command: |
             ./gradlew --no-daemon --parallel bintrayUpload
       - notify
-      
-  publishDocker:
-    executor: executor_med
-    steps:
-      - prepare
-      - setup_remote_docker
-      - attach_workspace:
-          at: ~/project
-      - run:
-          name: Publish Docker
-          command: |
-            docker login --username "${DOCKER_USER}" --password "${DOCKER_PASSWORD}"
-            ./gradlew --no-daemon --parallel "-Pbranch=${CIRCLE_BRANCH}" dockerUpload
-      - notify
-      
+
 workflows:
   version: 2
   default:
