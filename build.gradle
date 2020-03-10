@@ -393,10 +393,7 @@ distributions {
   }
 }
 
-installDist {
-  // TODO(tmm): This is not installing any files (not immediately required however)
-  dependsOn checkLicenses
-}
+installDist { dependsOn checkLicenses }
 
 distTar {
   dependsOn checkLicenses
