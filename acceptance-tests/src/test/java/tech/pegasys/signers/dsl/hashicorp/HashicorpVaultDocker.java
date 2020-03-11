@@ -57,9 +57,9 @@ public class HashicorpVaultDocker {
   private static final String DEFAULT_VAULT_HOST = "localhost";
   private static final int DEFAULT_VAULT_PORT = 8200;
   // hashicorp kv-v2 /secret/key is accessible from path /v1/secret/data/key.
-  // EthSigner (Hashicorp Signer) expects user to provide /secret/data/key and it appends /v1
+  // Secret reader expects user to provide /secret/data/key and it appends /v1
   private static final String SECRET_PATH = "/secret";
-  private static final String SIGNING_KEY_RESOURCE = "/ethsignerSigningKey";
+  private static final String SIGNING_KEY_RESOURCE = "/signingKeyResource";
   private static final String VAULT_PUT_RESOURCE = SECRET_PATH + SIGNING_KEY_RESOURCE;
   private static final String VAULT_SIGNING_KEY_PATH =
       "/v1" + SECRET_PATH + "/data" + SIGNING_KEY_RESOURCE;

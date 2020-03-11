@@ -40,7 +40,7 @@ public class HashicorpVaultDockerCertificate {
   private static final Path MOUNTABLE_PARENT_DIR =
       Path.of(System.getProperty("user.home", System.getProperty("java.io.tmpdir", "/tmp")));
   private static final Logger LOG = LogManager.getLogger();
-  private static final String TEMP_DIR_PREFIX = ".ethsigner-vault-dsl";
+  private static final String TEMP_DIR_PREFIX = ".acceptance-test-vault-dsl";
 
   private final Path certificateDirectory;
   private final Path tlsCertificate;

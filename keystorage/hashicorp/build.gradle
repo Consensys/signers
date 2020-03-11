@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 ConsenSys AG.
+ * Copyright (C) 2020 ConsenSys AG.
  *
  * The source code is provided to licensees of PegaSys Plus for their convenience and internal
  * business use. These files may not be copied, translated, and/or distributed without the express
@@ -58,7 +58,4 @@ dependencies {
   testFixturesImplementation 'org.apache.tuweni:tuweni-net'
   testFixturesImplementation 'org.junit.jupiter:junit-jupiter-engine'
   testFixturesImplementation 'org.bouncycastle:bcpkix-jdk15on'
-
-
-  errorprone("com.google.errorprone:error_prone_core")
 }
