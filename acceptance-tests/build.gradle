@@ -30,7 +30,6 @@ dependencies {
   testImplementation 'org.awaitility:awaitility'
   testImplementation 'org.apache.tuweni:tuweni-net'
   testImplementation(testFixtures(project(":keystorage:hashicorp")))
-
 }
 
 test.enabled = false
