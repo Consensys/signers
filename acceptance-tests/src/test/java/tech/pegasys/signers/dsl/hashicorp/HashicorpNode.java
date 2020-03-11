@@ -1,85 +1,103 @@
 /*
- * Copyright (C) 2019 ConsenSys AG.
+ * Copyright 2020 ConsenSys AG.
  *
- * The source code is provided to licensees of PegaSys Plus for their convenience and internal
- * business use. These files may not be copied, translated, and/or distributed without the express
- * written permission of an authorized signatory for ConsenSys AG.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package tech.pegasys.signers.dsl.hashicorp;
 
-import tech.pegasys.plus.plugin.encryptedstorage.encryption.util.HashicorpConfigUtil;
-
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.DockerCmdExecFactory;
-import com.github.dockerjava.core.DefaultDockerClientConfig;
-import com.github.dockerjava.core.DockerClientBuilder;
-import com.github.dockerjava.jaxrs.JerseyDockerCmdExecFactory;
+import org.apache.tuweni.net.tls.TLS;
 
 public class HashicorpNode {
-
-  private static final String HASHICORP_KEY_PATH = "/v1/secret/data/DBEncryptionKey";
-  private static final int HASHICORP_TIMEOUT_MILLI_SECONDS = 30_000;
-  private static final String HASHICORP_TLS_TYPE = "PEM";
-
+  private final HashicorpVaultDockerCertificate hashicorpVaultDockerCertificate;
+  private final DockerClient dockerClient;
   private HashicorpVaultDocker hashicorpVaultDocker;
-  private String hashicorpRootToken;
-  private final HashicorpVaultCerts hashicorpVaultCerts;
+  private Optional<Path> knownServerFile = Optional.empty();
 
-  public static HashicorpNode createAndstartupNode(final HashicorpVaultCerts hashicorpVaultCerts) {
-    final HashicorpNode hashicorpNode = new HashicorpNode(hashicorpVaultCerts);
-    hashicorpNode.startup();
+  private HashicorpNode(final DockerClient dockerClient) {
+    this(dockerClient, null);
+  }
+
+  private HashicorpNode(
+      final DockerClient dockerClient,
+      final HashicorpVaultDockerCertificate hashicorpVaultDockerCertificate) {
+    this.dockerClient = dockerClient;
+    this.hashicorpVaultDockerCertificate = hashicorpVaultDockerCertificate;
+  }
+
+  public static HashicorpNode createAndStartHashicorp(
+      final DockerClient dockerClient, final boolean withTls) {
+    final HashicorpNode hashicorpNode =
+        withTls
+            ? new HashicorpNode(dockerClient, HashicorpVaultDockerCertificate.create())
+            : new HashicorpNode(dockerClient);
+    hashicorpNode.start();
     return hashicorpNode;
   }
 
-  public HashicorpNode(final HashicorpVaultCerts hashicorpVaultCerts) {
-    this.hashicorpVaultCerts = hashicorpVaultCerts;
-  }
-
-  public void startup() {
-    final DockerClient docker = createDockerClient();
-    hashicorpVaultDocker = new HashicorpVaultDocker(docker, hashicorpVaultCerts);
+  private void start() {
+    hashicorpVaultDocker =
+        HashicorpVaultDocker.createVaultDocker(dockerClient, hashicorpVaultDockerCertificate);
     Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
-    hashicorpVaultDocker.start();
-    hashicorpVaultDocker.awaitStartupCompletion();
-    hashicorpRootToken = hashicorpVaultDocker.postStartup();
-    hashicorpVaultDocker.createTestData();
+
+    if (isTlsEnabled()) {
+      knownServerFile = Optional.of(createKnownServerFile());
+    }
   }
 
-  public void shutdown() {
-    hashicorpVaultDocker.shutdown();
+  public synchronized void shutdown() {
+    if (hashicorpVaultDocker != null) {
+      hashicorpVaultDocker.shutdown();
+      hashicorpVaultDocker = null;
+    }
   }
 
-  public Path createConfigFile() throws IOException {
-    final String certPath = hashicorpVaultCerts.getTlsCertificate().toString();
-    final String hashicorpHost = hashicorpVaultDocker.getIpAddress();
-    final int hashicorpPort = hashicorpVaultDocker.getPort();
-    return HashicorpConfigUtil.createConfigFile(
-        hashicorpHost,
-        hashicorpPort,
-        hashicorpRootToken,
-        HASHICORP_KEY_PATH,
-        null,
-        HASHICORP_TIMEOUT_MILLI_SECONDS,
-        true,
-        HASHICORP_TLS_TYPE,
-        certPath,
-        null);
+  public String getVaultToken() {
+    return hashicorpVaultDocker.getHashicorpRootToken();
   }
 
-  private DockerClient createDockerClient() {
-    final DockerCmdExecFactory dockerCmdExecFactory =
-        new JerseyDockerCmdExecFactory()
-            .withReadTimeout(7500)
-            .withConnectTimeout(7500)
-            .withMaxTotalConnections(100)
-            .withMaxPerRouteConnections(10);
+  public String getHost() {
+    return hashicorpVaultDocker.getIpAddress();
+  }
 
-    return DockerClientBuilder.getInstance(
-            DefaultDockerClientConfig.createDefaultConfigBuilder().build())
-        .withDockerCmdExecFactory(dockerCmdExecFactory)
-        .build();
+  public String getSigningKeyPath() {
+    return hashicorpVaultDocker.getVaultSigningKeyPath();
+  }
+
+  public int getPort() {
+    return hashicorpVaultDocker.getPort();
+  }
+
+  public boolean isTlsEnabled() {
+    return hashicorpVaultDockerCertificate != null;
+  }
+
+  public Optional<Path> getKnownServerFilePath() {
+    return knownServerFile;
+  }
+
+  private Path createKnownServerFile() {
+    try {
+      final Path tempFile = Files.createTempFile("knownServer", ".txt");
+      final String hexFingerprint =
+          TLS.certificateHexFingerprint(hashicorpVaultDockerCertificate.getTlsCertificate());
+      Files.writeString(tempFile, String.format("%s:%d %s", getHost(), getPort(), hexFingerprint));
+      return tempFile;
+    } catch (final IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 }
