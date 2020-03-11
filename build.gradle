@@ -377,9 +377,10 @@ configurations {
 }
 
 dependencies {
-  errorprone 'com.google.errorprone:error_prone_core'
+  subprojects.each { subProject ->
+    installedJars subProject
+  }
 }
-
 
 distributions {
   main {
