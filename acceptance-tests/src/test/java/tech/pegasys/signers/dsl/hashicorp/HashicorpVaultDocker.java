@@ -16,8 +16,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 
-import com.github.dockerjava.api.model.Frame;
-import com.github.dockerjava.core.command.LogContainerResultCallback;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -38,6 +36,7 @@ import com.github.dockerjava.api.exception.NotModifiedException;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Capability;
 import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
@@ -45,6 +44,7 @@ import com.github.dockerjava.api.model.Ports.Binding;
 import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
+import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.github.dockerjava.core.command.WaitContainerResultCallback;
 import org.apache.logging.log4j.LogManager;
@@ -153,11 +153,11 @@ public class HashicorpVaultDocker {
             final ExecCreateCmdResponse execCreateCmdResponse =
                 getExecCreateCmdResponse(vaultStatusCommand());
             assertThat(
-                runCommandInVaultContainerAndCompareOutput(
-                    execCreateCmdResponse, EXPECTED_FOR_STATUS))
+                    runCommandInVaultContainerAndCompareOutput(
+                        execCreateCmdResponse, EXPECTED_FOR_STATUS))
                 .isTrue();
           });
-    } catch(final ConditionTimeoutException e) {
+    } catch (final ConditionTimeoutException e) {
       showLogFromContainer();
       throw new RuntimeException("Vault didn't come online.");
     }

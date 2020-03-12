@@ -12,13 +12,13 @@
  */
 package tech.pegasys.signers.dsl.hashicorp;
 
-import java.security.cert.Certificate;
 import tech.pegasys.signers.dsl.certificates.SelfSignedCertificate;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.util.Optional;
 
@@ -106,8 +106,7 @@ public class HashicorpNode {
       throws CertificateEncodingException {
     try {
       final Path tempFile = Files.createTempFile("knownServer", ".txt");
-      final String hexFingerprint =
-          TLS.certificateHexFingerprint(certificate);
+      final String hexFingerprint = TLS.certificateHexFingerprint(certificate);
       Files.writeString(tempFile, String.format("%s:%d %s", getHost(), getPort(), hexFingerprint));
       return tempFile;
     } catch (final IOException e) {
