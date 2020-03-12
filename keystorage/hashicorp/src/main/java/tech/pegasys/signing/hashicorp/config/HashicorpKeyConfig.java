@@ -10,8 +10,24 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.signing.hashicorp.config;
 
-rootProject.name='signers'
-include 'bls-keystore'
-include 'keystorage:hashicorp'
-include 'acceptance-tests'
+public class HashicorpKeyConfig {
+
+  private final ConnectionParameters connectionParams;
+  private final KeyDefinition keyDefinition;
+
+  public HashicorpKeyConfig(
+      final ConnectionParameters connectionParams, final KeyDefinition keyDefinition) {
+    this.connectionParams = connectionParams;
+    this.keyDefinition = keyDefinition;
+  }
+
+  public ConnectionParameters getConnectionParams() {
+    return connectionParams;
+  }
+
+  public KeyDefinition getKeyDefinition() {
+    return keyDefinition;
+  }
+}
