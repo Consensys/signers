@@ -15,12 +15,12 @@ package tech.pegasys.signing.hashicorp.loader;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import tech.pegasys.signing.hashicorp.util.HashicorpConfigUtil;
 import tech.pegasys.signing.hashicorp.HashicorpException;
 import tech.pegasys.signing.hashicorp.TrustStoreType;
 import tech.pegasys.signing.hashicorp.config.HashicorpKeyConfig;
 import tech.pegasys.signing.hashicorp.config.TlsOptions;
 import tech.pegasys.signing.hashicorp.config.loader.toml.TomlConfigLoader;
+import tech.pegasys.signing.hashicorp.util.HashicorpConfigUtil;
 
 import java.io.IOException;
 import java.nio.file.Path;
