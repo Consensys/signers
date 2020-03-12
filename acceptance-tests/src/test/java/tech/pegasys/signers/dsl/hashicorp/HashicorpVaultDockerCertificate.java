@@ -14,8 +14,9 @@ package tech.pegasys.signers.dsl.hashicorp;
 
 import static java.nio.file.Files.createTempDirectory;
 
+import tech.pegasys.signers.dsl.certificates.SelfSignedCertificate;
+
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
@@ -57,12 +58,15 @@ public class HashicorpVaultDockerCertificate {
     try {
       final SelfSignedCertificate selfSignedCertificate = SelfSignedCertificate.generate();
       final Path certificateDirectory = createDestinationCertificateDirectory();
-      final Path tlsCertificate =
-          copyCertificate(selfSignedCertificate.certificatePath(), certificateDirectory);
-      final Path tlsPrivateKey =
-          copyCertificate(selfSignedCertificate.privateKeyPath(), certificateDirectory);
+
+      final Path certificatePath = certificateDirectory.resolve("certificate.crt");
+      selfSignedCertificate.writeCertificateToFile(certificatePath);
+
+      final Path privateKeyPath = certificateDirectory.resolve("priv.key");
+      selfSignedCertificate.writeCertificateToFile(privateKeyPath);
+
       return new HashicorpVaultDockerCertificate(
-          certificateDirectory, tlsCertificate, tlsPrivateKey);
+          certificateDirectory, certificatePath, privateKeyPath);
     } catch (final Exception e) {
       LOG.error("Unable to initialize HashicorpVaultCertificates", e);
       throw new RuntimeException("Unable to initialize HashicorpVaultCertificates", e);
@@ -77,16 +81,6 @@ public class HashicorpVaultDockerCertificate {
         createTempDirectory(MOUNTABLE_PARENT_DIR, TEMP_DIR_PREFIX, permissions);
     FileUtils.forceDeleteOnExit(certificateDirectory.toFile());
     return certificateDirectory;
-  }
-
-  private static Path copyCertificate(
-      final Path sourceCertificatePath, final Path destinationDirectory) throws IOException {
-    final Set<PosixFilePermission> posixPermissions = PosixFilePermissions.fromString("rw-r--r--");
-    final Path destinationCertificatePath =
-        destinationDirectory.resolve(sourceCertificatePath.getFileName());
-    Files.copy(sourceCertificatePath, destinationCertificatePath);
-    Files.setPosixFilePermissions(destinationCertificatePath, posixPermissions);
-    return destinationCertificatePath;
   }
 
   public Path getCertificateDirectory() {
