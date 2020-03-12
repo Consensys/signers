@@ -51,11 +51,13 @@ public class HashicorpVaultAccessAcceptanceTest {
     } catch (final Exception ignored) {
     }
 
-    if (hashicorpNode != null) {
-      hashicorpNode.shutdown();
-      hashicorpNode = null;
+    try {
+      if (hashicorpNode != null) {
+        hashicorpNode.shutdown();
+        hashicorpNode = null;
+      }
+    } catch (final Exception ignored) {
     }
-
     try {
       docker.close();
     } catch (final Exception ignored) {

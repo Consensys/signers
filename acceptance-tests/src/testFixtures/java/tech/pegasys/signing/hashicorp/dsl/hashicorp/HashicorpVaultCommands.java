@@ -64,29 +64,4 @@ public class HashicorpVaultCommands {
   public String[] vaultLoginCommand(final String rootToken) {
     return new String[] {"vault", "login", "-address=" + vaultUrl, rootToken};
   }
-
-  public List<String> constructVaultEnvVars() {
-    /*
-    try {
-      final URL url = new URL(vaultUrl);
-      final String addressConfig = String.format("\"address\":0.0.0.0:%d", url.getPort());
-      final List<String> environmentVariables =
-          List.of(
-              "VAULT_LOCAL_CONFIG={\"storage\": {\"inmem\":{}}, "
-                  + "\"default_lease_ttl\": \"168h\", \"max_lease_ttl\": \"720h\", "
-                  + "\"listener\": {\"tcp\": {"
-                  + addressConfig + ","
-                  + tlsEnvConfig()
-                  + "}}}",
-              "VAULT_SKIP_VERIFY=true");
-
-      return emptyList();
-    } catch(final MalformedURLException e) {
-      throw new RuntimeException("Illegal Vault URL, unable to create required env vars.", e);
-    }
-
-     */
-
-    return emptyList();
-  }
 }
