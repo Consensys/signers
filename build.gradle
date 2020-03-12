@@ -427,7 +427,6 @@ task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
   }
 }
 
-//configurations { annotationProcessor }
 
 // Prevent errorprone-checks being dependent upon errorprone-checks!
 // However, ensure all subprojects comply with the custom rules.

@@ -10,12 +10,13 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.dsl.hashicorp;
+package tech.pegasys.signing.hashicorp.dsl.hashicorp;
 
 import static java.nio.file.Files.createTempDirectory;
 
+import tech.pegasys.signing.hashicorp.dsl.certificates.SelfSignedCertificate;
+
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
@@ -40,7 +41,7 @@ public class HashicorpVaultDockerCertificate {
   private static final Path MOUNTABLE_PARENT_DIR =
       Path.of(System.getProperty("user.home", System.getProperty("java.io.tmpdir", "/tmp")));
   private static final Logger LOG = LogManager.getLogger();
-  private static final String TEMP_DIR_PREFIX = ".acceptance-test-vault-dsl";
+  private static final String TEMP_DIR_PREFIX = ".ethsigner-vault-dsl";
 
   private final Path certificateDirectory;
   private final Path tlsCertificate;
@@ -53,16 +54,18 @@ public class HashicorpVaultDockerCertificate {
     this.tlsPrivateKey = tlsPrivateKey;
   }
 
-  public static HashicorpVaultDockerCertificate create() {
+  public static HashicorpVaultDockerCertificate create(
+      final SelfSignedCertificate selfSignedCertificate) {
     try {
-      final SelfSignedCertificate selfSignedCertificate = SelfSignedCertificate.generate();
       final Path certificateDirectory = createDestinationCertificateDirectory();
-      final Path tlsCertificate =
-          copyCertificate(selfSignedCertificate.certificatePath(), certificateDirectory);
-      final Path tlsPrivateKey =
-          copyCertificate(selfSignedCertificate.privateKeyPath(), certificateDirectory);
-      return new HashicorpVaultDockerCertificate(
-          certificateDirectory, tlsCertificate, tlsPrivateKey);
+
+      final Path certPath = certificateDirectory.resolve("certFile.crt");
+      selfSignedCertificate.writeCertificateToFile(certPath);
+
+      final Path keyPath = certificateDirectory.resolve("privKey.key");
+      selfSignedCertificate.writePrivateKeyToFile(keyPath);
+
+      return new HashicorpVaultDockerCertificate(certificateDirectory, certPath, keyPath);
     } catch (final Exception e) {
       LOG.error("Unable to initialize HashicorpVaultCertificates", e);
       throw new RuntimeException("Unable to initialize HashicorpVaultCertificates", e);
@@ -77,16 +80,6 @@ public class HashicorpVaultDockerCertificate {
         createTempDirectory(MOUNTABLE_PARENT_DIR, TEMP_DIR_PREFIX, permissions);
     FileUtils.forceDeleteOnExit(certificateDirectory.toFile());
     return certificateDirectory;
-  }
-
-  private static Path copyCertificate(
-      final Path sourceCertificatePath, final Path destinationDirectory) throws IOException {
-    final Set<PosixFilePermission> posixPermissions = PosixFilePermissions.fromString("rw-r--r--");
-    final Path destinationCertificatePath =
-        destinationDirectory.resolve(sourceCertificatePath.getFileName());
-    Files.copy(sourceCertificatePath, destinationCertificatePath);
-    Files.setPosixFilePermissions(destinationCertificatePath, posixPermissions);
-    return destinationCertificatePath;
   }
 
   public Path getCertificateDirectory() {

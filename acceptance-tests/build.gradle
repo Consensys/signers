@@ -11,6 +11,8 @@
  * specific language governing permissions and limitations under the License.
  */
 
+apply plugin: 'java-test-fixtures'
+
 dependencies {
 
   testRuntimeOnly 'javax.activation:activation'
@@ -30,6 +32,17 @@ dependencies {
   testImplementation 'org.awaitility:awaitility'
   testImplementation 'org.apache.tuweni:tuweni-net'
   testImplementation(testFixtures(project(":keystorage:hashicorp")))
+  testImplementation sourceSets.testFixtures.output
+
+  testFixturesImplementation 'com.github.docker-java:docker-java'
+  testFixturesImplementation 'org.apache.logging.log4j:log4j-core'
+  testFixturesImplementation 'org.apache.logging.log4j:log4j-slf4j-impl'
+  testFixturesImplementation 'org.apache.logging.log4j:log4j-api'
+  testFixturesImplementation 'org.assertj:assertj-core'
+  testFixturesImplementation 'org.awaitility:awaitility'
+  testFixturesImplementation 'org.apache.tuweni:tuweni-net'
+  testFixturesImplementation 'org.junit.jupiter:junit-jupiter-engine'
+  testFixturesImplementation 'org.bouncycastle:bcpkix-jdk15on'
 }
 
 test.enabled = false
