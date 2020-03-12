@@ -10,7 +10,22 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.signers.dsl.hashicorp;
 
-rootProject.name='signers'
-include 'keystorage:hashicorp'
-include 'acceptance-tests'
+public class HashicorpVaultTokens {
+  private final String unsealKey;
+  private final String rootToken;
+
+  public HashicorpVaultTokens(final String unsealKey, final String rootToken) {
+    this.unsealKey = unsealKey;
+    this.rootToken = rootToken;
+  }
+
+  public String getUnsealKey() {
+    return unsealKey;
+  }
+
+  public String getRootToken() {
+    return rootToken;
+  }
+}

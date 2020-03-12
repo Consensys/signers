@@ -10,7 +10,31 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.signing.hashicorp.config;
 
-rootProject.name='signers'
-include 'keystorage:hashicorp'
-include 'acceptance-tests'
+import java.util.Optional;
+
+public class KeyDefinition {
+
+  private String keyPath;
+  private Optional<String> keyName;
+  private String token;
+
+  public KeyDefinition(final String keyPath, final Optional<String> keyName, final String token) {
+    this.keyPath = keyPath;
+    this.keyName = keyName;
+    this.token = token;
+  }
+
+  public String getKeyPath() {
+    return keyPath;
+  }
+
+  public Optional<String> getKeyName() {
+    return keyName;
+  }
+
+  public String getToken() {
+    return token;
+  }
+}
