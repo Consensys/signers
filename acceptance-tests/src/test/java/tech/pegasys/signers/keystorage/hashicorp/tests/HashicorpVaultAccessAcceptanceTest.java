@@ -14,13 +14,13 @@ package tech.pegasys.signers.keystorage.hashicorp.tests;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import tech.pegasys.plus.plugin.encryptedstorage.encryption.util.HashicorpConfigUtil;
 import tech.pegasys.signers.dsl.DockerClientFactory;
 import tech.pegasys.signers.dsl.hashicorp.HashicorpNode;
 import tech.pegasys.signing.hashicorp.HashicorpConnection;
 import tech.pegasys.signing.hashicorp.HashicorpConnectionFactory;
 import tech.pegasys.signing.hashicorp.config.HashicorpKeyConfig;
 import tech.pegasys.signing.hashicorp.config.loader.toml.TomlConfigLoader;
+import tech.pegasys.signing.hashicorp.util.HashicorpConfigUtil;
 
 import java.io.IOException;
 import java.nio.file.Path;
