@@ -10,7 +10,7 @@ apply plugin: 'java-library'
 apply plugin: 'java-test-fixtures'
 
 jar {
-  archiveBaseName = "hashicorp-vault"
+  archiveBaseName = "keystore-hashicorp"
   manifest {
     attributes(
       'Specification-Title': archiveBaseName.get(),
