@@ -54,16 +54,16 @@ public class HashicorpVaultDockerCertificate {
     this.tlsPrivateKey = tlsPrivateKey;
   }
 
-  public static HashicorpVaultDockerCertificate create() {
+  public static HashicorpVaultDockerCertificate create(
+      final SelfSignedCertificate selfSignedCertificate) {
     try {
-      final SelfSignedCertificate selfSignedCertificate = SelfSignedCertificate.generate();
       final Path certificateDirectory = createDestinationCertificateDirectory();
 
       final Path certificatePath = certificateDirectory.resolve("certificate.crt");
       selfSignedCertificate.writeCertificateToFile(certificatePath);
 
       final Path privateKeyPath = certificateDirectory.resolve("priv.key");
-      selfSignedCertificate.writeCertificateToFile(privateKeyPath);
+      selfSignedCertificate.writePrivateKeyToFile(privateKeyPath);
 
       return new HashicorpVaultDockerCertificate(
           certificateDirectory, certificatePath, privateKeyPath);
