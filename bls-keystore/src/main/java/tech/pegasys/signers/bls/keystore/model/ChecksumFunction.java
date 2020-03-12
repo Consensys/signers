@@ -10,8 +10,20 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.signers.bls.keystore.model;
 
-rootProject.name='signers'
-include 'bls-keystore'
-include 'keystorage:hashicorp'
-include 'acceptance-tests'
+import com.fasterxml.jackson.annotation.JsonValue;
+
+public enum ChecksumFunction {
+  SHA256("sha256");
+  private final String jsonValue;
+
+  ChecksumFunction(final String jsonValue) {
+    this.jsonValue = jsonValue;
+  }
+
+  @JsonValue
+  public String getJsonValue() {
+    return this.jsonValue;
+  }
+}
