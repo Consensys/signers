@@ -14,6 +14,7 @@ package tech.pegasys.signers.dsl.hashicorp;
 
 import tech.pegasys.signers.dsl.certificates.SelfSignedCertificate;
 
+import java.util.Map;
 import java.util.Optional;
 
 import com.github.dockerjava.api.DockerClient;
@@ -72,15 +73,25 @@ public class HashicorpNode {
     return hashicorpVaultDocker.getIpAddress();
   }
 
-  public String getSigningKeyPath() {
-    return hashicorpVaultDocker.getVaultSigningKeyPath();
-  }
-
   public int getPort() {
     return hashicorpVaultDocker.getPort();
   }
 
   public Optional<SelfSignedCertificate> getServerCertificate() {
     return serverTlsCertificate;
+  }
+
+  /* Note: Path should be the "subpath" of the secret - not the full HTTP path.
+  The full HTTP Path will be returned.
+   */
+  public void addSecretsToVault(final Map<String, String> entries, final String path) {
+    hashicorpVaultDocker.addSecretsToVault(entries, path);
+  }
+
+  public String getHttpApiPathForSecret(final String secretPath) {
+    // *ALL* Hashicorp Http API endpoints are prefixed by "/v1"
+    // KV-V2 insert "data" after the rootpath, and before the signing key path (so, just gotta
+    // handle that)
+    return hashicorpVaultDocker.getHttpApiPathForSecret(secretPath);
   }
 }

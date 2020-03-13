@@ -17,7 +17,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import tech.pegasys.signers.dsl.DockerClientFactory;
 import tech.pegasys.signers.dsl.certificates.CertificateHelpers;
 import tech.pegasys.signers.dsl.hashicorp.HashicorpNode;
-import tech.pegasys.signers.dsl.hashicorp.HashicorpVaultDocker;
 import tech.pegasys.signing.hashicorp.HashicorpConnection;
 import tech.pegasys.signing.hashicorp.HashicorpConnectionFactory;
 import tech.pegasys.signing.hashicorp.config.HashicorpKeyConfig;
@@ -27,6 +26,7 @@ import tech.pegasys.signing.hashicorp.util.HashicorpConfigUtil;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.security.cert.CertificateEncodingException;
+import java.util.Collections;
 import java.util.Optional;
 
 import com.github.dockerjava.api.DockerClient;
@@ -44,6 +44,10 @@ public class HashicorpVaultAccessAcceptanceTest {
   private final Vertx vertx = Vertx.vertx();
   final DockerClient docker = new DockerClientFactory().create();
   private HashicorpNode hashicorpNode;
+
+  private final String SECRET_KEY = "storedSecetKey";
+  private final String SECRET_VALUE = "secretValue";
+  private final String KEY_SUBPATH = "acceptanceTestSecret";
 
   @AfterEach
   void cleanup() {
@@ -72,14 +76,16 @@ public class HashicorpVaultAccessAcceptanceTest {
   @Test
   void keyCanBeExtractedFromVault() throws IOException {
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, false);
+    hashicorpNode.addSecretsToVault(
+        Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);
 
     final Path configFilePath =
         HashicorpConfigUtil.createConfigFile(
             hashicorpNode.getHost(),
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
-            hashicorpNode.getSigningKeyPath(),
-            null,
+            hashicorpNode.getHttpApiPathForSecret(KEY_SUBPATH),
+            SECRET_KEY,
             30_000,
             false,
             null,
@@ -88,7 +94,7 @@ public class HashicorpVaultAccessAcceptanceTest {
 
     final String secretData = fetchSecretFromVault(configFilePath);
 
-    assertThat(secretData).isEqualTo(HashicorpVaultDocker.SECRET_VALUE);
+    assertThat(secretData).isEqualTo(SECRET_VALUE);
   }
 
   @Test
@@ -102,13 +108,16 @@ public class HashicorpVaultAccessAcceptanceTest {
             hashicorpNode.getServerCertificate().get(),
             Optional.of(hashicorpNode.getPort()));
 
+    hashicorpNode.addSecretsToVault(
+        Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);
+
     final Path configFilePath =
         HashicorpConfigUtil.createConfigFile(
             hashicorpNode.getHost(),
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
-            hashicorpNode.getSigningKeyPath(),
-            null,
+            hashicorpNode.getHttpApiPathForSecret(KEY_SUBPATH),
+            SECRET_KEY,
             30_000,
             true,
             "WHITELIST",
@@ -117,7 +126,7 @@ public class HashicorpVaultAccessAcceptanceTest {
 
     final String secretData = fetchSecretFromVault(configFilePath);
 
-    assertThat(secretData).isEqualTo(HashicorpVaultDocker.SECRET_VALUE);
+    assertThat(secretData).isEqualTo(SECRET_VALUE);
   }
 
   @Test
@@ -125,6 +134,9 @@ public class HashicorpVaultAccessAcceptanceTest {
       throws IOException {
     final String TRUST_STORE_PASSWORD = "password";
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
+
+    hashicorpNode.addSecretsToVault(
+        Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);
 
     final Path trustStorePath =
         CertificateHelpers.createPkcs12TrustStore(
@@ -135,8 +147,8 @@ public class HashicorpVaultAccessAcceptanceTest {
             hashicorpNode.getHost(),
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
-            hashicorpNode.getSigningKeyPath(),
-            null,
+            hashicorpNode.getHttpApiPathForSecret(KEY_SUBPATH),
+            SECRET_KEY,
             30_000,
             true,
             "PKCS12",
@@ -145,7 +157,7 @@ public class HashicorpVaultAccessAcceptanceTest {
 
     final String secretData = fetchSecretFromVault(configFilePath);
 
-    assertThat(secretData).isEqualTo(HashicorpVaultDocker.SECRET_VALUE);
+    assertThat(secretData).isEqualTo(SECRET_VALUE);
   }
 
   @Test
@@ -153,6 +165,9 @@ public class HashicorpVaultAccessAcceptanceTest {
       throws IOException {
     final String TRUST_STORE_PASSWORD = "password";
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
+
+    hashicorpNode.addSecretsToVault(
+        Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);
 
     final Path trustStorePath =
         CertificateHelpers.createJksTrustStore(
@@ -163,8 +178,8 @@ public class HashicorpVaultAccessAcceptanceTest {
             hashicorpNode.getHost(),
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
-            hashicorpNode.getSigningKeyPath(),
-            null,
+            hashicorpNode.getHttpApiPathForSecret(KEY_SUBPATH),
+            SECRET_KEY,
             30_000,
             true,
             "JKS",
@@ -173,7 +188,7 @@ public class HashicorpVaultAccessAcceptanceTest {
 
     final String secretData = fetchSecretFromVault(configFilePath);
 
-    assertThat(secretData).isEqualTo(HashicorpVaultDocker.SECRET_VALUE);
+    assertThat(secretData).isEqualTo(SECRET_VALUE);
   }
 
   @Test
@@ -181,17 +196,19 @@ public class HashicorpVaultAccessAcceptanceTest {
       throws IOException, CertificateEncodingException {
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
 
+    hashicorpNode.addSecretsToVault(
+        Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);
+
     final Path trustStorePath = testDir.resolve("cert.crt");
     hashicorpNode.getServerCertificate().get().writeCertificateToFile(trustStorePath);
 
-    // create tomlfile
     final Path configFilePath =
         HashicorpConfigUtil.createConfigFile(
             hashicorpNode.getHost(),
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
-            hashicorpNode.getSigningKeyPath(),
-            null,
+            hashicorpNode.getHttpApiPathForSecret(KEY_SUBPATH),
+            SECRET_KEY,
             30_000,
             true,
             "PEM",
@@ -200,7 +217,7 @@ public class HashicorpVaultAccessAcceptanceTest {
 
     final String secretData = fetchSecretFromVault(configFilePath);
 
-    assertThat(secretData).isEqualTo(HashicorpVaultDocker.SECRET_VALUE);
+    assertThat(secretData).isEqualTo(SECRET_VALUE);
   }
 
   private String fetchSecretFromVault(final Path configFilePath) {
