@@ -31,11 +31,15 @@ import java.util.Optional;
 
 import com.github.dockerjava.api.DockerClient;
 import io.vertx.core.Vertx;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 public class HashicorpVaultAccessAcceptanceTest {
+
+  private static final Logger LOG = LogManager.getLogger();
 
   private final Vertx vertx = Vertx.vertx();
   final DockerClient docker = new DockerClientFactory().create();
@@ -45,17 +49,23 @@ public class HashicorpVaultAccessAcceptanceTest {
   void cleanup() {
     try {
       vertx.close();
-    } catch (final Exception ignored) {
+    } catch (final Exception e) {
+      LOG.error("Failed to close vertx.", e);
     }
 
-    if (hashicorpNode != null) {
-      hashicorpNode.shutdown();
-      hashicorpNode = null;
+    try {
+      if (hashicorpNode != null) {
+        hashicorpNode.shutdown();
+        hashicorpNode = null;
+      }
+    } catch (final Exception e) {
+      LOG.error("Failed to shutdown Hashicorp Node.", e);
     }
 
     try {
       docker.close();
-    } catch (final Exception ignored) {
+    } catch (final Exception e) {
+      LOG.error("Failed to close docker.", e);
     }
   }
 
