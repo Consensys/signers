@@ -60,11 +60,14 @@ public class HashicorpVaultDocker {
   private static final String DEFAULT_VAULT_HOST = "localhost";
   private static final int DEFAULT_VAULT_PORT = 8200;
 
-  private static final String SECRET_PATH = "/secret";
+  private static final String VAULT_ROOT_PATH = "/secret";
   private static final String SIGNING_KEY_RESOURCE = "/signingKeyResource";
-  private static final String VAULT_PUT_RESOURCE = SECRET_PATH + SIGNING_KEY_RESOURCE;
+  private static final String VAULT_PUT_RESOURCE = VAULT_ROOT_PATH + SIGNING_KEY_RESOURCE;
   private static final String VAULT_SIGNING_KEY_PATH =
-      "/v1" + SECRET_PATH + "/data" + SIGNING_KEY_RESOURCE;
+      "/v1" + VAULT_ROOT_PATH + "/data" + SIGNING_KEY_RESOURCE;
+
+  private static final String SECRET_VALUE =
+      "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63";
 
   private static final String EXPECTED_FOR_SECRET_CREATION = "created_time";
   private static final String EXPECTED_FOR_STATUS = "Sealed";
@@ -78,12 +81,14 @@ public class HashicorpVaultDocker {
   private int port;
   private String ipAddress;
   private String hashicorpRootToken;
+  private final HashicorpVaultCommands vaultCommands;
 
   private HashicorpVaultDocker(
       final DockerClient docker,
       final HashicorpVaultDockerCertificate hashicorpVaultDockerCertificate) {
     this.docker = docker;
     this.hashicorpVaultDockerCertificate = hashicorpVaultDockerCertificate;
+    vaultCommands = new HashicorpVaultCommands(vaultDefaultUrl());
   }
 
   public static HashicorpVaultDocker createVaultDocker(
@@ -141,7 +146,7 @@ public class HashicorpVaultDocker {
 
     final Ports ports = containerResponse.getNetworkSettings().getPorts();
     port = portSpec(ports);
-    LOG.info("Http port for Hashicorp Vault: {}", port);
+    LOG.info("Http port for Dockerised Hashicorp Vault: {}", port);
   }
 
   private void awaitStartupCompletion() {
@@ -151,7 +156,7 @@ public class HashicorpVaultDocker {
           60,
           () -> {
             final ExecCreateCmdResponse execCreateCmdResponse =
-                getExecCreateCmdResponse(vaultStatusCommand());
+                getExecCreateCmdResponse(vaultCommands.statusCommand());
             assertThat(
                     runCommandInVaultContainerAndCompareOutput(
                         execCreateCmdResponse, EXPECTED_FOR_STATUS))
@@ -174,12 +179,12 @@ public class HashicorpVaultDocker {
 
   private void createSecretKey() {
     LOG.info("creating the secret in vault that contains the private key.");
-
     waitFor(
         10,
         () -> {
           final ExecCreateCmdResponse execCreateCmdResponse =
-              getExecCreateCmdResponse(vaultPutSecretCommand());
+              getExecCreateCmdResponse(
+                  vaultCommands.putSecretCommand("value", SECRET_VALUE, VAULT_PUT_RESOURCE));
           assertThat(
                   runCommandInVaultContainerAndCompareOutput(
                       execCreateCmdResponse, EXPECTED_FOR_SECRET_CREATION))
@@ -191,7 +196,7 @@ public class HashicorpVaultDocker {
   private HashicorpVaultTokens initVault() {
     LOG.info("Initializing Hashicorp vault ...");
     final ExecCreateCmdResponse execCreateCmdResponse =
-        getExecCreateCmdResponse(vaultInitCommand());
+        getExecCreateCmdResponse(vaultCommands.initCommand());
     final String jsonOutput =
         Awaitility.await()
             .atMost(10, SECONDS)
@@ -221,13 +226,7 @@ public class HashicorpVaultDocker {
   private void unseal(final String unsealKey) {
     LOG.info("Unseal Hashicorp vault ...");
     final ExecCreateCmdResponse execCreateCmdResponse =
-        getExecCreateCmdResponse(
-            "vault",
-            "operator",
-            "unseal",
-            "-address=" + vaultDefaultUrl(),
-            "-format=json",
-            unsealKey);
+        getExecCreateCmdResponse(vaultCommands.unseal(unsealKey));
     final String jsonOutput =
         Awaitility.await()
             .atMost(10, SECONDS)
@@ -249,7 +248,7 @@ public class HashicorpVaultDocker {
   private void login(final String rootToken) {
     LOG.info("Login Hashicorp vault CLI ...");
     final ExecCreateCmdResponse execCreateCmdResponse =
-        getExecCreateCmdResponse("vault", "login", "-address=" + vaultDefaultUrl(), rootToken);
+        getExecCreateCmdResponse(vaultCommands.loginCommand(rootToken));
 
     Awaitility.await()
         .atMost(10, SECONDS)
@@ -266,7 +265,7 @@ public class HashicorpVaultDocker {
   private void enableHashicorpKeyValueV2Engine() {
     LOG.info("Mounting /secret kv-v2 in Hashicorp vault ...");
     final ExecCreateCmdResponse execCreateCmdResponse =
-        getExecCreateCmdResponse(vaultEnableSecretEngineCommand());
+        getExecCreateCmdResponse(vaultCommands.enableSecretEngineCommand(VAULT_ROOT_PATH));
 
     Awaitility.await()
         .atMost(10, SECONDS)
@@ -283,44 +282,6 @@ public class HashicorpVaultDocker {
   private String vaultDefaultUrl() {
     return String.format(
         "%s://%s:%d", isTlsEnabled() ? "https" : "http", DEFAULT_VAULT_HOST, DEFAULT_VAULT_PORT);
-  }
-
-  private String[] vaultStatusCommand() {
-    return new String[] {"vault", "status", "-address=" + vaultDefaultUrl()};
-  }
-
-  private String[] vaultInitCommand() {
-    return new String[] {
-      "vault",
-      "operator",
-      "init",
-      "-key-shares=1",
-      "-key-threshold=1",
-      "-format=json",
-      "-address=" + vaultDefaultUrl()
-    };
-  }
-
-  private String[] vaultEnableSecretEngineCommand() {
-    return new String[] {
-      "vault",
-      "secrets",
-      "enable",
-      "-address=" + vaultDefaultUrl(),
-      "-path=" + SECRET_PATH,
-      "kv-v2",
-    };
-  }
-
-  private String[] vaultPutSecretCommand() {
-    return new String[] {
-      "vault",
-      "kv",
-      "put",
-      "-address=" + vaultDefaultUrl(),
-      VAULT_PUT_RESOURCE,
-      "value=8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63",
-    };
   }
 
   private String getDockerHostIp() {
@@ -416,6 +377,7 @@ public class HashicorpVaultDocker {
                 + "\"default_lease_ttl\": \"168h\", \"max_lease_ttl\": \"720h\", "
                 + "\"listener\": {\"tcp\": {"
                 + tcpEnvAddressConfig()
+                + ","
                 + tlsEnvConfig()
                 + "}}}",
             "VAULT_SKIP_VERIFY=true");
@@ -448,7 +410,7 @@ public class HashicorpVaultDocker {
 
   private String tlsEnvConfig() {
     if (!isTlsEnabled()) {
-      return ", \"tls_disable\":\"true\"";
+      return "\"tls_disable\":\"true\"";
     }
     final Path containerTlsCertPath =
         CONTAINER_MOUNT_PATH.resolve(
@@ -458,7 +420,7 @@ public class HashicorpVaultDocker {
             hashicorpVaultDockerCertificate.getTlsPrivateKey().getFileName());
 
     return String.format(
-        ", \"tls_min_version\": \"tls12\", \"tls_cert_file\": \"%s\", \"tls_key_file\": \"%s\"",
+        "\"tls_min_version\": \"tls12\", \"tls_cert_file\": \"%s\", \"tls_key_file\": \"%s\"",
         containerTlsCertPath.toString(), containerTlsKeyPath.toString());
   }
 
