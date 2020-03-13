@@ -45,10 +45,9 @@ public class HashicorpNode {
   public static HashicorpNode createAndStartHashicorp(
       final DockerClient dockerClient, final boolean withTls) {
     try {
-      final SelfSignedCertificate selfSignedCertificate = SelfSignedCertificate.generate();
       final HashicorpNode hashicorpNode =
           withTls
-              ? new HashicorpNode(dockerClient, selfSignedCertificate)
+              ? new HashicorpNode(dockerClient, SelfSignedCertificate.generate())
               : new HashicorpNode(dockerClient);
       hashicorpNode.start();
       return hashicorpNode;
