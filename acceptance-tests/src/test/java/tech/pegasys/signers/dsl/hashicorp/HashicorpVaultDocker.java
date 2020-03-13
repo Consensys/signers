@@ -186,7 +186,7 @@ public class HashicorpVaultDocker {
     return getHttpApiPathForSecret(path);
   }
 
-  public static String getHttpApiPathForSecret(final String secretPath) {
+  public String getHttpApiPathForSecret(final String secretPath) {
     // *ALL* Hashicorp Http API endpoints are prefixed by "/v1"
     // KV-V2 insert "data" after the rootpath, and before the signing key path (so, just gotta
     // handle that)

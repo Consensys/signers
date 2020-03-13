@@ -47,6 +47,7 @@ public class HashicorpVaultAccessAcceptanceTest {
 
   private final String SECRET_KEY = "storedSecetKey";
   private final String SECRET_VALUE = "secretValue";
+  private final String KEY_SUBPATH = "acceptanceTestSecret";
 
   @AfterEach
   void cleanup() {
@@ -75,17 +76,15 @@ public class HashicorpVaultAccessAcceptanceTest {
   @Test
   void keyCanBeExtractedFromVault() throws IOException {
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, false);
-
-    final String hashicorpSecretHttpPath =
-        hashicorpNode.addSecretsToVault(
-            Collections.singletonMap(SECRET_KEY, SECRET_VALUE), "acceptanceTestSecret");
+    hashicorpNode.addSecretsToVault(
+        Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);
 
     final Path configFilePath =
         HashicorpConfigUtil.createConfigFile(
             hashicorpNode.getHost(),
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
-            hashicorpSecretHttpPath,
+            hashicorpNode.getHttpApiPathForSecret(KEY_SUBPATH),
             SECRET_KEY,
             30_000,
             false,
@@ -109,16 +108,15 @@ public class HashicorpVaultAccessAcceptanceTest {
             hashicorpNode.getServerCertificate().get(),
             Optional.of(hashicorpNode.getPort()));
 
-    final String hashicorpSecretHttpPath =
-        hashicorpNode.addSecretsToVault(
-            Collections.singletonMap(SECRET_KEY, SECRET_VALUE), "acceptanceTestSecret");
+    hashicorpNode.addSecretsToVault(
+        Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);
 
     final Path configFilePath =
         HashicorpConfigUtil.createConfigFile(
             hashicorpNode.getHost(),
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
-            hashicorpSecretHttpPath,
+            hashicorpNode.getHttpApiPathForSecret(KEY_SUBPATH),
             SECRET_KEY,
             30_000,
             true,
@@ -137,9 +135,8 @@ public class HashicorpVaultAccessAcceptanceTest {
     final String TRUST_STORE_PASSWORD = "password";
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
 
-    final String hashicorpSecretHttpPath =
-        hashicorpNode.addSecretsToVault(
-            Collections.singletonMap(SECRET_KEY, SECRET_VALUE), "acceptanceTestSecret");
+    hashicorpNode.addSecretsToVault(
+        Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);
 
     final Path trustStorePath =
         CertificateHelpers.createPkcs12TrustStore(
@@ -150,7 +147,7 @@ public class HashicorpVaultAccessAcceptanceTest {
             hashicorpNode.getHost(),
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
-            hashicorpSecretHttpPath,
+            hashicorpNode.getHttpApiPathForSecret(KEY_SUBPATH),
             SECRET_KEY,
             30_000,
             true,
@@ -169,9 +166,8 @@ public class HashicorpVaultAccessAcceptanceTest {
     final String TRUST_STORE_PASSWORD = "password";
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
 
-    final String hashicorpSecretHttpPath =
-        hashicorpNode.addSecretsToVault(
-            Collections.singletonMap(SECRET_KEY, SECRET_VALUE), "acceptanceTestSecret");
+    hashicorpNode.addSecretsToVault(
+        Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);
 
     final Path trustStorePath =
         CertificateHelpers.createJksTrustStore(
@@ -182,7 +178,7 @@ public class HashicorpVaultAccessAcceptanceTest {
             hashicorpNode.getHost(),
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
-            hashicorpSecretHttpPath,
+            hashicorpNode.getHttpApiPathForSecret(KEY_SUBPATH),
             SECRET_KEY,
             30_000,
             true,
@@ -200,9 +196,8 @@ public class HashicorpVaultAccessAcceptanceTest {
       throws IOException, CertificateEncodingException {
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
 
-    final String hashicorpSecretHttpPath =
-        hashicorpNode.addSecretsToVault(
-            Collections.singletonMap(SECRET_KEY, SECRET_VALUE), "acceptanceTestSecret");
+    hashicorpNode.addSecretsToVault(
+        Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);
 
     final Path trustStorePath = testDir.resolve("cert.crt");
     hashicorpNode.getServerCertificate().get().writeCertificateToFile(trustStorePath);
@@ -212,7 +207,7 @@ public class HashicorpVaultAccessAcceptanceTest {
             hashicorpNode.getHost(),
             hashicorpNode.getPort(),
             hashicorpNode.getVaultToken(),
-            hashicorpSecretHttpPath,
+            hashicorpNode.getHttpApiPathForSecret(KEY_SUBPATH),
             SECRET_KEY,
             30_000,
             true,

@@ -84,7 +84,14 @@ public class HashicorpNode {
   /* Note: Path should be the "subpath" of the secret - not the full HTTP path.
   The full HTTP Path will be returned.
    */
-  public String addSecretsToVault(final Map<String, String> entries, final String path) {
-    return hashicorpVaultDocker.addSecretsToVault(entries, path);
+  public void addSecretsToVault(final Map<String, String> entries, final String path) {
+    hashicorpVaultDocker.addSecretsToVault(entries, path);
+  }
+
+  public String getHttpApiPathForSecret(final String secretPath) {
+    // *ALL* Hashicorp Http API endpoints are prefixed by "/v1"
+    // KV-V2 insert "data" after the rootpath, and before the signing key path (so, just gotta
+    // handle that)
+    return hashicorpVaultDocker.getHttpApiPathForSecret(secretPath);
   }
 }
