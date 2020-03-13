@@ -12,17 +12,22 @@
  */
 package tech.pegasys.signers.dsl.hashicorp;
 
+import tech.pegasys.signers.dsl.certificates.SelfSignedCertificate;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.util.Optional;
 
 import com.github.dockerjava.api.DockerClient;
 import org.apache.tuweni.net.tls.TLS;
 
 public class HashicorpNode {
-  private final HashicorpVaultDockerCertificate hashicorpVaultDockerCertificate;
+
+  private final Optional<SelfSignedCertificate> tlsServerCertificate;
   private final DockerClient dockerClient;
   private HashicorpVaultDocker hashicorpVaultDocker;
   private Optional<Path> knownServerFile = Optional.empty();
@@ -32,29 +37,36 @@ public class HashicorpNode {
   }
 
   private HashicorpNode(
-      final DockerClient dockerClient,
-      final HashicorpVaultDockerCertificate hashicorpVaultDockerCertificate) {
+      final DockerClient dockerClient, final SelfSignedCertificate tlsServerCertificate) {
     this.dockerClient = dockerClient;
-    this.hashicorpVaultDockerCertificate = hashicorpVaultDockerCertificate;
+    this.tlsServerCertificate = Optional.ofNullable(tlsServerCertificate);
   }
 
   public static HashicorpNode createAndStartHashicorp(
       final DockerClient dockerClient, final boolean withTls) {
-    final HashicorpNode hashicorpNode =
-        withTls
-            ? new HashicorpNode(dockerClient, HashicorpVaultDockerCertificate.create())
-            : new HashicorpNode(dockerClient);
-    hashicorpNode.start();
-    return hashicorpNode;
+    try {
+      final HashicorpNode hashicorpNode =
+          withTls
+              ? new HashicorpNode(dockerClient, SelfSignedCertificate.generate())
+              : new HashicorpNode(dockerClient);
+      hashicorpNode.start();
+      return hashicorpNode;
+    } catch (final Exception e) {
+      throw new RuntimeException("Failed to create Hashicorp Node.", e);
+    }
   }
 
-  private void start() {
+  private void start() throws CertificateEncodingException {
+    final HashicorpVaultDockerCertificate hashicorpVaultDockerCertificate =
+        tlsServerCertificate.map(HashicorpVaultDockerCertificate::create).orElse(null);
+
     hashicorpVaultDocker =
         HashicorpVaultDocker.createVaultDocker(dockerClient, hashicorpVaultDockerCertificate);
     Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
 
-    if (isTlsEnabled()) {
-      knownServerFile = Optional.of(createKnownServerFile());
+    if (tlsServerCertificate.isPresent()) {
+      knownServerFile =
+          Optional.of(createKnownServerFile(tlsServerCertificate.get().getCertificate()));
     }
   }
 
@@ -82,18 +94,18 @@ public class HashicorpNode {
   }
 
   public boolean isTlsEnabled() {
-    return hashicorpVaultDockerCertificate != null;
+    return tlsServerCertificate != null;
   }
 
   public Optional<Path> getKnownServerFilePath() {
     return knownServerFile;
   }
 
-  private Path createKnownServerFile() {
+  private Path createKnownServerFile(final Certificate certificate)
+      throws CertificateEncodingException {
     try {
       final Path tempFile = Files.createTempFile("knownServer", ".txt");
-      final String hexFingerprint =
-          TLS.certificateHexFingerprint(hashicorpVaultDockerCertificate.getTlsCertificate());
+      final String hexFingerprint = TLS.certificateHexFingerprint(certificate);
       Files.writeString(tempFile, String.format("%s:%d %s", getHost(), getPort(), hexFingerprint));
       return tempFile;
     } catch (final IOException e) {

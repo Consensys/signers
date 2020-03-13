@@ -36,6 +36,7 @@ import com.github.dockerjava.api.exception.NotModifiedException;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Capability;
 import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
@@ -43,11 +44,13 @@ import com.github.dockerjava.api.model.Ports.Binding;
 import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
+import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.github.dockerjava.core.command.WaitContainerResultCallback;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionTimeoutException;
 import org.awaitility.core.ThrowingRunnable;
 
 public class HashicorpVaultDocker {
@@ -143,17 +146,21 @@ public class HashicorpVaultDocker {
 
   private void awaitStartupCompletion() {
     LOG.info("Waiting for Hashicorp Vault to become responsive...");
-
-    waitFor(
-        60,
-        () -> {
-          final ExecCreateCmdResponse execCreateCmdResponse =
-              getExecCreateCmdResponse(vaultStatusCommand());
-          assertThat(
-                  runCommandInVaultContainerAndCompareOutput(
-                      execCreateCmdResponse, EXPECTED_FOR_STATUS))
-              .isTrue();
-        });
+    try {
+      waitFor(
+          60,
+          () -> {
+            final ExecCreateCmdResponse execCreateCmdResponse =
+                getExecCreateCmdResponse(vaultStatusCommand());
+            assertThat(
+                    runCommandInVaultContainerAndCompareOutput(
+                        execCreateCmdResponse, EXPECTED_FOR_STATUS))
+                .isTrue();
+          });
+    } catch (final ConditionTimeoutException e) {
+      showLogFromContainer();
+      throw new RuntimeException("Vault didn't come online.");
+    }
     LOG.info("Hashicorp Vault is now responsive");
   }
 
@@ -472,5 +479,21 @@ public class HashicorpVaultDocker {
         .ignoreExceptions()
         .atMost(timeoutSeconds, TimeUnit.SECONDS)
         .untilAsserted(condition);
+  }
+
+  private void showLogFromContainer() {
+    docker
+        .logContainerCmd(vaultContainerId)
+        .withStdOut(true)
+        .withStdErr(true)
+        .withFollowStream(true)
+        .withTail(500)
+        .exec(
+            new LogContainerResultCallback() {
+              @Override
+              public void onNext(Frame item) {
+                LOG.info(item.toString());
+              }
+            });
   }
 }
