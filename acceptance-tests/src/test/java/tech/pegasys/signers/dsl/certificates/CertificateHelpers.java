@@ -28,18 +28,21 @@ import org.apache.tuweni.net.tls.TLS;
 
 public class CertificateHelpers {
 
-  public static void populateFingerprintFile(
-      final Path knownHostsPath,
+  public static Path createFingerprintFile(
+      final Path parentDir,
       final SelfSignedCertificate selfSignedCert,
       final Optional<Integer> port)
       throws IOException, CertificateEncodingException {
 
+    final Path knownHostsPath = parentDir.resolve("knownhosts");
     final StringBuilder fingerPrintsToAdd = new StringBuilder();
     final String portFragment = port.map(p -> String.format(":%d", p)).orElse("");
     final String fingerprint = TLS.certificateHexFingerprint(selfSignedCert.getCertificate());
     fingerPrintsToAdd.append(String.format("localhost%s %s%n", portFragment, fingerprint));
     fingerPrintsToAdd.append(String.format("127.0.0.1%s %s%n", portFragment, fingerprint));
     Files.writeString(knownHostsPath, fingerPrintsToAdd.toString());
+
+    return knownHostsPath;
   }
 
   public static Path createJksTrustStore(

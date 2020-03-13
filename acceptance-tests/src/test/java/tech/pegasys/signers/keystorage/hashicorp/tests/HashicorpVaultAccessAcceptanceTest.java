@@ -73,7 +73,6 @@ public class HashicorpVaultAccessAcceptanceTest {
   void keyCanBeExtractedFromVault() throws IOException {
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, false);
 
-    // create tomlfile
     final Path configFilePath =
         HashicorpConfigUtil.createConfigFile(
             hashicorpNode.getHost(),
@@ -97,13 +96,12 @@ public class HashicorpVaultAccessAcceptanceTest {
       throws IOException, CertificateEncodingException {
     hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
 
-    final Path fingerprintFile = testDir.resolve("whitelist.tmp");
-    CertificateHelpers.populateFingerprintFile(
-        fingerprintFile,
-        hashicorpNode.getServerCertificate().get(),
-        Optional.of(hashicorpNode.getPort()));
+    final Path fingerprintFile =
+        CertificateHelpers.createFingerprintFile(
+            testDir,
+            hashicorpNode.getServerCertificate().get(),
+            Optional.of(hashicorpNode.getPort()));
 
-    // create tomlfile
     final Path configFilePath =
         HashicorpConfigUtil.createConfigFile(
             hashicorpNode.getHost(),
@@ -132,7 +130,6 @@ public class HashicorpVaultAccessAcceptanceTest {
         CertificateHelpers.createPkcs12TrustStore(
             testDir, hashicorpNode.getServerCertificate().get(), TRUST_STORE_PASSWORD);
 
-    // create tomlfile
     final Path configFilePath =
         HashicorpConfigUtil.createConfigFile(
             hashicorpNode.getHost(),
@@ -161,7 +158,6 @@ public class HashicorpVaultAccessAcceptanceTest {
         CertificateHelpers.createJksTrustStore(
             testDir, hashicorpNode.getServerCertificate().get(), TRUST_STORE_PASSWORD);
 
-    // create tomlfile
     final Path configFilePath =
         HashicorpConfigUtil.createConfigFile(
             hashicorpNode.getHost(),

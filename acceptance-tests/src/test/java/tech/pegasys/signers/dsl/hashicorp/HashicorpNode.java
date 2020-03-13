@@ -80,10 +80,6 @@ public class HashicorpNode {
     return hashicorpVaultDocker.getPort();
   }
 
-  public boolean isTlsEnabled() {
-    return serverTlsCertificate != null;
-  }
-
   public Optional<SelfSignedCertificate> getServerCertificate() {
     return serverTlsCertificate;
   }
