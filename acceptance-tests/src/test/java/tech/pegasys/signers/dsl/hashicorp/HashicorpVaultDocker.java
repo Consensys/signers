@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -59,15 +60,7 @@ public class HashicorpVaultDocker {
   private static final String HASHICORP_VAULT_IMAGE = "vault:1.2.3";
   private static final String DEFAULT_VAULT_HOST = "localhost";
   private static final int DEFAULT_VAULT_PORT = 8200;
-
-  private static final String VAULT_ROOT_PATH = "/secret";
-  private static final String SIGNING_KEY_RESOURCE = "/signingKeyResource";
-  private static final String VAULT_PUT_RESOURCE = VAULT_ROOT_PATH + SIGNING_KEY_RESOURCE;
-  private static final String VAULT_SIGNING_KEY_PATH =
-      "/v1" + VAULT_ROOT_PATH + "/data" + SIGNING_KEY_RESOURCE;
-
-  public static final String SECRET_VALUE =
-      "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63";
+  private static final String VAULT_ROOT_PATH = "secret";
 
   private static final String EXPECTED_FOR_SECRET_CREATION = "created_time";
   private static final String EXPECTED_FOR_STATUS = "Sealed";
@@ -101,7 +94,6 @@ public class HashicorpVaultDocker {
     hashicorpVaultDocker.start();
     hashicorpVaultDocker.awaitStartupCompletion();
     hashicorpVaultDocker.postStartup();
-    hashicorpVaultDocker.createSecretKey();
     return hashicorpVaultDocker;
   }
 
@@ -127,10 +119,6 @@ public class HashicorpVaultDocker {
 
   public String getHashicorpRootToken() {
     return hashicorpRootToken;
-  }
-
-  public String getVaultSigningKeyPath() {
-    return VAULT_SIGNING_KEY_PATH;
   }
 
   private void start() {
@@ -177,20 +165,32 @@ public class HashicorpVaultDocker {
     hashicorpRootToken = hashicorpVaultTokens.getRootToken();
   }
 
-  private void createSecretKey() {
+  public String addSecretsToVault(final Map<String, String> entries, final String path) {
     LOG.info("creating the secret in vault that contains the private key.");
-    waitFor(
-        10,
-        () -> {
-          final ExecCreateCmdResponse execCreateCmdResponse =
-              getExecCreateCmdResponse(
-                  vaultCommands.putSecretCommand("value", SECRET_VALUE, VAULT_PUT_RESOURCE));
-          assertThat(
-                  runCommandInVaultContainerAndCompareOutput(
-                      execCreateCmdResponse, EXPECTED_FOR_SECRET_CREATION))
-              .isTrue();
-        });
-    LOG.info("The secret was created successfully.");
+    final String secretPutPath = String.join("/", VAULT_ROOT_PATH, path);
+    for (final Map.Entry<String, String> entry : entries.entrySet()) {
+      waitFor(
+          10,
+          () -> {
+            final ExecCreateCmdResponse execCreateCmdResponse =
+                getExecCreateCmdResponse(
+                    vaultCommands.putSecretCommand(
+                        entry.getKey(), entry.getValue(), secretPutPath));
+            assertThat(
+                    runCommandInVaultContainerAndCompareOutput(
+                        execCreateCmdResponse, EXPECTED_FOR_SECRET_CREATION))
+                .isTrue();
+          });
+      LOG.info("The secret ({}) was created successfully.", entry.getKey());
+    }
+    return getHttpApiPathForSecret(path);
+  }
+
+  public static String getHttpApiPathForSecret(final String secretPath) {
+    // *ALL* Hashicorp Http API endpoints are prefixed by "/v1"
+    // KV-V2 insert "data" after the rootpath, and before the signing key path (so, just gotta
+    // handle that)
+    return "/v1/" + VAULT_ROOT_PATH + "/data/" + secretPath;
   }
 
   private HashicorpVaultTokens initVault() {
@@ -388,11 +388,8 @@ public class HashicorpVaultDocker {
               .createContainerCmd(HASHICORP_VAULT_IMAGE)
               .withHostConfig(hostConfig)
               .withEnv(environmentVariables)
-              .withCmd("server");
-
-      if (isTlsEnabled()) {
-        createVault.withVolumes(configVolume);
-      }
+              .withCmd("server")
+              .withVolumes(configVolume);
 
       LOG.info("Creating the Vault Docker container (TLS={})...", isTlsEnabled());
       final CreateContainerResponse vault = createVault.exec();
