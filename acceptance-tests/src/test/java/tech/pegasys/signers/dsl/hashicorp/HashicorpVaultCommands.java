@@ -12,8 +12,6 @@
  */
 package tech.pegasys.signers.dsl.hashicorp;
 
-import java.util.Map;
-
 // This assumes there is a Vault Server running at the vault URL (for AT, typically in a docker)
 public class HashicorpVaultCommands {
 
@@ -23,7 +21,7 @@ public class HashicorpVaultCommands {
     this.vaultUrl = vaultUrl;
   }
 
-  public String[] vaultStatusCommand() {
+  public String[] statusCommand() {
     return new String[] {"vault", "status", "-address=" + vaultUrl};
   }
 
