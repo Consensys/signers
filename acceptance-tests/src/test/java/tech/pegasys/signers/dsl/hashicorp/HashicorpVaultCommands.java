@@ -12,9 +12,6 @@
  */
 package tech.pegasys.signers.dsl.hashicorp;
 
-import static java.util.Collections.emptyList;
-
-import java.util.List;
 import java.util.Map;
 
 // This assumes there is a Vault Server running at teh vault URL (for AT, typically in a docker)
