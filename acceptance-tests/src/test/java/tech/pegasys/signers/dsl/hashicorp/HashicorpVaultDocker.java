@@ -181,13 +181,12 @@ public class HashicorpVaultDocker {
 
   private void createSecretKey() {
     LOG.info("creating the secret in vault that contains the private key.");
-    final Map.Entry<String, String> secretEntry = Maps.immutableEntry("value", SECRET_VALUE);
     waitFor(
         10,
         () -> {
           final ExecCreateCmdResponse execCreateCmdResponse =
               getExecCreateCmdResponse(
-                  vaultCommands.vaultPutSecretCommand(secretEntry, VAULT_PUT_RESOURCE));
+                  vaultCommands.putSecretCommand("value", SECRET_VALUE, VAULT_PUT_RESOURCE));
           assertThat(
                   runCommandInVaultContainerAndCompareOutput(
                       execCreateCmdResponse, EXPECTED_FOR_SECRET_CREATION))
@@ -199,7 +198,7 @@ public class HashicorpVaultDocker {
   private HashicorpVaultTokens initVault() {
     LOG.info("Initializing Hashicorp vault ...");
     final ExecCreateCmdResponse execCreateCmdResponse =
-        getExecCreateCmdResponse(vaultCommands.vaultInitCommand());
+        getExecCreateCmdResponse(vaultCommands.initCommand());
     final String jsonOutput =
         Awaitility.await()
             .atMost(10, SECONDS)
@@ -229,7 +228,7 @@ public class HashicorpVaultDocker {
   private void unseal(final String unsealKey) {
     LOG.info("Unseal Hashicorp vault ...");
     final ExecCreateCmdResponse execCreateCmdResponse =
-        getExecCreateCmdResponse(vaultCommands.unsealVault(unsealKey));
+        getExecCreateCmdResponse(vaultCommands.unseal(unsealKey));
     final String jsonOutput =
         Awaitility.await()
             .atMost(10, SECONDS)
@@ -251,7 +250,7 @@ public class HashicorpVaultDocker {
   private void login(final String rootToken) {
     LOG.info("Login Hashicorp vault CLI ...");
     final ExecCreateCmdResponse execCreateCmdResponse =
-        getExecCreateCmdResponse(vaultCommands.vaultLoginCommand(rootToken));
+        getExecCreateCmdResponse(vaultCommands.loginCommand(rootToken));
 
     Awaitility.await()
         .atMost(10, SECONDS)
@@ -268,7 +267,7 @@ public class HashicorpVaultDocker {
   private void enableHashicorpKeyValueV2Engine() {
     LOG.info("Mounting /secret kv-v2 in Hashicorp vault ...");
     final ExecCreateCmdResponse execCreateCmdResponse =
-        getExecCreateCmdResponse(vaultCommands.vaultEnableSecretEngineCommand(VAULT_ROOT_PATH));
+        getExecCreateCmdResponse(vaultCommands.enableSecretEngineCommand(VAULT_ROOT_PATH));
 
     Awaitility.await()
         .atMost(10, SECONDS)

@@ -14,7 +14,7 @@ package tech.pegasys.signers.dsl.hashicorp;
 
 import java.util.Map;
 
-// This assumes there is a Vault Server running at teh vault URL (for AT, typically in a docker)
+// This assumes there is a Vault Server running at the vault URL (for AT, typically in a docker)
 public class HashicorpVaultCommands {
 
   private final String vaultUrl;
@@ -27,7 +27,7 @@ public class HashicorpVaultCommands {
     return new String[] {"vault", "status", "-address=" + vaultUrl};
   }
 
-  public String[] vaultInitCommand() {
+  public String[] initCommand() {
     return new String[] {
       "vault",
       "operator",
@@ -39,26 +39,26 @@ public class HashicorpVaultCommands {
     };
   }
 
-  public String[] vaultEnableSecretEngineCommand(final String vaultRootPath) {
+  public String[] enableSecretEngineCommand(final String vaultRootPath) {
     return new String[] {
       "vault", "secrets", "enable", "-address=" + vaultUrl, "-path=" + vaultRootPath, "kv-v2",
     };
   }
 
-  public String[] unsealVault(final String unsealKey) {
+  public String[] unseal(final String unsealKey) {
     return new String[] {
       "vault", "operator", "unseal", "-address=" + vaultUrl, "-format=json", unsealKey
     };
   }
 
-  public String[] vaultPutSecretCommand(final Map.Entry<String, String> entry, final String path) {
-    final String paramString = String.format("%s=%s", entry.getKey(), entry.getValue());
+  public String[] putSecretCommand(final String key, final String value, final String path) {
+    final String paramString = String.format("%s=%s", key, value);
     return new String[] {
       "vault", "kv", "put", "-address=" + vaultUrl, path, paramString,
     };
   }
 
-  public String[] vaultLoginCommand(final String rootToken) {
+  public String[] loginCommand(final String rootToken) {
     return new String[] {"vault", "login", "-address=" + vaultUrl, rootToken};
   }
 }
