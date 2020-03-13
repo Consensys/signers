@@ -66,7 +66,7 @@ public class HashicorpVaultDocker {
   private static final String VAULT_SIGNING_KEY_PATH =
       "/v1" + VAULT_ROOT_PATH + "/data" + SIGNING_KEY_RESOURCE;
 
-  private static final String SECRET_VALUE =
+  public static final String SECRET_VALUE =
       "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63";
 
   private static final String EXPECTED_FOR_SECRET_CREATION = "created_time";
