@@ -14,32 +14,24 @@ package tech.pegasys.signers.dsl.hashicorp;
 
 import tech.pegasys.signers.dsl.certificates.SelfSignedCertificate;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateEncodingException;
 import java.util.Optional;
 
 import com.github.dockerjava.api.DockerClient;
-import org.apache.tuweni.net.tls.TLS;
 
 public class HashicorpNode {
 
-  private final Optional<SelfSignedCertificate> tlsServerCertificate;
+  private final Optional<SelfSignedCertificate> serverTlsCertificate;
   private final DockerClient dockerClient;
   private HashicorpVaultDocker hashicorpVaultDocker;
-  private Optional<Path> knownServerFile = Optional.empty();
 
   private HashicorpNode(final DockerClient dockerClient) {
     this(dockerClient, null);
   }
 
   private HashicorpNode(
-      final DockerClient dockerClient, final SelfSignedCertificate tlsServerCertificate) {
+      final DockerClient dockerClient, final SelfSignedCertificate serverTlsCertificate) {
     this.dockerClient = dockerClient;
-    this.tlsServerCertificate = Optional.ofNullable(tlsServerCertificate);
+    this.serverTlsCertificate = Optional.ofNullable(serverTlsCertificate);
   }
 
   public static HashicorpNode createAndStartHashicorp(
@@ -56,18 +48,13 @@ public class HashicorpNode {
     }
   }
 
-  private void start() throws CertificateEncodingException {
+  private void start() {
     final HashicorpVaultDockerCertificate hashicorpVaultDockerCertificate =
-        tlsServerCertificate.map(HashicorpVaultDockerCertificate::create).orElse(null);
+        serverTlsCertificate.map(HashicorpVaultDockerCertificate::create).orElse(null);
 
     hashicorpVaultDocker =
         HashicorpVaultDocker.createVaultDocker(dockerClient, hashicorpVaultDockerCertificate);
     Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
-
-    if (tlsServerCertificate.isPresent()) {
-      knownServerFile =
-          Optional.of(createKnownServerFile(tlsServerCertificate.get().getCertificate()));
-    }
   }
 
   public synchronized void shutdown() {
@@ -94,22 +81,10 @@ public class HashicorpNode {
   }
 
   public boolean isTlsEnabled() {
-    return tlsServerCertificate != null;
+    return serverTlsCertificate != null;
   }
 
-  public Optional<Path> getKnownServerFilePath() {
-    return knownServerFile;
-  }
-
-  private Path createKnownServerFile(final Certificate certificate)
-      throws CertificateEncodingException {
-    try {
-      final Path tempFile = Files.createTempFile("knownServer", ".txt");
-      final String hexFingerprint = TLS.certificateHexFingerprint(certificate);
-      Files.writeString(tempFile, String.format("%s:%d %s", getHost(), getPort(), hexFingerprint));
-      return tempFile;
-    } catch (final IOException e) {
-      throw new UncheckedIOException(e);
-    }
+  public Optional<SelfSignedCertificate> getServerCertificate() {
+    return serverTlsCertificate;
   }
 }
