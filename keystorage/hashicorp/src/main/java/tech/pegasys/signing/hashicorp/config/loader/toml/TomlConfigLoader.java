@@ -156,7 +156,9 @@ public class TomlConfigLoader {
 
     return Optional.of(
         new TlsOptions(
-            Optional.ofNullable(trustStoreType), Path.of(trustStorePath), trustStorePassword));
+            Optional.ofNullable(trustStoreType),
+            trustStorePath == null ? null : Path.of(trustStorePath),
+            trustStorePassword));
   }
 
   private TrustStoreType decodeTrustStoreType(final String trustStoreString) {
