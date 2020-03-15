@@ -10,11 +10,9 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.dsl.hashicorp;
+package tech.pegasys.signers.hashicorp.dsl.hashicorp;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -145,7 +143,7 @@ public class HashicorpVaultDocker {
           () -> {
             final ExecCreateCmdResponse execCreateCmdResponse =
                 getExecCreateCmdResponse(vaultCommands.statusCommand());
-            assertThat(
+            Assertions.assertThat(
                     runCommandInVaultContainerAndCompareOutput(
                         execCreateCmdResponse, EXPECTED_FOR_STATUS))
                 .isTrue();
@@ -176,7 +174,7 @@ public class HashicorpVaultDocker {
                 getExecCreateCmdResponse(
                     vaultCommands.putSecretCommand(
                         entry.getKey(), entry.getValue(), secretPutPath));
-            assertThat(
+            Assertions.assertThat(
                     runCommandInVaultContainerAndCompareOutput(
                         execCreateCmdResponse, EXPECTED_FOR_SECRET_CREATION))
                 .isTrue();
@@ -203,7 +201,7 @@ public class HashicorpVaultDocker {
             .ignoreExceptions()
             .until(
                 () -> runCommandInContainerAndGetOutput(execCreateCmdResponse),
-                containsString("root_token"));
+                Matchers.containsString("root_token"));
 
     final String rootToken;
     final String unsealKey;
@@ -211,13 +209,13 @@ public class HashicorpVaultDocker {
       final JsonNode jsonNode = objectMapper.readTree(jsonOutput);
       rootToken = jsonNode.get("root_token").asText();
       final JsonNode unsealKeyJsonNodeArray = jsonNode.get("unseal_keys_b64");
-      assertThat(unsealKeyJsonNodeArray.isArray()).isTrue();
+      Assertions.assertThat(unsealKeyJsonNodeArray.isArray()).isTrue();
       unsealKey = unsealKeyJsonNodeArray.get(0).asText();
     } catch (IOException e) {
       throw new RuntimeException("Error in parsing json output from vault unseal command", e);
     }
-    assertThat(rootToken).isNotNull();
-    assertThat(unsealKey).isNotNull();
+    Assertions.assertThat(rootToken).isNotNull();
+    Assertions.assertThat(unsealKey).isNotNull();
     LOG.info("Hashicorp vault is initialized");
 
     return new HashicorpVaultTokens(unsealKey, rootToken);
@@ -233,11 +231,11 @@ public class HashicorpVaultDocker {
             .ignoreExceptions()
             .until(
                 () -> runCommandInContainerAndGetOutput(execCreateCmdResponse),
-                containsString("sealed"));
+                Matchers.containsString("sealed"));
 
     try {
       final JsonNode jsonNode = objectMapper.readTree(jsonOutput);
-      assertThat(jsonNode.get("sealed").asBoolean()).isFalse();
+      Assertions.assertThat(jsonNode.get("sealed").asBoolean()).isFalse();
     } catch (IOException e) {
       throw new RuntimeException("Error in parsing json output from vault unseal command", e);
     }
@@ -427,8 +425,8 @@ public class HashicorpVaultDocker {
 
   private int portSpec(final Ports ports) {
     final Binding[] tcpPorts = ports.getBindings().get(ExposedPort.tcp(DEFAULT_VAULT_PORT));
-    assertThat(tcpPorts).isNotEmpty();
-    assertThat(tcpPorts.length).isEqualTo(1);
+    Assertions.assertThat(tcpPorts).isNotEmpty();
+    Assertions.assertThat(tcpPorts.length).isEqualTo(1);
 
     return Integer.parseInt(tcpPorts[0].getHostPortSpec());
   }

@@ -10,9 +10,9 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.dsl.hashicorp;
+package tech.pegasys.signers.hashicorp.dsl.hashicorp;
 
-import tech.pegasys.signers.dsl.certificates.SelfSignedCertificate;
+import tech.pegasys.signers.hashicorp.dsl.certificates.SelfSignedCertificate;
 
 import java.util.Map;
 import java.util.Optional;

@@ -47,15 +47,11 @@ dependencies {
   integrationTestImplementation 'org.mockito:mockito-core'
   integrationTestImplementation 'org.mockito:mockito-junit-jupiter'
   integrationTestImplementation 'org.mock-server:mockserver-netty'
-  integrationTestImplementation sourceSets.testFixtures.output
 
   testFixturesImplementation 'com.github.docker-java:docker-java'
-  testFixturesImplementation 'org.apache.logging.log4j:log4j-core'
-  testFixturesImplementation 'org.apache.logging.log4j:log4j-slf4j-impl'
   testFixturesImplementation 'org.apache.logging.log4j:log4j-api'
   testFixturesImplementation 'org.assertj:assertj-core'
   testFixturesImplementation 'org.awaitility:awaitility'
   testFixturesImplementation 'org.apache.tuweni:tuweni-net'
-  testFixturesImplementation 'org.junit.jupiter:junit-jupiter-engine'
-  testFixturesImplementation 'org.bouncycastle:bcpkix-jdk15on'
+  testFixturesImplementation 'org.mockito:mockito-core'
 }
