@@ -22,6 +22,7 @@ import tech.pegasys.signing.hashicorp.HashicorpConnection;
 import tech.pegasys.signing.hashicorp.HashicorpConnectionFactory;
 import tech.pegasys.signing.hashicorp.config.HashicorpKeyConfig;
 import tech.pegasys.signing.hashicorp.config.loader.toml.TomlConfigLoader;
+import tech.pegasys.signing.hashicorp.util.HashicorpConfigUtil;
 
 import java.io.IOException;
 import java.nio.file.Path;
