@@ -11,9 +11,6 @@
  * specific language governing permissions and limitations under the License.
  */
 
-apply plugin: 'java-library'
-apply plugin: 'java-test-fixtures'
-
 dependencies {
 
   testRuntimeOnly 'javax.activation:activation'
