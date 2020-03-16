@@ -10,7 +10,7 @@ apply plugin: 'java-library'
 apply plugin: 'java-test-fixtures'
 
 jar {
-  archiveBaseName = "keystore-hashicorp"
+  archiveBaseName = calculateJarName(project)
   manifest {
     attributes(
       'Specification-Title': archiveBaseName.get(),
@@ -19,6 +19,10 @@ jar {
       'Implementation-Version': calculateVersion()
       )
   }
+}
+
+testFixturesJar {
+  archiveBaseName = calculateJarName(project)
 }
 
 dependencies {

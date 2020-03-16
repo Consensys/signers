@@ -35,7 +35,7 @@ if (!JavaVersion.current().java11Compatible) {
 def bintrayUser = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
 def bintrayKey = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_KEY')
 def bintrayPackage = bintray.pkg {
-  repo = 'pegasys-repo'
+  repo = 'test-repo'
   name = 'signers'
   userOrg = 'consensys'
   licenses = ['Apache-2.0']
@@ -240,6 +240,12 @@ task deploy() {}
 
 subprojects {
 
+  build {
+    doFirst() {
+      System.out.println("Build Time = " + calculateJarName(project))
+    }
+  }
+
   if (file('src/main/java').directory) {
     apply plugin: 'com.jfrog.bintray'
     apply plugin: 'maven-publish'
@@ -248,6 +254,7 @@ subprojects {
       publications {
         mavenJava(MavenPublication) {
           groupId "tech.pegasys.signers.internal"
+
           version "${project.version}"
           from components.java
           artifact sourcesJar
@@ -257,7 +264,7 @@ subprojects {
             usage('java-runtime') { fromResolutionResult() }
           }
           pom {
-            name = "Signers - ${project.name}"
+            name = "Signers - " + project.jar.archiveBaseName.get()
             url = 'http://github.com/PegaSysEng/signers'
             licenses {
               license {
@@ -457,6 +464,19 @@ def calculateVersion() {
     version = version.replace("-SNAPSHOT", "-dev-" + getCheckedOutGitCommitHash())
   }
   return version
+}
+
+def calculateJarName(Project project) {
+  def jarName = project.name
+  def parent = project.parent
+
+  while (parent != null) {
+    if (parent != rootProject) {
+      jarName = parent.name + '-' + jarName
+    }
+    parent = parent.parent
+  }
+  return jarName
 }
 
 def getCheckedOutGitCommitHash() {
