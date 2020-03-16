@@ -27,8 +27,6 @@ dependencies {
 
   testImplementation 'org.apache.logging.log4j:log4j-api'
   testImplementation 'org.assertj:assertj-core'
-  testImplementation 'org.awaitility:awaitility'
-  testImplementation 'org.apache.tuweni:tuweni-net'
   testImplementation(testFixtures(project(":keystorage:hashicorp")))
 }
 

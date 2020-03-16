@@ -14,14 +14,14 @@ package tech.pegasys.signers.keystorage.hashicorp.tests;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import tech.pegasys.signers.dsl.DockerClientFactory;
-import tech.pegasys.signers.dsl.certificates.CertificateHelpers;
-import tech.pegasys.signers.dsl.hashicorp.HashicorpNode;
-import tech.pegasys.signing.hashicorp.HashicorpConnection;
-import tech.pegasys.signing.hashicorp.HashicorpConnectionFactory;
-import tech.pegasys.signing.hashicorp.config.HashicorpKeyConfig;
-import tech.pegasys.signing.hashicorp.config.loader.toml.TomlConfigLoader;
-import tech.pegasys.signing.hashicorp.util.HashicorpConfigUtil;
+import tech.pegasys.signers.hashicorp.HashicorpConnection;
+import tech.pegasys.signers.hashicorp.HashicorpConnectionFactory;
+import tech.pegasys.signers.hashicorp.config.HashicorpKeyConfig;
+import tech.pegasys.signers.hashicorp.config.loader.toml.TomlConfigLoader;
+import tech.pegasys.signers.hashicorp.dsl.DockerClientFactory;
+import tech.pegasys.signers.hashicorp.dsl.HashicorpNode;
+import tech.pegasys.signers.hashicorp.dsl.certificates.CertificateHelpers;
+import tech.pegasys.signers.hashicorp.util.HashicorpConfigUtil;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -42,7 +42,7 @@ public class HashicorpVaultAccessAcceptanceTest {
   private static final Logger LOG = LogManager.getLogger();
 
   private final Vertx vertx = Vertx.vertx();
-  final DockerClient docker = new DockerClientFactory().create();
+  private final DockerClient docker = new DockerClientFactory().create();
   private HashicorpNode hashicorpNode;
 
   private final String SECRET_KEY = "storedSecetKey";
