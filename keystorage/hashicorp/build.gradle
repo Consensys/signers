@@ -10,7 +10,7 @@ apply plugin: 'java-library'
 apply plugin: 'java-test-fixtures'
 
 jar {
-  archiveBaseName = "keystore-hashicorp"
+  archiveBaseName = calculateJarName(project)
   manifest {
     attributes(
       'Specification-Title': archiveBaseName.get(),
@@ -21,13 +21,16 @@ jar {
   }
 }
 
+testFixturesJar {
+  archiveBaseName = calculateJarName(project)
+}
+
 dependencies {
   implementation 'io.vertx:vertx-core'
   implementation 'org.apache.logging.log4j:log4j-api'
 
   implementation 'org.apache.tuweni:tuweni-toml'
   implementation 'org.apache.tuweni:tuweni-net'
-  implementation 'org.bouncycastle:bcpkix-jdk15on'
 
   runtimeOnly 'org.apache.logging.log4j:log4j-core'
   runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
@@ -37,17 +40,14 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-api'
   testImplementation 'org.junit.jupiter:junit-jupiter-params'
   testImplementation 'org.mockito:mockito-core'
-  testImplementation 'org.mockito:mockito-junit-jupiter'
 
   integrationTestImplementation 'org.assertj:assertj-core'
-  integrationTestImplementation 'org.awaitility:awaitility'
   integrationTestImplementation 'org.junit.jupiter:junit-jupiter-api'
   integrationTestImplementation 'org.junit.jupiter:junit-jupiter-engine'
-  integrationTestImplementation 'org.junit.jupiter:junit-jupiter-params'
-  integrationTestImplementation 'org.mockito:mockito-core'
-  integrationTestImplementation 'org.mockito:mockito-junit-jupiter'
   integrationTestImplementation 'org.mock-server:mockserver-netty'
   integrationTestImplementation sourceSets.testFixtures.output
+
+  errorprone("com.google.errorprone:error_prone_core")
 
   testFixturesImplementation 'com.github.docker-java:docker-java'
   testFixturesImplementation 'org.apache.logging.log4j:log4j-api'

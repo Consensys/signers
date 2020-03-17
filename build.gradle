@@ -247,6 +247,7 @@ subprojects {
     publishing {
       publications {
         mavenJava(MavenPublication) {
+          artifactId calculateJarName(project)
           groupId "tech.pegasys.signers.internal"
           version "${project.version}"
           from components.java
@@ -457,6 +458,19 @@ def calculateVersion() {
     version = version.replace("-SNAPSHOT", "-dev-" + getCheckedOutGitCommitHash())
   }
   return version
+}
+
+def calculateJarName(Project project) {
+  def jarName = project.name
+  def parent = project.parent
+
+  while (parent != null) {
+    if (parent != rootProject) {
+      jarName = parent.name + '-' + jarName
+    }
+    parent = parent.parent
+  }
+  return jarName
 }
 
 def getCheckedOutGitCommitHash() {
