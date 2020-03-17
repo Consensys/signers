@@ -35,7 +35,7 @@ if (!JavaVersion.current().java11Compatible) {
 def bintrayUser = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
 def bintrayKey = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_KEY')
 def bintrayPackage = bintray.pkg {
-  repo = 'test-repo'
+  repo = 'pegasys-repo'
   name = 'signers'
   userOrg = 'consensys'
   licenses = ['Apache-2.0']
@@ -247,8 +247,8 @@ subprojects {
     publishing {
       publications {
         mavenJava(MavenPublication) {
+          artifactId calculateJarName(project)
           groupId "tech.pegasys.signers.internal"
-
           version "${project.version}"
           from components.java
           artifact sourcesJar
@@ -258,7 +258,7 @@ subprojects {
             usage('java-runtime') { fromResolutionResult() }
           }
           pom {
-            name = "Signers - " + project.jar.archiveBaseName.get()
+            name = "Signers - ${project.name}"
             url = 'http://github.com/PegaSysEng/signers'
             licenses {
               license {
