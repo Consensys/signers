@@ -240,12 +240,6 @@ task deploy() {}
 
 subprojects {
 
-  build {
-    doFirst() {
-      System.out.println("Build Time = " + calculateJarName(project))
-    }
-  }
-
   if (file('src/main/java').directory) {
     apply plugin: 'com.jfrog.bintray'
     apply plugin: 'maven-publish'
