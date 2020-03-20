@@ -35,7 +35,7 @@ if (!JavaVersion.current().java11Compatible) {
 def bintrayUser = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
 def bintrayKey = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_KEY')
 def bintrayPackage = bintray.pkg {
-  repo = 'pegasys-repo'
+  repo = 'test-repo'
   name = 'signers'
   userOrg = 'consensys'
   licenses = ['Apache-2.0']
@@ -369,6 +369,28 @@ subprojects {
 
     dependencies { jmh 'org.apache.logging.log4j:log4j-api' }
   }
+
+  def jarName = project.name
+  def parent = project.parent
+  while (parent != null) {
+    if (parent != rootProject || jarName != 'artemis') {
+      jarName = parent.name + '-' + jarName
+    }
+    parent = parent.parent
+  }
+
+  jar {
+    baseName jarName
+    manifest {
+      attributes(
+        'Specification-Title': jarName,
+        'Specification-Version': project.version,
+        'Implementation-Title': jarName,
+        'Implementation-Version': calculateVersion()
+        )
+    }
+  }
+
 }
 
 jar { enabled = false }
