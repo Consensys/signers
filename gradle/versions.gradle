@@ -58,7 +58,5 @@ dependencyManagement {
     dependency 'org.mockito:mockito-core:3.2.4'
     dependency 'org.mockito:mockito-inline:3.2.4'
     dependency 'org.mockito:mockito-junit-jupiter:3.2.4'
-
-    dependency 'tech.pegasys.teku.internal:bls:0.8.2-SNAPSHOT'
   }
 }
