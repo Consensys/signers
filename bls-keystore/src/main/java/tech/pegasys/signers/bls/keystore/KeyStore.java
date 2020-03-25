@@ -18,8 +18,6 @@ import static javax.crypto.Cipher.ENCRYPT_MODE;
 import static org.apache.tuweni.bytes.Bytes.concatenate;
 import static org.apache.tuweni.crypto.Hash.sha2_256;
 
-import tech.pegasys.artemis.util.mikuli.PublicKey;
-import tech.pegasys.artemis.util.mikuli.SecretKey;
 import tech.pegasys.signers.bls.keystore.model.Checksum;
 import tech.pegasys.signers.bls.keystore.model.Cipher;
 import tech.pegasys.signers.bls.keystore.model.Crypto;
@@ -33,7 +31,6 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes48;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
@@ -47,7 +44,9 @@ public class KeyStore {
   /**
    * Encrypt the given BLS12-381 key with specified password.
    *
-   * @param blsPrivateKey BLS12-381 private key in Bytes
+   * @param blsPrivateKey BLS12-381 private key in Bytes to encrypt. It is not validated to be a
+   *     valid BLS12-381 key.
+   * @param blsPublicKey BLS12-381 public key in Bytes. It is not validated and stored as it is.
    * @param password The password to use for encryption
    * @param path Path as defined in EIP-2334. Can be empty String.
    * @param kdfParam crypto function such as scrypt or PBKDF2 and related parameters such as dklen,
@@ -58,12 +57,14 @@ public class KeyStore {
    */
   public static KeyStoreData encrypt(
       final Bytes blsPrivateKey,
+      final Bytes blsPublicKey,
       final String password,
       final String path,
       final KdfParam kdfParam,
       final Cipher cipher) {
 
     checkNotNull(blsPrivateKey, "PrivateKey cannot be null");
+    checkNotNull(blsPublicKey, "PublicKey cannot be null");
     checkNotNull(password, "Password cannot be null");
     checkNotNull(path, "Path cannot be null");
     checkNotNull(kdfParam, "KDFParam cannot be null");
@@ -73,9 +74,7 @@ public class KeyStore {
     cipher.validate();
 
     final Crypto crypto = encryptUsingCipherFunction(blsPrivateKey, password, kdfParam, cipher);
-    final Bytes pubKey =
-        new PublicKey(SecretKey.fromBytes(Bytes48.leftPad(blsPrivateKey))).toBytesCompressed();
-    return new KeyStoreData(crypto, pubKey, path);
+    return new KeyStoreData(crypto, blsPublicKey, path);
   }
 
   private static Crypto encryptUsingCipherFunction(

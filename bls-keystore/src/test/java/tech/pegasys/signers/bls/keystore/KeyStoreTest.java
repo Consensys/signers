@@ -124,7 +124,7 @@ class KeyStoreTest {
   void encryptWithKdfAndCipherFunction(
       final KdfParam kdfParam, final Bytes expectedChecksum, final Bytes encryptedCipherMessage) {
     final KeyStoreData keyStoreData =
-        KeyStore.encrypt(BLS_PRIVATE_KEY, PASSWORD, "", kdfParam, CIPHER);
+        KeyStore.encrypt(BLS_PRIVATE_KEY, BLS_PUB_KEY, PASSWORD, "", kdfParam, CIPHER);
     assertThat(keyStoreData.getCrypto().getChecksum().getMessage()).isEqualTo(expectedChecksum);
     assertThat(keyStoreData.getCrypto().getCipher().getMessage()).isEqualTo(encryptedCipherMessage);
     assertThat(keyStoreData.getVersion()).isEqualTo(KeyStoreData.KEYSTORE_VERSION);
@@ -207,7 +207,7 @@ class KeyStoreTest {
   private void encryptSaveAndReloadKeyStore(final Path tempDir, final KdfParam kdfParam)
       throws IOException {
     final KeyStoreData keyStoreData =
-        KeyStore.encrypt(BLS_PRIVATE_KEY, PASSWORD, "", kdfParam, CIPHER);
+        KeyStore.encrypt(BLS_PRIVATE_KEY, BLS_PUB_KEY, PASSWORD, "", kdfParam, CIPHER);
     final Path tempKeyStoreFile = Files.createTempFile(tempDir, "keystore", ".json");
     assertThatCode(() -> KeyStoreLoader.saveToFile(tempKeyStoreFile, keyStoreData))
         .doesNotThrowAnyException();

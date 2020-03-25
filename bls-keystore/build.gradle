@@ -21,7 +21,6 @@ jar {
 }
 
 dependencies {
-  implementation 'tech.pegasys.teku.internal:bls'
   implementation 'com.fasterxml.jackson.core:jackson-databind'
   implementation 'org.bouncycastle:bcprov-jdk15on'
   implementation 'com.google.guava:guava'
