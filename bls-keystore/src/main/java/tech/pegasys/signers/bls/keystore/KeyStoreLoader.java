@@ -25,6 +25,7 @@ import java.nio.file.Path;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidTypeIdException;
@@ -35,7 +36,9 @@ import org.apache.logging.log4j.Logger;
 public class KeyStoreLoader {
   private static final Logger LOG = LogManager.getLogger();
   private static final ObjectMapper OBJECT_MAPPER =
-      new ObjectMapper().registerModule(new KeyStoreBytesModule());
+      new ObjectMapper()
+          .registerModule(new KeyStoreBytesModule())
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
   public static KeyStoreData loadFromFile(final Path keystoreFile)
       throws KeyStoreValidationException {
