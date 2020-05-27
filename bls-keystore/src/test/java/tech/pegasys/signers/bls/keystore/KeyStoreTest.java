@@ -55,6 +55,8 @@ class KeyStoreTest {
   private static final Bytes AES_IV_PARAM = Bytes.fromHexString("264daa3f303d7259501c93d997d84fe6");
 
   private static final String SCRYPT_KEYSTORE_RESOURCE = "scryptTestVector.json";
+  private static final String SCRYPT_EXTRA_FIELD_KEYSTORE_RESOURCE =
+      "scryptExtraFieldTestVector.json";
   private static final String PBKDF2_KEYSTORE_RESOURCE = "pbkdf2TestVector.json";
   private static final String MISSING_SECTION_KEYSTORE_RESOURCE =
       "missingKdfSectionTestVector.json";
@@ -86,6 +88,11 @@ class KeyStoreTest {
   @Test
   void loadSCryptKeyStoreAndDecryptKey() {
     loadKeyStoreAndDecryptKey(SCRYPT_KEYSTORE_RESOURCE);
+  }
+
+  @Test
+  void ableToLoadKeystoreWithUnknownFieldsAndDecryptKey() {
+    loadKeyStoreAndDecryptKey(SCRYPT_EXTRA_FIELD_KEYSTORE_RESOURCE);
   }
 
   @Test
