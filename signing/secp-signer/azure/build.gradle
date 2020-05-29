@@ -27,7 +27,7 @@ jar {
 
 dependencies {
 
-  implementation project(':signing:secp-signer-api')
+  implementation project(':signing:secp-signer:api')
   implementation project(':signing:secp-signer:common')
 
   implementation 'com.google.guava:guava'
