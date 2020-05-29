@@ -26,8 +26,8 @@ jar {
 
 dependencies {
 
-  implementation project(':signing:secp-signer:api')
-  implementation project(':signing:secp-signer:common')
+  implementation project(':signing:secp:api')
+  implementation project(':signing:secp:common')
 
   implementation 'com.google.guava:guava'
   implementation 'org.apache.logging.log4j:log4j-api'

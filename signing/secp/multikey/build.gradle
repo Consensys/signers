@@ -24,11 +24,11 @@ jar {
 }
 
 dependencies {
-  implementation project(':signing:secp-signer:api')
-  implementation project(':signing:secp-signer:common')
-  implementation project(':signing:secp-signer:file-based')
-  implementation project(':signing:secp-signer:azure')
-  implementation project(':signing:secp-signer:hashicorp')
+  implementation project(':signing:secp:api')
+  implementation project(':signing:secp:common')
+  implementation project(':signing:secp:file-based')
+  implementation project(':signing:secp:azure')
+  implementation project(':signing:secp:hashicorp')
   implementation project(':keystorage:hashicorp')
 
   implementation 'io.vertx:vertx-core'
