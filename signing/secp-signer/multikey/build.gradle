@@ -24,7 +24,7 @@ jar {
 }
 
 dependencies {
-  implementation project(':signing:secp-signing-api')
+  implementation project(':signing:secp-signer-api')
   implementation project(':signing:secp-signer:common')
   implementation project(':signing:secp-signer:file-based')
   implementation project(':signing:secp-signer:azure')
