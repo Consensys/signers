@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 ConsenSys AG.
+ * Copyright 2018 ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -23,34 +23,21 @@ jar {
   }
 }
 
+
 dependencies {
-  implementation project(':signing:secp:api')
-  implementation project(':signing:secp:common')
-  implementation project(':signing:secp:file-based')
-  implementation project(':signing:secp:azure')
-  implementation project(':signing:secp:hashicorp')
+
+  implementation project(':signing:secp256k1:api')
+  implementation project(':signing:secp256k1:common')
+  implementation project(':signing:secp256k1:file-based')
   implementation project(':keystorage:hashicorp')
 
-  implementation 'io.vertx:vertx-core'
-
   implementation 'com.google.guava:guava'
-  implementation 'org.web3j:core'
-  implementation 'org.apache.tuweni:tuweni-toml'
   implementation 'org.apache.logging.log4j:log4j-api'
+  implementation 'org.web3j:core'
+  implementation 'io.vertx:vertx-core'
+  implementation 'org.apache.tuweni:tuweni-net'
 
+  runtimeOnly 'org.bouncycastle:bcpkix-jdk15on'
   runtimeOnly 'org.apache.logging.log4j:log4j-core'
   runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
-
-  testImplementation 'org.junit.jupiter:junit-jupiter-api'
-  testImplementation 'org.assertj:assertj-core'
-  testImplementation 'org.mockito:mockito-inline'
-  testImplementation 'org.mockito:mockito-core'
-  testImplementation 'org.mockito:mockito-junit-jupiter'
-  testImplementation(testFixtures(project(":keystorage:hashicorp")))
-
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-}
-
-artifacts {
-  testSupportArtifacts testSupportJar
 }

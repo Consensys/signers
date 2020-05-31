@@ -26,18 +26,19 @@ jar {
 
 dependencies {
 
-  implementation project(':signing:secp:api')
-  implementation project(':signing:secp:common')
-  implementation project(':signing:secp:file-based')
-  implementation project(':keystorage:hashicorp')
+  implementation project(':signing:secp256k1:api')
+  implementation project(':signing:secp256k1:common')
 
   implementation 'com.google.guava:guava'
   implementation 'org.apache.logging.log4j:log4j-api'
   implementation 'org.web3j:core'
-  implementation 'io.vertx:vertx-core'
-  implementation 'org.apache.tuweni:tuweni-net'
 
-  runtimeOnly 'org.bouncycastle:bcpkix-jdk15on'
   runtimeOnly 'org.apache.logging.log4j:log4j-core'
   runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-api'
+  testImplementation 'org.assertj:assertj-core'
+  testImplementation 'org.mockito:mockito-core'
+
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
