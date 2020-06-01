@@ -11,16 +11,23 @@
  * specific language governing permissions and limitations under the License.
  */
 
+apply plugin: 'java-library'
+apply plugin: 'java-test-fixtures'
+
 jar {
   archiveBaseName = calculateJarName(project)
   manifest {
     attributes(
-      'Specification-Title': archiveBaseName,
-      'Specification-Version': project.version,
-      'Implementation-Title': archiveBaseName,
+      'Specification-Title': archiveBaseName.get(),
+      'Specification-Version': rootProject.version,
+      'Implementation-Title': archiveBaseName.get(),
       'Implementation-Version': calculateVersion()
       )
   }
+}
+
+testFixturesJar {
+  archiveBaseName = calculateJarName(project)
 }
 
 dependencies {
