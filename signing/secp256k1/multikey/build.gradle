@@ -47,6 +47,7 @@ dependencies {
   testImplementation 'org.mockito:mockito-core'
   testImplementation 'org.mockito:mockito-junit-jupiter'
   testImplementation(testFixtures(project(":keystorage:hashicorp")))
+  testImplementation(testFixtures(project(":signing:secp256k1:common")))
 
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
