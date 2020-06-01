@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 ConsenSys AG.
+ * Copyright 2019 ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -10,14 +10,30 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.signers.secpsigner.signerapi;
 
-rootProject.name='signers'
-include 'bls-keystore'
-include 'keystorage:hashicorp'
-include 'acceptance-tests'
-include 'signing:secp256k1:api'
-include 'signing:secp256k1:common'
-include 'signing:secp256k1:azure'
-include 'signing:secp256k1:file-based'
-include 'signing:secp256k1:hashicorp'
-include 'signing:secp256k1:multikey'
+import java.math.BigInteger;
+
+public class Signature {
+  private final BigInteger v;
+  private final BigInteger r;
+  private final BigInteger s;
+
+  public Signature(final BigInteger v, final BigInteger r, final BigInteger s) {
+    this.v = v;
+    this.r = r;
+    this.s = s;
+  }
+
+  public BigInteger getV() {
+    return v;
+  }
+
+  public BigInteger getR() {
+    return r;
+  }
+
+  public BigInteger getS() {
+    return s;
+  }
+}
