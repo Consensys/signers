@@ -12,6 +12,8 @@
  */
 package tech.pegasys.signers.secp256k1.multikey;
 
+import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.TransactionSignerProvider;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultTransactionSignerFactory;
 import tech.pegasys.signers.secp256k1.filebased.FileBasedSignerFactory;
@@ -20,8 +22,6 @@ import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HashicorpSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
-import tech.pegasys.signers.secp256k1.signerapi.TransactionSigner;
-import tech.pegasys.signers.secp256k1.signerapi.TransactionSignerProvider;
 
 import java.nio.file.Path;
 import java.util.Objects;

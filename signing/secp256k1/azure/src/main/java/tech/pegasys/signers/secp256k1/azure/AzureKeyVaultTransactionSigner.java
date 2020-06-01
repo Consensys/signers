@@ -12,8 +12,8 @@
  */
 package tech.pegasys.signers.secp256k1.azure;
 
-import tech.pegasys.signers.secp256k1.signerapi.Signature;
-import tech.pegasys.signers.secp256k1.signerapi.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signature;
+import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 
 import java.math.BigInteger;
 import java.util.Arrays;

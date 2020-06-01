@@ -16,9 +16,9 @@ import tech.pegasys.signers.hashicorp.HashicorpConnection;
 import tech.pegasys.signers.hashicorp.HashicorpConnectionFactory;
 import tech.pegasys.signers.hashicorp.HashicorpException;
 import tech.pegasys.signers.hashicorp.config.HashicorpKeyConfig;
+import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 import tech.pegasys.signers.secp256k1.filebased.CredentialTransactionSigner;
 import tech.pegasys.signers.secp256k1.multikey.TransactionSignerInitializationException;
-import tech.pegasys.signers.secp256k1.signerapi.TransactionSigner;
 
 import io.vertx.core.Vertx;
 import org.web3j.crypto.Credentials;

@@ -13,8 +13,8 @@
 package tech.pegasys.signers.secp256k1.multikey.metadata;
 
 import tech.pegasys.signers.hashicorp.config.HashicorpKeyConfig;
+import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 import tech.pegasys.signers.secp256k1.multikey.MultiSignerFactory;
-import tech.pegasys.signers.secp256k1.signerapi.TransactionSigner;
 
 public class HashicorpSigningMetadataFile extends SigningMetadataFile {
 

@@ -16,10 +16,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.web3j.crypto.Keys.getAddress;
 
+import tech.pegasys.signers.secp256k1.api.Signature;
+import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 import tech.pegasys.signers.secp256k1.azure.AzureConfig.AzureConfigBuilder;
 import tech.pegasys.signers.secp256k1.multikey.TransactionSignerInitializationException;
-import tech.pegasys.signers.secp256k1.signerapi.Signature;
-import tech.pegasys.signers.secp256k1.signerapi.TransactionSigner;
 
 import java.math.BigInteger;
 

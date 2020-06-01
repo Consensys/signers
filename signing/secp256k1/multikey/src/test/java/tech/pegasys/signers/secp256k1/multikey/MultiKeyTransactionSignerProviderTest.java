@@ -20,11 +20,11 @@ import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.CONFIG
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.LOWERCASE_ADDRESS;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.copyMetadataFileToDirectory;
 
+import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultTransactionSignerFactory;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
-import tech.pegasys.signers.secp256k1.signerapi.TransactionSigner;
 
 import java.net.URISyntaxException;
 import java.nio.file.Files;

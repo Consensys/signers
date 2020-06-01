@@ -12,9 +12,9 @@
  */
 package tech.pegasys.signers.secp256k1.multikey.metadata;
 
+import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 import tech.pegasys.signers.secp256k1.azure.AzureConfig;
 import tech.pegasys.signers.secp256k1.multikey.MultiSignerFactory;
-import tech.pegasys.signers.secp256k1.signerapi.TransactionSigner;
 
 public class AzureSigningMetadataFile extends SigningMetadataFile {
 

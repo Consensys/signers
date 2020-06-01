@@ -10,30 +10,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.secp256k1.signerapi;
+package tech.pegasys.signers.secp256k1.api;
 
-import java.math.BigInteger;
+public interface TransactionSigner {
 
-public class Signature {
-  private final BigInteger v;
-  private final BigInteger r;
-  private final BigInteger s;
+  Signature sign(final byte[] data);
 
-  public Signature(final BigInteger v, final BigInteger r, final BigInteger s) {
-    this.v = v;
-    this.r = r;
-    this.s = s;
-  }
-
-  public BigInteger getV() {
-    return v;
-  }
-
-  public BigInteger getR() {
-    return r;
-  }
-
-  public BigInteger getS() {
-    return s;
-  }
+  String getAddress();
 }

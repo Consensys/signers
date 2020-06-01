@@ -14,8 +14,8 @@ package tech.pegasys.signers.secp256k1.filebased;
 
 import static tech.pegasys.signers.secp256k1.multikey.PasswordFileUtil.readPasswordFromFile;
 
+import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 import tech.pegasys.signers.secp256k1.multikey.TransactionSignerInitializationException;
-import tech.pegasys.signers.secp256k1.signerapi.TransactionSigner;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
