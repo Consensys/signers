@@ -19,7 +19,7 @@ import static org.web3j.crypto.Keys.getAddress;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 import tech.pegasys.signers.secp256k1.azure.AzureConfig.AzureConfigBuilder;
-import tech.pegasys.signers.secp256k1.multikey.TransactionSignerInitializationException;
+import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
 
 import java.math.BigInteger;
 

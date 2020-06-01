@@ -12,7 +12,7 @@
  */
 package tech.pegasys.signers.secp256k1.azure;
 
-import tech.pegasys.signers.secp256k1.multikey.TransactionSignerInitializationException;
+import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
 
 import java.net.MalformedURLException;
 import java.util.concurrent.ExecutionException;

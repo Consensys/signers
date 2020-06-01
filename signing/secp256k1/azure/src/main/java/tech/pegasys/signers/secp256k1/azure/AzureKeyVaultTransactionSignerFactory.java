@@ -15,7 +15,7 @@ package tech.pegasys.signers.secp256k1.azure;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import tech.pegasys.signers.secp256k1.api.TransactionSigner;
-import tech.pegasys.signers.secp256k1.multikey.TransactionSignerInitializationException;
+import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
 
 import java.math.BigInteger;
 import java.net.UnknownHostException;

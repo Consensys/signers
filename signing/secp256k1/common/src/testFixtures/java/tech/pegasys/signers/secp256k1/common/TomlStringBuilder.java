@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.secp256k1.multikey;
+package tech.pegasys.signers.secp256k1.common;
 
 /** Create toml String with header. Note: To be used in tests only. */
 public class TomlStringBuilder {
