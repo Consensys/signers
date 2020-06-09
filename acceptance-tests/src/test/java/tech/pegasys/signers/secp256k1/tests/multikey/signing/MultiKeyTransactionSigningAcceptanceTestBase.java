@@ -14,9 +14,8 @@ package tech.pegasys.signers.secp256k1.tests.multikey.signing;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.web3j.crypto.Hash.sha3;
 import static org.web3j.crypto.Sign.publicKeyFromPrivate;
-import static org.web3j.crypto.Sign.signedMessageHashToKey;
+import static org.web3j.crypto.Sign.signedMessageToKey;
 import static org.web3j.utils.Numeric.toBigInt;
 import static org.web3j.utils.Numeric.toBytesPadded;
 
@@ -29,6 +28,7 @@ import java.security.SignatureException;
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
+import org.web3j.crypto.ECDSASignature;
 import org.web3j.crypto.Sign.SignatureData;
 
 public class MultiKeyTransactionSigningAcceptanceTestBase extends MultiKeyAcceptanceTestBase {
@@ -46,8 +46,12 @@ public class MultiKeyTransactionSigningAcceptanceTestBase extends MultiKeyAccept
     final BigInteger expectedPublicKey = publicKeyFromPrivate(privateKey);
 
     final Signature signature = signer.get().sign(DATA_TO_SIGN);
+
     final BigInteger messagePublicKey = recoverPublicKey(signature);
     assertThat(messagePublicKey).isEqualTo(expectedPublicKey);
+
+    final ECDSASignature ecdsaSignature = new ECDSASignature(signature.getR(), signature.getS());
+    assertThat(ecdsaSignature.isCanonical()).isTrue();
   }
 
   private BigInteger recoverPublicKey(final Signature signature) {
@@ -56,7 +60,7 @@ public class MultiKeyTransactionSigningAcceptanceTestBase extends MultiKeyAccept
       final byte[] r = toBytesPadded(toBigInt(signature.getR().toByteArray()), 32);
       final byte[] s = toBytesPadded(toBigInt(signature.getS().toByteArray()), 32);
       final SignatureData signatureData = new SignatureData(v, r, s);
-      return signedMessageHashToKey(sha3(DATA_TO_SIGN), signatureData);
+      return signedMessageToKey(DATA_TO_SIGN, signatureData);
     } catch (SignatureException e) {
       throw new IllegalStateException("signature cannot be recovered", e);
     }
