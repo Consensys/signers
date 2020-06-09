@@ -34,7 +34,8 @@ public class MultiKeyFileBasedTransactionSignerAcceptanceTest
   public void fileBasedMultiKeyCanSignValueTransferTransaction(@TempDir Path tomlDirectory)
       throws URISyntaxException, IOException {
     final String keyPath =
-        new File(Resources.getResource("rich_benefactor_one.json").toURI()).getAbsolutePath();
+        new File(Resources.getResource("secp256k1/rich_benefactor_one.json").toURI())
+            .getAbsolutePath();
 
     final Path passwordPath = tomlDirectory.resolve("password");
     Files.write(passwordPath, "pass".getBytes(UTF_8));
