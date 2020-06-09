@@ -20,7 +20,7 @@ public class MultiKeyAcceptanceTestBase {
 
   protected MultiKeyTransactionSignerProvider signerProvider;
 
-  void setup(final Path tomlDirectory) {
+  protected void setup(final Path tomlDirectory) {
     this.signerProvider = MultiKeyTransactionSignerProvider.create(tomlDirectory);
   }
 }
