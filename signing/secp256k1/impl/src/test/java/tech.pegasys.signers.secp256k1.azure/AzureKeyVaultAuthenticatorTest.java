@@ -39,8 +39,8 @@ import org.web3j.crypto.Sign;
 
 public class AzureKeyVaultAuthenticatorTest {
 
-  private static final String clientId = System.getenv("ETHSIGNER_AZURE_CLIENT_ID");
-  private static final String clientSecret = System.getenv("ETHSIGNER_AZURE_CLIENT_SECRET");
+  private static final String clientId = System.getenv("AZURE_CLIENT_ID");
+  private static final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
 
   private static final String validKeyVersion = "7c01fe58d68148bba5824ce418241092";
 

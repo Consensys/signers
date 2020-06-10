@@ -169,9 +169,7 @@ public class SigningMetadataTomlConfigLoader {
       final String filename, final TomlParseResult result) {
     final TomlTable signingTable = result.getTable("signing");
     if (signingTable == null) {
-      LOG.error(
-          filename
-              + " is a badly formed EthSigner metadata file - \"signing\" heading is missing.");
+      LOG.error(filename + " is a badly formed metadata file - \"signing\" heading is missing.");
       return Optional.empty();
     }
     return Optional.of(new TomlTableAdapter(signingTable));
