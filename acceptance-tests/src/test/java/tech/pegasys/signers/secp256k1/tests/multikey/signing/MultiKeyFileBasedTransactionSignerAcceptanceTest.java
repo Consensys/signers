@@ -31,7 +31,7 @@ public class MultiKeyFileBasedTransactionSignerAcceptanceTest
   static final String FILENAME = "fe3b557e8fb62b89f4916b721be55ceb828dbd73";
 
   @Test
-  public void fileBasedMultiKeyCanSignValueTransferTransaction(@TempDir Path tomlDirectory)
+  public void fileBasedMultiKeyCanSign(@TempDir Path tomlDirectory)
       throws URISyntaxException, IOException {
     final String keyPath =
         new File(Resources.getResource("secp256k1/rich_benefactor_one.json").toURI())

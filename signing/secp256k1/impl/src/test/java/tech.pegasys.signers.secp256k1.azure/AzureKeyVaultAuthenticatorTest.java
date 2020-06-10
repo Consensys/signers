@@ -41,6 +41,8 @@ public class AzureKeyVaultAuthenticatorTest {
 
   private static final String clientId = System.getenv("AZURE_CLIENT_ID");
   private static final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
+  private static final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
+  private static final String VAULT_BASE_URL = "https://" + keyVaultName + ".vault.azure.net";
 
   private static final String validKeyVersion = "7c01fe58d68148bba5824ce418241092";
 
@@ -62,22 +64,20 @@ public class AzureKeyVaultAuthenticatorTest {
 
     assertThat(client.apiVersion()).isEqualTo("7.0");
 
-    final PagedList<KeyItem> keys = client.listKeys("https://ethsignertestkey.vault.azure.net");
+    final PagedList<KeyItem> keys = client.listKeys(VAULT_BASE_URL);
     assertThat(keys.size()).isEqualTo(1);
 
     final KeyItem keyItem = keys.get(0);
-    assertThat(keyItem.kid()).isEqualTo("https://ethsignertestkey.vault.azure.net/keys/TestKey");
+    assertThat(keyItem.kid()).isEqualTo(VAULT_BASE_URL + "/keys/TestKey");
 
     KeyIdentifier kid = new KeyIdentifier(keyItem.kid());
     assertThat(kid.name()).isEqualTo("TestKey");
 
-    final PagedList<KeyItem> keyVersions =
-        client.listKeyVersions("https://ethsignertestkey.vault.azure.net", "TestKey");
+    final PagedList<KeyItem> keyVersions = client.listKeyVersions(VAULT_BASE_URL, "TestKey");
     assertThat(keyVersions.size()).isEqualTo(1);
 
     KeyItem keyVersion = keyVersions.get(0);
-    assertThat(keyVersion.kid())
-        .isEqualTo("https://ethsignertestkey.vault.azure.net/keys/TestKey/" + validKeyVersion);
+    assertThat(keyVersion.kid()).isEqualTo(VAULT_BASE_URL + "/keys/TestKey/" + validKeyVersion);
 
     kid = new KeyIdentifier(keyVersion.kid());
     assertThat(kid.version()).isEqualTo(validKeyVersion);
@@ -169,7 +169,7 @@ public class AzureKeyVaultAuthenticatorTest {
 
   private AzureConfigBuilder createValidConfigBuilder() {
     return new AzureConfigBuilder()
-        .withKeyVaultName("ethsignertestkey")
+        .withKeyVaultName(keyVaultName)
         .withKeyName("TestKey")
         .withKeyVersion(validKeyVersion)
         .withClientId(clientId)

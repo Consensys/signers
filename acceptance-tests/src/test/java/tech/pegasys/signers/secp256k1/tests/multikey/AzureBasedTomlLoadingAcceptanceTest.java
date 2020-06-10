@@ -26,6 +26,7 @@ public class AzureBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
 
   static final String clientId = System.getenv("AZURE_CLIENT_ID");
   static final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
+  static final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
   static final String FILENAME = "fe3b557e8fb62b89f4916b721be55ceb828dbd73";
   static final String AZURE_ETHEREUM_ADDRESS = "0x" + FILENAME;
 
@@ -39,7 +40,10 @@ public class AzureBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
   @Test
   void azureSignersAreCreatedAndExpectedAddressIsReported(@TempDir Path tomlDirectory) {
     createAzureTomlFileAt(
-        tomlDirectory.resolve("arbitrary_prefix" + FILENAME + ".toml"), clientId, clientSecret);
+        tomlDirectory.resolve("arbitrary_prefix" + FILENAME + ".toml"),
+        clientId,
+        clientSecret,
+        keyVaultName);
 
     setup(tomlDirectory);
 
@@ -51,7 +55,8 @@ public class AzureBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
     createAzureTomlFileAt(
         tomlDirectory.resolve("ffffffffffffffffffffffffffffffffffffffff.toml"),
         clientId,
-        clientSecret);
+        clientSecret,
+        keyVaultName);
 
     setup(tomlDirectory);
 

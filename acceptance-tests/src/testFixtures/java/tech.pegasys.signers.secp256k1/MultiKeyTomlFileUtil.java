@@ -27,11 +27,14 @@ import java.util.Optional;
 public class MultiKeyTomlFileUtil {
 
   public static void createAzureTomlFileAt(
-      final Path tomlPath, final String clientId, final String clientSecret) {
+      final Path tomlPath,
+      final String clientId,
+      final String clientSecret,
+      final String keyVaultName) {
     final String toml =
         new TomlStringBuilder("signing")
             .withQuotedString("type", "azure-signer")
-            .withQuotedString("key-vault-name", "ethsignertestkey")
+            .withQuotedString("key-vault-name", keyVaultName)
             .withQuotedString("key-name", "TestKey")
             .withQuotedString("key-version", "7c01fe58d68148bba5824ce418241092")
             .withQuotedString("client-id", clientId)

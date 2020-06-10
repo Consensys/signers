@@ -39,7 +39,7 @@ public class MultiKeyHashicorpTransactionSignerAcceptanceTest
   }
 
   @Test
-  void hashicorpLoadedFromMultiKeyCanSignValueTransferTransaction(@TempDir Path tomlDirectory) {
+  void hashicorpLoadedFromMultiKeyCanSign(@TempDir Path tomlDirectory) {
 
     createHashicorpTomlFileAt(tomlDirectory.resolve(FILENAME + ".toml"), hashicorpNode);
 

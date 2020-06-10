@@ -30,7 +30,7 @@ public class KeyImporter {
   public static void importKeyToCloudVault() {
     final String clientId = System.getenv("AZURE_CLIENT_ID");
     final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
-    final String keyVaultName = "ethsignertestkey";
+    final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
     final String keyName = "TestKey";
 
     final AzureKeyVaultAuthenticator authenticator = new AzureKeyVaultAuthenticator();
