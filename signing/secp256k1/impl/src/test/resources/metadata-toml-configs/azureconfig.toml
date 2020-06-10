@@ -4,7 +4,7 @@ description = "Example of Azure Key Vault based configuration"
 
 [signing]
 type = "azure-signer"
-key-vault-name = "ethsignertestkey"
+key-vault-name = "testkey"
 key-name = "TestKey"
 key-version = "7c01fe58d68148bba5824ce418241092"
 client-id = "theClientId"
