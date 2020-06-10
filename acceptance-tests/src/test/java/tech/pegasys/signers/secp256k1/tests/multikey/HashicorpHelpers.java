@@ -22,7 +22,7 @@ import com.github.dockerjava.api.DockerClient;
 public class HashicorpHelpers {
 
   public static final String secretPath = "acceptanceTestSecretPath";
-  public static final String secretName = "value"; // this is the required default usedin EthSigner
+  public static final String secretName = "value";
   private static final String PRIVATE_KEY_HEX_STRING =
       "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63";
 
