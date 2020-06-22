@@ -12,6 +12,7 @@
  */
 package tech.pegasys.signers.secp256k1.multikey;
 
+import tech.pegasys.signers.cavium.CaviumKeyStoreProvider;
 import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 import tech.pegasys.signers.secp256k1.api.TransactionSignerProvider;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
@@ -49,7 +50,8 @@ public class MultiKeyTransactionSignerProvider
   private final HSMTransactionSignerFactory hsmFactory;
   private final CaviumKeyStoreSignerFactory caviumFactory;
 
-  public static MultiKeyTransactionSignerProvider create(final Path rootDir) {
+  public static MultiKeyTransactionSignerProvider create(
+      final Path rootDir, final String... subArgs) {
     final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader =
         new SigningMetadataTomlConfigLoader(rootDir);
 
@@ -58,17 +60,27 @@ public class MultiKeyTransactionSignerProvider
 
     final HashicorpSignerFactory hashicorpSignerFactory = new HashicorpSignerFactory(Vertx.vertx());
 
-    //    final HSMTransactionSignerFactory hsmFactory =
-    //            new HSMTransactionSignerFactory(
-    //                    libraryPath != null ? libraryPath.toString() : null, slotLabel, slotPin);
-    //
-    //    final CaviumKeyStoreSignerFactory caviumFactory =
-    //            new CaviumKeyStoreSignerFactory(
-    //                    new CaviumKeyStoreProvider(
-    //                            libraryPath != null ? libraryPath.toString() : null, slotPin));
+    String library = null;
+    String label = null;
+    String pin = null;
+    if (subArgs != null && subArgs.length > 2) {
+      library = subArgs[0];
+      label = subArgs[1];
+      pin = subArgs[2];
+    }
+
+    final HSMTransactionSignerFactory hsmFactory =
+        new HSMTransactionSignerFactory(library, label, pin);
+
+    final CaviumKeyStoreSignerFactory caviumFactory =
+        new CaviumKeyStoreSignerFactory(new CaviumKeyStoreProvider(library, pin));
 
     return new MultiKeyTransactionSignerProvider(
-        signingMetadataTomlConfigLoader, azureFactory, hashicorpSignerFactory, null, null);
+        signingMetadataTomlConfigLoader,
+        azureFactory,
+        hashicorpSignerFactory,
+        hsmFactory,
+        caviumFactory);
   }
 
   public MultiKeyTransactionSignerProvider(

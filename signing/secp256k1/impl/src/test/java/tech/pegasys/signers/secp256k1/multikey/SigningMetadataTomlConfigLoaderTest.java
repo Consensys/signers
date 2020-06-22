@@ -39,6 +39,7 @@ import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.copyMe
 
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.HSMSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
 import java.nio.file.Files;
@@ -274,5 +275,41 @@ class SigningMetadataTomlConfigLoaderTest {
     assertThat(metadataFile.getKeyPath()).isEqualTo(configsDirectory.resolve("./path/to/k.key"));
     assertThat(metadataFile.getPasswordPath())
         .isEqualTo(configsDirectory.resolve("./path/to/p.password"));
+  }
+
+  @Test
+  void hsmConfigIsLoadedIfAzureMetadataFileInDirectory() {
+    copyFileIntoConfigDirectory("hsmconfig.toml");
+
+    final Collection<SigningMetadataFile> metadataFiles =
+        loader.loadAvailableSigningMetadataTomlConfigs();
+
+    assertThat(metadataFiles.size()).isOne();
+    assertThat(metadataFiles.toArray()[0]).isInstanceOf(HSMSigningMetadataFile.class);
+    final HSMSigningMetadataFile metadataFile = (HSMSigningMetadataFile) metadataFiles.toArray()[0];
+
+    assertThat(metadataFile.getConfig().getAddress())
+        .isEqualTo("0x34a93e9b0AE1B808a83bAEe179264EFc6774C315");
+    assertThat(metadataFile.getConfig().getSlot()).isEqualTo("992881475");
+  }
+
+  @Test
+  void hsmConfigWithMissingAddressFailsToLoad() {
+    copyFileIntoConfigDirectory("hsmconfig_missingAddress.toml");
+
+    final Collection<SigningMetadataFile> metadataFiles =
+        loader.loadAvailableSigningMetadataTomlConfigs();
+
+    assertThat(metadataFiles.size()).isZero();
+  }
+
+  @Test
+  void hsmConfigWithMissingSlotFailsToLoad() {
+    copyFileIntoConfigDirectory("hsmconfig_missingSlot.toml");
+
+    final Collection<SigningMetadataFile> metadataFiles =
+        loader.loadAvailableSigningMetadataTomlConfigs();
+
+    assertThat(metadataFiles.size()).isZero();
   }
 }

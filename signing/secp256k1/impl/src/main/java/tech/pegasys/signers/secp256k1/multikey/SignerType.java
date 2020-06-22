@@ -16,6 +16,8 @@ public enum SignerType {
   FILE_BASED_SIGNER("file-based-signer"),
   AZURE_SIGNER("azure-signer"),
   HASHICORP_SIGNER("hashicorp-signer"),
+  HSM_SIGNER("hsm-signer"),
+  CAVIUM_SIGNER("cavium-signer"),
   UNKNOWN_TYPE_SIGNER("unknown");
 
   private final String type;
