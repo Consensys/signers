@@ -31,8 +31,6 @@ class CaviumKeyStoreProviderTest {
 
   private static String library;
   private static String pin;
-  // private static String address;
-  // private static byte[] data = {1, 2, 3};
 
   private static CaviumKeyStoreProvider ksp;
 
@@ -45,7 +43,6 @@ class CaviumKeyStoreProviderTest {
       p.load(is);
       library = p.getProperty("library");
       pin = p.getProperty("pin");
-      // address = p.getProperty("address");
     } catch (IOException e) {
       fail("Properties file not found");
     }

@@ -19,9 +19,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.Security;
 import java.security.cert.CertificateException;
+import java.util.concurrent.ConcurrentHashMap;
 
 import iaik.pkcs.pkcs11.Module;
 import iaik.pkcs.pkcs11.TokenException;
@@ -44,6 +46,7 @@ public class HSMKeyStoreProvider {
   private String configName;
   protected String slotIndex;
   protected String slotPin;
+  protected ConcurrentHashMap<String, PrivateKey> cache = new ConcurrentHashMap<>();
 
   public HSMKeyStoreProvider() {}
 
@@ -119,5 +122,13 @@ public class HSMKeyStoreProvider {
 
   public String getSlotIndex() {
     return slotIndex;
+  }
+
+  public PrivateKey getKey(String address) {
+    return cache.get(address);
+  }
+
+  public void addKey(String address, PrivateKey privateKey) {
+    cache.putIfAbsent(address, privateKey);
   }
 }
