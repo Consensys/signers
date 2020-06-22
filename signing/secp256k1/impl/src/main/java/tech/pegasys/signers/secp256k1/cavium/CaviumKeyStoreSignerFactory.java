@@ -10,13 +10,24 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.secp256k1.api;
+package tech.pegasys.signers.secp256k1.cavium;
 
-public interface TransactionSigner {
+import tech.pegasys.signers.cavium.CaviumKeyStoreProvider;
+import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 
-  Signature sign(final byte[] data);
+public class CaviumKeyStoreSignerFactory {
 
-  String getAddress();
+  private final CaviumKeyStoreProvider provider;
 
-  default void shutdown() {}
+  public CaviumKeyStoreSignerFactory(final CaviumKeyStoreProvider provider) {
+    this.provider = provider;
+  }
+
+  public TransactionSigner createSigner(String address) {
+    return new CaviumKeyStoreSigner(provider, address);
+  }
+
+  public void shutdown() {
+    provider.shutdown();
+  }
 }

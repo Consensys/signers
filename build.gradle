@@ -116,6 +116,7 @@ allprojects {
 
   repositories {
     jcenter()
+    mavenLocal()
     mavenCentral()
     maven { url  "https://consensys.bintray.com/pegasys-repo" }
   }
@@ -221,7 +222,8 @@ allprojects {
       '--add-opens',
       'java.base/java.util=ALL-UNNAMED',
       '--add-opens',
-      'java.base/java.util.concurrent=ALL-UNNAMED'
+      'java.base/java.util.concurrent=ALL-UNNAMED',
+      "-Djava.library.path=/opt/cloudhsm/lib"
     ]
     Set toImport = [
       'root.log.level',
@@ -301,6 +303,7 @@ subprojects {
   tasks.withType(Test) {
     // If GRADLE_MAX_TEST_FORKS is not set, use half the available processors
     maxParallelForks = (System.getenv('GRADLE_MAX_TEST_FORKS') ?: (Runtime.runtime.availableProcessors().intdiv(2) ?: 1)).toInteger()
+    systemProperty "java.library.path", "/opt/cloudhsm/lib"
   }
 
   tasks.withType(JavaCompile) {

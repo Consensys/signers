@@ -16,11 +16,15 @@ import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 import tech.pegasys.signers.secp256k1.api.TransactionSignerProvider;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultTransactionSignerFactory;
+import tech.pegasys.signers.secp256k1.cavium.CaviumKeyStoreSignerFactory;
 import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
 import tech.pegasys.signers.secp256k1.filebased.FileBasedSignerFactory;
 import tech.pegasys.signers.secp256k1.hashicorp.HashicorpSignerFactory;
+import tech.pegasys.signers.secp256k1.hsm.HSMTransactionSignerFactory;
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.CaviumSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.HSMSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HashicorpSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
@@ -42,6 +46,8 @@ public class MultiKeyTransactionSignerProvider
   private final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader;
   private final AzureKeyVaultTransactionSignerFactory azureFactory;
   private final HashicorpSignerFactory hashicorpSignerFactory;
+  private final HSMTransactionSignerFactory hsmFactory;
+  private final CaviumKeyStoreSignerFactory caviumFactory;
 
   public static MultiKeyTransactionSignerProvider create(final Path rootDir) {
     final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader =
@@ -52,17 +58,30 @@ public class MultiKeyTransactionSignerProvider
 
     final HashicorpSignerFactory hashicorpSignerFactory = new HashicorpSignerFactory(Vertx.vertx());
 
+    //    final HSMTransactionSignerFactory hsmFactory =
+    //            new HSMTransactionSignerFactory(
+    //                    libraryPath != null ? libraryPath.toString() : null, slotLabel, slotPin);
+    //
+    //    final CaviumKeyStoreSignerFactory caviumFactory =
+    //            new CaviumKeyStoreSignerFactory(
+    //                    new CaviumKeyStoreProvider(
+    //                            libraryPath != null ? libraryPath.toString() : null, slotPin));
+
     return new MultiKeyTransactionSignerProvider(
-        signingMetadataTomlConfigLoader, azureFactory, hashicorpSignerFactory);
+        signingMetadataTomlConfigLoader, azureFactory, hashicorpSignerFactory, null, null);
   }
 
   public MultiKeyTransactionSignerProvider(
       final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader,
       final AzureKeyVaultTransactionSignerFactory azureFactory,
-      final HashicorpSignerFactory hashicorpSignerFactory) {
+      final HashicorpSignerFactory hashicorpSignerFactory,
+      final HSMTransactionSignerFactory hsmFactory,
+      final CaviumKeyStoreSignerFactory caviumFactory) {
     this.signingMetadataTomlConfigLoader = signingMetadataTomlConfigLoader;
     this.azureFactory = azureFactory;
     this.hashicorpSignerFactory = hashicorpSignerFactory;
+    this.hsmFactory = hsmFactory;
+    this.caviumFactory = caviumFactory;
   }
 
   @Override
@@ -152,7 +171,49 @@ public class MultiKeyTransactionSignerProvider
   }
 
   @Override
+  public TransactionSigner createSigner(final HSMSigningMetadataFile metadataFile) {
+    final TransactionSigner signer;
+    if (!metadataFile.getConfig().getSlot().equals(hsmFactory.getSlotLabel())) {
+      LOG.error("Failed to construct HSM signer for slot " + metadataFile.getConfig().getSlot());
+      return null;
+    }
+    try {
+      signer = hsmFactory.createSigner(metadataFile.getConfig().getAddress());
+    } catch (final TransactionSignerInitializationException e) {
+      LOG.error("Failed to construct HSM signer from " + metadataFile.getBaseFilename());
+      return null;
+    }
+
+    if (filenameMatchesSigningAddress(signer, metadataFile)) {
+      LOG.info("Loaded signer for address {}", signer.getAddress());
+      return signer;
+    }
+
+    return null;
+  }
+
+  @Override
+  public TransactionSigner createSigner(final CaviumSigningMetadataFile metadataFile) {
+    final TransactionSigner signer;
+    try {
+      signer = caviumFactory.createSigner(metadataFile.getConfig().getAddress());
+    } catch (final TransactionSignerInitializationException e) {
+      LOG.error("Failed to construct Cavium signer from " + metadataFile.getBaseFilename());
+      return null;
+    }
+
+    if (filenameMatchesSigningAddress(signer, metadataFile)) {
+      LOG.info("Loaded signer for address {}", signer.getAddress());
+      return signer;
+    }
+
+    return null;
+  }
+
+  @Override
   public void shutdown() {
     hashicorpSignerFactory.shutdown(); // required to clean up its Vertx instance.
+    hsmFactory.shutdown();
+    caviumFactory.shutdown();
   }
 }
