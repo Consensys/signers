@@ -186,7 +186,7 @@ public class MultiKeyTransactionSignerProvider
   public TransactionSigner createSigner(final HSMSigningMetadataFile metadataFile) {
     final TransactionSigner signer;
     if (!metadataFile.getConfig().getSlot().equals(hsmFactory.getSlotLabel())) {
-      LOG.error("Failed to construct HSM signer for slot " + metadataFile.getConfig().getSlot());
+      LOG.warn("Failed to construct HSM signer for slot " + metadataFile.getConfig().getSlot());
       return null;
     }
     try {
