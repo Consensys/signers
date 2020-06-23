@@ -116,6 +116,7 @@ allprojects {
 
   repositories {
     jcenter()
+    mavenLocal()
     mavenCentral()
     maven { url  "https://consensys.bintray.com/pegasys-repo" }
   }
@@ -216,6 +217,7 @@ allprojects {
     jvmArgs = [
       '-Xmx4g',
       '-XX:-UseGCOverheadLimit',
+      "-Djava.library.path=/opt/cloudhsm/lib",
       // Mockito and jackson-databind do some strange reflection during tests.
       // This suppresses an illegal access warning.
       '--add-opens',
@@ -301,6 +303,7 @@ subprojects {
   tasks.withType(Test) {
     // If GRADLE_MAX_TEST_FORKS is not set, use half the available processors
     maxParallelForks = (System.getenv('GRADLE_MAX_TEST_FORKS') ?: (Runtime.runtime.availableProcessors().intdiv(2) ?: 1)).toInteger()
+    systemProperty "java.library.path", "/opt/cloudhsm/lib"
   }
 
   tasks.withType(JavaCompile) {

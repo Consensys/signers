@@ -12,11 +12,15 @@
  */
 package tech.pegasys.signers.secp256k1.multikey;
 
+import tech.pegasys.signers.cavium.CaviumConfig;
 import tech.pegasys.signers.hashicorp.config.HashicorpKeyConfig;
 import tech.pegasys.signers.hashicorp.config.loader.toml.TomlConfigLoader;
+import tech.pegasys.signers.hsm.HSMConfig;
 import tech.pegasys.signers.secp256k1.azure.AzureConfig.AzureConfigBuilder;
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.CaviumSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.HSMSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HashicorpSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
@@ -102,6 +106,10 @@ public class SigningMetadataTomlConfigLoader {
         return getAzureBasedSigningMetadataFromToml(file.getFileName().toString(), result);
       } else if (SignerType.fromString(type).equals(SignerType.HASHICORP_SIGNER)) {
         return getHashicorpMetadataFromToml(file, result);
+      } else if (SignerType.fromString(type).equals(SignerType.HSM_SIGNER)) {
+        return getHSMSigningMetadataFromToml(file.getFileName().toString(), result);
+      } else if (SignerType.fromString(type).equals(SignerType.CAVIUM_SIGNER)) {
+        return getCaviumSigningMetadataFromToml(file.getFileName().toString(), result);
       } else {
         LOG.error("Unknown signing type in metadata: " + type);
         return Optional.empty();
@@ -163,6 +171,37 @@ public class SigningMetadataTomlConfigLoader {
     final HashicorpKeyConfig config = TomlConfigLoader.fromToml(inputFile, "signing");
 
     return Optional.of(new HashicorpSigningMetadataFile(filename, config));
+  }
+
+  private Optional<SigningMetadataFile> getHSMSigningMetadataFromToml(
+      final String filename, final TomlParseResult result) {
+
+    final Optional<TomlTableAdapter> signingTable = getSigningTableFrom(filename, result);
+    if (signingTable.isEmpty()) {
+      return Optional.empty();
+    }
+
+    final HSMConfig.HSMConfigBuilder builder;
+    final TomlTableAdapter table = signingTable.get();
+    builder = new HSMConfig.HSMConfigBuilder();
+    builder.withAddress(table.getString("address"));
+    builder.withSlot(table.getString("slot"));
+    return Optional.of(new HSMSigningMetadataFile(filename, builder.build()));
+  }
+
+  private Optional<SigningMetadataFile> getCaviumSigningMetadataFromToml(
+      final String filename, final TomlParseResult result) {
+
+    final Optional<TomlTableAdapter> signingTable = getSigningTableFrom(filename, result);
+    if (signingTable.isEmpty()) {
+      return Optional.empty();
+    }
+
+    final CaviumConfig.CaviumConfigBuilder builder;
+    final TomlTableAdapter table = signingTable.get();
+    builder = new CaviumConfig.CaviumConfigBuilder();
+    builder.withAddress(table.getString("address"));
+    return Optional.of(new CaviumSigningMetadataFile(filename, builder.build()));
   }
 
   private Optional<TomlTableAdapter> getSigningTableFrom(

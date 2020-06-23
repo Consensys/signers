@@ -14,6 +14,8 @@
 rootProject.name='signers'
 include 'bls-keystore'
 include 'keystorage:hashicorp'
+include 'keystorage:hsm'
+include 'keystorage:cavium'
 include 'acceptance-tests'
 include 'signing:secp256k1:api'
 include 'signing:secp256k1:impl'

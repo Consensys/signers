@@ -17,4 +17,6 @@ public interface TransactionSigner {
   Signature sign(final byte[] data);
 
   String getAddress();
+
+  default void shutdown() {}
 }
