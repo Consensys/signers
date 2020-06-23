@@ -41,7 +41,6 @@ public class HSMCryptoTest {
   @BeforeAll
   public static void beforeAll() {
     Properties p = new Properties();
-    // InputStream is = ClassLoader.getSystemResourceAsStream("cavium" + ".properties");
     InputStream is = ClassLoader.getSystemResourceAsStream("softhsm-wallet-000" + ".properties");
     try {
       p.load(is);

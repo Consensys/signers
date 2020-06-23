@@ -23,7 +23,6 @@ import java.util.Properties;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 
 class HSMKeyStoreSignerTest {
 
@@ -60,35 +59,5 @@ class HSMKeyStoreSignerTest {
     if (ksp != null) {
       ksp.shutdown();
     }
-  }
-
-  @Test
-  void generateTest() {
-    //    String address = kgr.generate();
-    //    System.out.println("Generated: " + address);
-    //    boolean exists = kgr.exists(address);
-    //    assertThat(exists).isTrue();
-    //    List<String> addresses = kgr.getAll();
-    //    assertThat(addresses).contains(address);
-    //    KeyStore.PrivateKeyEntry privateKeyEntry = null;
-    //    try {
-    //      privateKeyEntry = (KeyStore.PrivateKeyEntry) ksp.getKeyStore().getEntry(address, null);
-    //    } catch (NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException e) {
-    //      fail("Failed to retrieve private key handle");
-    //    }
-    //    assertThat(privateKeyEntry).isNotNull();
-    //    PrivateKey privateKey = privateKeyEntry.getPrivateKey();
-    //    assertThat(privateKey).isNotNull();
-  }
-
-  @Test
-  void getAllTest() {
-    //    String address = kgr.generate();
-    //    System.out.println("Generated: " + address);
-    //    List<String> addresses = kgr.getAll();
-    //    assertThat(addresses).isNotEmpty();
-    //    for (String a : addresses) {
-    //      System.out.println("Listed: " + a);
-    //    }
   }
 }
