@@ -26,6 +26,7 @@ import java.util.Properties;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.web3j.crypto.ECDSASignature;
 
 public class HSMTransactionSignerTest {
 
@@ -66,8 +67,11 @@ public class HSMTransactionSignerTest {
   }
 
   @Test
-  public void success() {
+  public void signTest() {
     Signature sig = signer.sign(data);
     assertThat(sig).isNotNull();
+
+    final ECDSASignature ecdsaSignature = new ECDSASignature(sig.getR(), sig.getS());
+    assertThat(ecdsaSignature.isCanonical()).isTrue();
   }
 }

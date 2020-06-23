@@ -23,8 +23,10 @@ import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.Security;
 import java.security.cert.CertificateException;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import iaik.pkcs.pkcs11.Module;
 import iaik.pkcs.pkcs11.TokenException;
 import org.apache.logging.log4j.LogManager;
@@ -46,7 +48,8 @@ public class HSMKeyStoreProvider {
   private String configName;
   protected String slotIndex;
   protected String slotPin;
-  protected ConcurrentHashMap<String, PrivateKey> cache = new ConcurrentHashMap<>();
+  private Cache<String, PrivateKey> cache =
+      CacheBuilder.newBuilder().maximumSize(10).expireAfterWrite(10, TimeUnit.MINUTES).build();
 
   public HSMKeyStoreProvider() {}
 
@@ -58,10 +61,6 @@ public class HSMKeyStoreProvider {
     sb.append("attributes(generate, *, *) = { CKA_TOKEN = true }\n");
     sb.append("attributes(generate, CKO_CERTIFICATE, *) = { CKA_PRIVATE=false }\n");
     sb.append("attributes(generate, CKO_PUBLIC_KEY, *) = { CKA_PRIVATE=false }\n");
-    // sb.append("attributes(generate, CKO_CERTIFICATE, *) = { CKA_PRIVATE=true }\n");
-    // sb.append("attributes(generate, CKO_PUBLIC_KEY, *) = { CKA_PRIVATE=true CKA_VERIFY=true
-    // }\n");
-    // sb.append("attributes(generate, CKO_PRIVATE_KEY, *) = { CKA_PRIVATE=true CKA_SIGN=true }\n");
     final String configContent = sb.toString();
     try {
       Path configPath = Files.createTempFile("pkcs11-", ".cfg");
@@ -125,10 +124,10 @@ public class HSMKeyStoreProvider {
   }
 
   public PrivateKey getKey(String address) {
-    return cache.get(address);
+    return cache.getIfPresent(address);
   }
 
   public void addKey(String address, PrivateKey privateKey) {
-    cache.putIfAbsent(address, privateKey);
+    cache.put(address, privateKey);
   }
 }

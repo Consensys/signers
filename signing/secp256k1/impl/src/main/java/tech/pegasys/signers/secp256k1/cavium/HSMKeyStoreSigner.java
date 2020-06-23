@@ -129,17 +129,22 @@ public class HSMKeyStoreSigner implements TransactionSigner {
   }
 
   protected PrivateKey getPrivateKey() {
-    PrivateKeyEntry privateKeyEntry = null;
-    try {
-      privateKeyEntry = (PrivateKeyEntry) provider.getKeyStore().getEntry(address, null);
-    } catch (NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException ex) {
-      LOG.trace(ex);
-      throw new RuntimeException("Failed to query key store");
+    PrivateKey privateKey = provider.getKey(address);
+    if (privateKey == null) {
+      PrivateKeyEntry privateKeyEntry;
+      try {
+        privateKeyEntry = (PrivateKeyEntry) provider.getKeyStore().getEntry(address, null);
+      } catch (NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException ex) {
+        LOG.trace(ex);
+        throw new RuntimeException("Failed to query key store");
+      }
+      if (privateKeyEntry == null) {
+        throw new RuntimeException("Failed to get private key from key store");
+      }
+      privateKey = privateKeyEntry.getPrivateKey();
+      provider.addKey(address, privateKey);
     }
-    if (privateKeyEntry == null) {
-      throw new RuntimeException("Failed to get private key from key store");
-    }
-    return privateKeyEntry.getPrivateKey();
+    return privateKey;
   }
 
   @Override

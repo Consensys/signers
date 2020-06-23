@@ -13,6 +13,7 @@
 package tech.pegasys.signers.secp256k1.cavium;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 import tech.pegasys.signers.cavium.CaviumKeyStoreProvider;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test;
 public class CaviumKeyStoreSignerFactoryTest {
 
   private static CaviumKeyStoreProvider ksp;
+  private static byte[] data = {1, 2, 3};
 
   @BeforeAll
   public static void createProvider() {
@@ -33,8 +35,18 @@ public class CaviumKeyStoreSignerFactoryTest {
   @Test
   public void success() {
     final TransactionSigner signer = (new CaviumKeyStoreSignerFactory(ksp)).createSigner("0x");
-
     assertThat(signer).isNotNull();
     assertThat(signer.getAddress()).isNotEmpty();
+  }
+
+  @Test
+  public void failure() {
+    assertThrows(
+        RuntimeException.class,
+        () -> {
+          final TransactionSigner signer =
+              (new CaviumKeyStoreSignerFactory(ksp)).createSigner("0x");
+          signer.sign(data);
+        });
   }
 }

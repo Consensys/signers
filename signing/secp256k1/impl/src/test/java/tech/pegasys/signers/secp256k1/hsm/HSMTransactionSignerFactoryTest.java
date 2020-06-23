@@ -13,8 +13,10 @@
 package tech.pegasys.signers.secp256k1.hsm;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 
 import java.io.File;
@@ -34,6 +36,7 @@ public class HSMTransactionSignerFactoryTest {
   private static String address;
 
   private static HSMTransactionSignerFactory factory;
+  private static byte[] data = {1, 2, 3};
 
   @BeforeAll
   public static void beforeAll() {
@@ -68,5 +71,17 @@ public class HSMTransactionSignerFactoryTest {
     assertThat(signer).isNotNull();
     assertThat(signer.getAddress()).isNotEmpty();
     assertThat(signer.getAddress()).isEqualTo(address);
+    Signature sig = signer.sign(data);
+    assertThat(sig).isNotNull();
+  }
+
+  @Test
+  public void failure() {
+    assertThrows(
+        RuntimeException.class,
+        () -> {
+          final TransactionSigner signer = factory.createSigner("0x");
+          signer.sign(data);
+        });
   }
 }
