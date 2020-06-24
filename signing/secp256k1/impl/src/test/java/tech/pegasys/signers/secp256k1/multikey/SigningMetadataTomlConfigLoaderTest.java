@@ -38,6 +38,7 @@ import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.UNKNOW
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.copyMetadataFileToDirectory;
 
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.CaviumSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HSMSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
@@ -278,7 +279,7 @@ class SigningMetadataTomlConfigLoaderTest {
   }
 
   @Test
-  void hsmConfigIsLoadedIfAzureMetadataFileInDirectory() {
+  void hsmConfigIsLoadedIfHSMMetadataFileInDirectory() {
     copyFileIntoConfigDirectory("hsmconfig.toml");
 
     final Collection<SigningMetadataFile> metadataFiles =
@@ -306,6 +307,32 @@ class SigningMetadataTomlConfigLoaderTest {
   @Test
   void hsmConfigWithMissingSlotFailsToLoad() {
     copyFileIntoConfigDirectory("hsmconfig_missingSlot.toml");
+
+    final Collection<SigningMetadataFile> metadataFiles =
+        loader.loadAvailableSigningMetadataTomlConfigs();
+
+    assertThat(metadataFiles.size()).isZero();
+  }
+
+  @Test
+  void caviumConfigIsLoadedIfHSMMetadataFileInDirectory() {
+    copyFileIntoConfigDirectory("caviumconfig.toml");
+
+    final Collection<SigningMetadataFile> metadataFiles =
+        loader.loadAvailableSigningMetadataTomlConfigs();
+
+    assertThat(metadataFiles.size()).isOne();
+    assertThat(metadataFiles.toArray()[0]).isInstanceOf(CaviumSigningMetadataFile.class);
+    final CaviumSigningMetadataFile metadataFile =
+        (CaviumSigningMetadataFile) metadataFiles.toArray()[0];
+
+    assertThat(metadataFile.getConfig().getAddress())
+        .isEqualTo("0x34a93e9b0AE1B808a83bAEe179264EFc6774C315");
+  }
+
+  @Test
+  void caviumConfigWithMissingAddressFailsToLoad() {
+    copyFileIntoConfigDirectory("caviumconfig_missingAddress.toml");
 
     final Collection<SigningMetadataFile> metadataFiles =
         loader.loadAvailableSigningMetadataTomlConfigs();

@@ -12,15 +12,20 @@
  */
 package tech.pegasys.signers.cavium;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyStoreException;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Properties;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 class HSMKeyStoreProviderTest {
 
@@ -51,6 +56,21 @@ class HSMKeyStoreProviderTest {
   public static void afterAll() {
     if (ksp != null) {
       ksp.shutdown();
+    }
+  }
+
+  @Test
+  void getAllTest() {
+    ksp.initialize();
+    Enumeration<String> addresses;
+    try {
+      addresses = ksp.keyStore.aliases();
+    } catch (KeyStoreException e) {
+      return;
+    }
+    assertThat(addresses).isNotNull();
+    for (String a : Collections.list(addresses)) {
+      System.out.println("Listed: " + a);
     }
   }
 }

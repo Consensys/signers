@@ -1,0 +1,6 @@
+[metadata]
+createdAt = 2020-03-25T08:23:02.439983Z
+description = "Example of Cavium based configuration"
+
+[signing]
+type = "cavium-signer"

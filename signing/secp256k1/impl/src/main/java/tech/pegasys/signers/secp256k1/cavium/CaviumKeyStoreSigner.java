@@ -28,18 +28,18 @@ public class CaviumKeyStoreSigner extends HSMKeyStoreSigner {
   @Override
   protected PrivateKey getPrivateKey() {
     PrivateKey privateKey = provider.getKey(address);
-    if (privateKey == null)
+    if (privateKey == null) {
       try {
-        // This is blocking threads!
         privateKey = (PrivateKey) provider.getKeyStore().getKey(address, "".toCharArray());
       } catch (NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException ex) {
         LOG.trace(ex);
         throw new RuntimeException("Failed to query key store");
       }
-    if (privateKey == null) {
-      throw new RuntimeException("Failed to get private key from key store");
+      if (privateKey == null) {
+        throw new RuntimeException("Failed to get private key from key store");
+      }
+      provider.addKey(address, privateKey);
     }
-    provider.addKey(address, privateKey);
     return privateKey;
   }
 }

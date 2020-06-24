@@ -67,7 +67,7 @@ class CaviumKeyStoreSignerTest {
   }
 
   @Test
-  void signTest() {
+  public void signTest() {
     Signature sig = kss.sign(data);
     assertThat(sig).isNotNull();
   }

@@ -12,9 +12,11 @@
  */
 package tech.pegasys.signers.secp256k1.cavium;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import tech.pegasys.signers.cavium.HSMKeyStoreProvider;
+import tech.pegasys.signers.secp256k1.api.Signature;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,12 +25,15 @@ import java.util.Properties;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 class HSMKeyStoreSignerTest {
 
   private static String library;
   private static String slot;
   private static String pin;
+  private static String address;
+  private static byte[] data = {1, 2, 3};
 
   private static HSMKeyStoreProvider ksp;
   private static HSMKeyStoreSigner kss;
@@ -42,13 +47,14 @@ class HSMKeyStoreSignerTest {
       library = p.getProperty("library");
       slot = p.getProperty("slot");
       pin = p.getProperty("pin");
+      address = p.getProperty("address");
     } catch (IOException e) {
       fail("Properties file not found");
     }
 
     org.junit.jupiter.api.Assumptions.assumeTrue((new File(library).exists()));
     ksp = new HSMKeyStoreProvider(library, slot, pin);
-    kss = (HSMKeyStoreSigner) (new HSMKeyStoreSignerFactory(ksp)).createSigner("0x");
+    kss = (HSMKeyStoreSigner) (new HSMKeyStoreSignerFactory(ksp)).createSigner(address);
   }
 
   @AfterAll
@@ -59,5 +65,11 @@ class HSMKeyStoreSignerTest {
     if (ksp != null) {
       ksp.shutdown();
     }
+  }
+
+  @Test
+  public void signTest() {
+    Signature sig = kss.sign(data);
+    assertThat(sig).isNotNull();
   }
 }
