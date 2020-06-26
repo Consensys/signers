@@ -116,12 +116,14 @@ allprojects {
 
   repositories {
     jcenter()
-    mavenLocal()
     mavenCentral()
     maven { url  "https://consensys.bintray.com/pegasys-repo" }
   }
 
-  dependencies { errorprone("com.google.errorprone:error_prone_core") }
+  dependencies {
+    compile fileTree(dir: "${rootDir}/libs", include: "*.jar")
+    errorprone("com.google.errorprone:error_prone_core")
+  }
 
   apply plugin: 'com.diffplug.gradle.spotless'
   spotless {
@@ -246,12 +248,11 @@ allprojects {
 
 }
 
-
-
 task deploy() {}
 
 
 subprojects {
+
   if (file('src/main/java').directory) {
     apply plugin: 'com.jfrog.bintray'
     apply plugin: 'maven-publish'
@@ -300,10 +301,6 @@ subprojects {
       pkg = bintrayPackage
     }
   }
-
-//  project(':keystorage:hsm') {
-//    apply from: "${rootDir}/gradle/integration-test-hsm.gradle"
-//  }
 
   tasks.withType(Test) {
     // If GRADLE_MAX_TEST_FORKS is not set, use half the available processors
@@ -520,8 +517,6 @@ task releaseIntegrationTest(type: Test){
 
     if (subProjectIntegrationTask != null) {
       dependsOn subProjectIntegrationTask
-//      dependsOn startAndWaitOnHealthyContainer
-//      finalizedBy stopContainer
     }
   }
 }
