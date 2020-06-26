@@ -49,7 +49,6 @@ dependencies {
   integrationTestImplementation 'org.junit.jupiter:junit-jupiter-api'
   integrationTestImplementation 'org.junit.jupiter:junit-jupiter-engine'
   integrationTestImplementation 'org.mock-server:mockserver-netty'
-  integrationTestImplementation sourceSets.testFixtures.output
 
   errorprone("com.google.errorprone:error_prone_core")
 }
