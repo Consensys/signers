@@ -116,12 +116,14 @@ allprojects {
 
   repositories {
     jcenter()
-    mavenLocal()
     mavenCentral()
     maven { url  "https://consensys.bintray.com/pegasys-repo" }
   }
 
-  dependencies { errorprone("com.google.errorprone:error_prone_core") }
+  dependencies {
+    compile fileTree(dir: "${rootDir}/libs", include: "*.jar")
+    errorprone("com.google.errorprone:error_prone_core")
+  }
 
   apply plugin: 'com.diffplug.gradle.spotless'
   spotless {
