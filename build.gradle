@@ -34,6 +34,7 @@ if (!JavaVersion.current().java11Compatible) {
 
 def bintrayUser = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
 def bintrayKey = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_KEY')
+
 def bintrayPackage = bintray.pkg {
   repo = 'pegasys-repo'
   name = 'signers'
@@ -284,6 +285,15 @@ subprojects {
               developerConnection = 'scm:git:ssh://github.com/PegaSysEng/signers.git'
               url = 'https://github.com/PegaSysEng/signers'
             }
+          }
+        }
+      }
+      repositories {
+        maven {
+          url "https://adhara.jfrog.io/artifactory/maven-local"
+          credentials {
+            username = System.getenv('ARTIFACTORY_USER')
+            password = System.getenv('ARTIFACTORY_PASSWORD')
           }
         }
       }
