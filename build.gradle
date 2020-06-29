@@ -95,7 +95,7 @@ allprojects {
   apply plugin: 'net.ltgt.errorprone'
   apply plugin: 'distribution'
   apply from: "${rootDir}/gradle/versions.gradle"
-  apply from: "${rootDir}/gradle/check-licenses.gradle"
+  // apply from: "${rootDir}/gradle/check-licenses.gradle"
 
   version = rootProject.version
 
@@ -409,10 +409,12 @@ distributions {
   }
 }
 
-installDist { dependsOn checkLicenses }
+installDist {
+  // dependsOn checkLicenses
+}
 
 distTar {
-  dependsOn checkLicenses
+  //  dependsOn checkLicenses
   doFirst {
     delete fileTree(dir: 'build/distributions', include: '*.tar.gz')
   }
@@ -421,7 +423,7 @@ distTar {
 }
 
 distZip {
-  dependsOn checkLicenses
+  //  dependsOn checkLicenses
   doFirst {
     delete fileTree(dir: 'build/distributions', include: '*.zip')
   }
