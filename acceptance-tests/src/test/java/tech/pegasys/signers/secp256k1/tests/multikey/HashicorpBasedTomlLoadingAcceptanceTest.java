@@ -45,14 +45,6 @@ class HashicorpBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase
     assertThat(signerProvider.availableAddresses()).containsOnly(HASHICORP_ETHEREUM_ADDRESS);
   }
 
-  @Test
-  void incorrectlyNamedHashicorpConfigFileIsNotLoaded(@TempDir final Path tempDir) {
-    createHashicorpTomlFileAt(
-        tempDir.resolve("ffffffffffffffffffffffffffffffffffffffff.toml"), hashicorpNode);
-    setup(tempDir);
-    assertThat(signerProvider.availableAddresses()).isEmpty();
-  }
-
   @AfterAll
   static void tearDown() {
     hashicorpNode.shutdown();

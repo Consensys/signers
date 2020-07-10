@@ -22,7 +22,6 @@ import tech.pegasys.signers.secp256k1.hashicorp.HashicorpSignerFactory;
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HashicorpSigningMetadataFile;
-import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -83,72 +82,34 @@ public class MultiKeyTransactionSignerProvider
 
   @Override
   public TransactionSigner createSigner(final AzureSigningMetadataFile metadataFile) {
-    final TransactionSigner signer;
     try {
-      signer = azureFactory.createSigner(metadataFile.getConfig());
+      return azureFactory.createSigner(metadataFile.getConfig());
     } catch (final TransactionSignerInitializationException e) {
       LOG.error("Failed to construct Azure signer from " + metadataFile.getBaseFilename());
       return null;
     }
-
-    if (filenameMatchesSigningAddress(signer, metadataFile)) {
-      LOG.info("Loaded signer for address {}", signer.getAddress());
-      return signer;
-    }
-
-    return null;
   }
 
   @Override
   public TransactionSigner createSigner(final HashicorpSigningMetadataFile metadataFile) {
-    final TransactionSigner signer;
     try {
-      signer = hashicorpSignerFactory.create(metadataFile.getConfig());
+      return hashicorpSignerFactory.create(metadataFile.getConfig());
     } catch (final TransactionSignerInitializationException e) {
       LOG.error("Failed to construct Hashicorp signer from " + metadataFile.getBaseFilename());
       return null;
     }
-
-    if (filenameMatchesSigningAddress(signer, metadataFile)) {
-      LOG.info("Loaded signer for address {}", signer.getAddress());
-      return signer;
-    }
-
-    return null;
   }
 
   @Override
   public TransactionSigner createSigner(final FileBasedSigningMetadataFile metadataFile) {
     try {
-      final TransactionSigner signer =
-          FileBasedSignerFactory.createSigner(
-              metadataFile.getKeyPath(), metadataFile.getPasswordPath());
-      if (filenameMatchesSigningAddress(signer, metadataFile)) {
-        LOG.info("Loaded signer for address {}", signer.getAddress());
-        return signer;
-      }
-
-      return null;
+      return FileBasedSignerFactory.createSigner(
+          metadataFile.getKeyPath(), metadataFile.getPasswordPath());
 
     } catch (final TransactionSignerInitializationException e) {
       LOG.error("Unable to load signer with key " + metadataFile.getKeyPath().getFileName(), e);
       return null;
     }
-  }
-
-  private boolean filenameMatchesSigningAddress(
-      final TransactionSigner signer, final SigningMetadataFile metadataFile) {
-
-    // strip leading 0x from the address.
-    final String signerAddress = signer.getAddress().substring(2).toLowerCase();
-    if (!metadataFile.getBaseFilename().toLowerCase().endsWith(signerAddress)) {
-      LOG.error(
-          String.format(
-              "Signer's Ethereum Address (%s) does not align with metadata filename (%s)",
-              signerAddress, metadataFile.getBaseFilename()));
-      return false;
-    }
-    return true;
   }
 
   @Override
