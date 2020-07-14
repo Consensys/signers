@@ -53,7 +53,7 @@ dependencies {
 
 test.enabled = false
 
-task downloadHashicorpVault(type: Download) {
+task downloadHashicorpVaultDist(type: Download) {
   src {
     // see gradle.properties for Hashicorp Vault URL
     return project.property("hashicorpVaultUrl.${osdetector.os}")
@@ -62,14 +62,14 @@ task downloadHashicorpVault(type: Download) {
   onlyIfModified true
 }
 
-task downloadAndExtractHashicorpVault(dependsOn: downloadHashicorpVault, type: Copy) {
-  from zipTree(downloadHashicorpVault.dest)
+task extractHashicorpVaultDist(dependsOn: downloadHashicorpVaultDist, type: Copy) {
+  from zipTree(downloadHashicorpVaultDist.dest)
   into buildDir
 }
 
 task acceptanceTest(dependsOn: [
   rootProject.installDist,
-  downloadAndExtractHashicorpVault
+  extractHashicorpVaultDist
 ], type: Test) {
   inputs.property "integration.date", LocalTime.now() // so it runs at every invocation
 
@@ -81,5 +81,5 @@ task acceptanceTest(dependsOn: [
 
   useJUnitPlatform()
   // toggle to show standard out and standard error of the test JVM(s) on the console
-  testLogging.showStandardStreams = true
+  testLogging.showStandardStreams = false
 }
