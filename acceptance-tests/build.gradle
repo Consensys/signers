@@ -71,6 +71,8 @@ task acceptanceTest(dependsOn: [
   rootProject.installDist,
   downloadAndExtractHashicorpVault
 ], type: Test) {
+  inputs.property "integration.date", LocalTime.now() // so it runs at every invocation
+  
   mustRunAfter rootProject.subprojects*.test
   description = 'Runs Signer utility acceptance tests.'
   group = 'verification'
