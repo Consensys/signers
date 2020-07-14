@@ -164,7 +164,7 @@ public class HashicorpLocalNode implements HashicorpNode {
 
   private Path getVaultServerConfig() throws IOException, CertificateEncodingException {
     final String config =
-        "{\"storage\": {\"inmem\":{}}, "
+        "{\"storage\": {\"inmem\":{}}, \"disable_mlock\": true, "
             + "\"default_lease_ttl\": \"168h\", \"max_lease_ttl\": \"720h\", "
             + "\"listener\": {\"tcp\": {"
             + "\"address\":\"127.0.0.1:0\""
