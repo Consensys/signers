@@ -64,5 +64,7 @@ dependencyManagement {
     dependency 'org.mockito:mockito-junit-jupiter:3.2.4'
 
     dependency 'org.web3j:core:4.5.14'
+
+    dependency 'org.zeroturnaround:zt-exec:1.11'
   }
 }

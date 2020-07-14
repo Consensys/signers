@@ -12,36 +12,28 @@
  */
 package tech.pegasys.signers.hashicorp.dsl;
 
+import com.github.dockerjava.api.DockerClient;
 import tech.pegasys.signers.hashicorp.dsl.certificates.SelfSignedCertificate;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
-import com.github.dockerjava.api.DockerClient;
+public interface HashicorpNode {
 
-public class HashicorpNode {
-
-  private final Optional<SelfSignedCertificate> serverTlsCertificate;
-  private final DockerClient dockerClient;
-  private HashicorpVaultDocker hashicorpVaultDocker;
-
-  private HashicorpNode(final DockerClient dockerClient) {
-    this(dockerClient, null);
-  }
-
-  private HashicorpNode(
-      final DockerClient dockerClient, final SelfSignedCertificate serverTlsCertificate) {
-    this.dockerClient = dockerClient;
-    this.serverTlsCertificate = Optional.ofNullable(serverTlsCertificate);
-  }
-
-  public static HashicorpNode createAndStartHashicorp(
+  /**
+   * Create Create a dockerized Hashicorp Vault process and start it.
+   * @param dockerClient Instance of com.github.dockerjava.api.DockerClient
+   * @param withTls if TLS should be enabled
+   * @return An instance of HashicorpNode backed by Dockerized Vault
+   */
+  static HashicorpNode createAndStartHashicorp(
       final DockerClient dockerClient, final boolean withTls) {
     try {
-      final HashicorpNode hashicorpNode =
+      final HashicorpDockerNode hashicorpNode =
           withTls
-              ? new HashicorpNode(dockerClient, SelfSignedCertificate.generate())
-              : new HashicorpNode(dockerClient);
+              ? new HashicorpDockerNode(dockerClient, SelfSignedCertificate.generate())
+              : new HashicorpDockerNode(dockerClient);
       hashicorpNode.start();
       return hashicorpNode;
     } catch (final Exception e) {
@@ -49,49 +41,46 @@ public class HashicorpNode {
     }
   }
 
-  private void start() {
-    final HashicorpVaultDockerCertificate hashicorpVaultDockerCertificate =
-        serverTlsCertificate.map(HashicorpVaultDockerCertificate::create).orElse(null);
-
-    hashicorpVaultDocker =
-        HashicorpVaultDocker.createVaultDocker(dockerClient, hashicorpVaultDockerCertificate);
-    Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
-  }
-
-  public synchronized void shutdown() {
-    if (hashicorpVaultDocker != null) {
-      hashicorpVaultDocker.shutdown();
-      hashicorpVaultDocker = null;
+  /**
+   * Create a local Hashicorp Vault process and start it.
+   * @param vault Path to vault binary
+   * @param withTls if TLS should be enabled
+   * @return An instance of HashicorpNode backed by a local vault process.
+   */
+  static HashicorpNode createAndStartHashicorp(final Path vault, final boolean withTls) {
+    try {
+      final HashicorpLocalNode hashicorpNode =
+              withTls
+                      ? new HashicorpLocalNode(vault, SelfSignedCertificate.generate())
+                      : new HashicorpLocalNode(vault);
+      hashicorpNode.start();
+      return hashicorpNode;
+    } catch (final Exception e) {
+      throw new RuntimeException("Failed to create Hashicorp Node.", e);
     }
   }
 
-  public String getVaultToken() {
-    return hashicorpVaultDocker.getHashicorpRootToken();
+  static void main(String[] args) {
+    createAndStartHashicorp(Path.of("/Users/usmansaleem/Downloads/vault"), false);
   }
 
-  public String getHost() {
-    return hashicorpVaultDocker.getIpAddress();
-  }
+  void shutdown();
 
-  public int getPort() {
-    return hashicorpVaultDocker.getPort();
-  }
+  String getVaultToken();
 
-  public Optional<SelfSignedCertificate> getServerCertificate() {
-    return serverTlsCertificate;
-  }
+  String getHost();
+
+  int getPort();
+
+  Optional<SelfSignedCertificate> getServerCertificate();
 
   /* Note: Path should be the "subpath" of the secret - not the full HTTP path.
   The full HTTP Path will be returned.
    */
-  public void addSecretsToVault(final Map<String, String> entries, final String path) {
-    hashicorpVaultDocker.addSecretsToVault(entries, path);
-  }
+  void addSecretsToVault(final Map<String, String> entries, final String path);
 
-  public String getHttpApiPathForSecret(final String secretPath) {
-    // *ALL* Hashicorp Http API endpoints are prefixed by "/v1"
-    // KV-V2 insert "data" after the rootpath, and before the signing key path (so, just gotta
-    // handle that)
-    return hashicorpVaultDocker.getHttpApiPathForSecret(secretPath);
-  }
+  // *ALL* Hashicorp Http API endpoints are prefixed by "/v1"
+  // KV-V2 insert "data" after the rootpath, and before the signing key path (so, just gotta
+  // handle that)
+  String getHttpApiPathForSecret(final String secretPath);
 }

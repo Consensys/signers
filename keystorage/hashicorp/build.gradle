@@ -54,4 +54,5 @@ dependencies {
   testFixturesImplementation 'org.assertj:assertj-core'
   testFixturesImplementation 'org.awaitility:awaitility'
   testFixturesImplementation 'org.apache.tuweni:tuweni-net'
+  testFixturesImplementation 'org.zeroturnaround:zt-exec'
 }
