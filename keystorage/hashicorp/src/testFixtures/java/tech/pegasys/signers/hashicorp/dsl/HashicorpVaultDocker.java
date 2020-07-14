@@ -15,6 +15,7 @@ package tech.pegasys.signers.hashicorp.dsl;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static tech.pegasys.signers.hashicorp.dsl.HashicorpNode.VAULT_ROOT_PATH;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -60,7 +61,6 @@ public class HashicorpVaultDocker {
   private static final String HASHICORP_VAULT_IMAGE = "vault:1.2.3";
   private static final String DEFAULT_VAULT_HOST = "localhost";
   private static final int DEFAULT_VAULT_PORT = 8200;
-  private static final String VAULT_ROOT_PATH = "secret";
 
   private static final String EXPECTED_FOR_SECRET_CREATION = "created_time";
   private static final String EXPECTED_FOR_STATUS = "Sealed";
@@ -165,7 +165,7 @@ public class HashicorpVaultDocker {
     hashicorpRootToken = hashicorpVaultTokens.getRootToken();
   }
 
-  public String addSecretsToVault(final Map<String, String> entries, final String path) {
+  public void addSecretsToVault(final Map<String, String> entries, final String path) {
     LOG.info("creating the secret in vault that contains the private key.");
     final String secretPutPath = String.join("/", VAULT_ROOT_PATH, path);
     for (final Map.Entry<String, String> entry : entries.entrySet()) {
@@ -183,14 +183,6 @@ public class HashicorpVaultDocker {
           });
       LOG.info("The secret ({}) was created successfully.", entry.getKey());
     }
-    return getHttpApiPathForSecret(path);
-  }
-
-  public String getHttpApiPathForSecret(final String secretPath) {
-    // *ALL* Hashicorp Http API endpoints are prefixed by "/v1"
-    // KV-V2 insert "data" after the rootpath, and before the signing key path (so, just gotta
-    // handle that)
-    return "/v1/" + VAULT_ROOT_PATH + "/data/" + secretPath;
   }
 
   private HashicorpVaultTokens initVault() {

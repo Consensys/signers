@@ -21,6 +21,7 @@ import java.util.Optional;
 import com.github.dockerjava.api.DockerClient;
 
 public interface HashicorpNode {
+  String VAULT_ROOT_PATH = "secret";
 
   /**
    * Create Create a dockerized Hashicorp Vault process and start it.
@@ -80,10 +81,12 @@ public interface HashicorpNode {
   /* Note: Path should be the "subpath" of the secret - not the full HTTP path.
   The full HTTP Path will be returned.
    */
-  void addSecretsToVault(final Map<String, String> entries, final String path);
+  String addSecretsToVault(final Map<String, String> entries, final String path);
 
   // *ALL* Hashicorp Http API endpoints are prefixed by "/v1"
   // KV-V2 insert "data" after the rootpath, and before the signing key path (so, just gotta
   // handle that)
-  String getHttpApiPathForSecret(final String secretPath);
+  default String getHttpApiPathForSecret(final String secretPath) {
+    return "/v1/" + VAULT_ROOT_PATH + "/data/" + secretPath;
+  }
 }

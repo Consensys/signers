@@ -142,7 +142,7 @@ public class HashicorpLocalNode implements HashicorpNode {
   }
 
   @Override
-  public void addSecretsToVault(final Map<String, String> entries, final String path) {
+  public String addSecretsToVault(final Map<String, String> entries, final String path) {
     LOG.info("creating the secret in vault that contains the private key.");
     final String secretPutPath = String.join("/", VAULT_ROOT_PATH, path);
     for (final Map.Entry<String, String> entry : entries.entrySet()) {
@@ -159,11 +159,7 @@ public class HashicorpLocalNode implements HashicorpNode {
 
       LOG.info("The secret ({}) was created successfully.", entry.getKey());
     }
-  }
-
-  @Override
-  public String getHttpApiPathForSecret(final String secretPath) {
-    return "/v1/" + VAULT_ROOT_PATH + "/data/" + secretPath;
+    return getHttpApiPathForSecret(path);
   }
 
   private Path getVaultServerConfig() throws IOException, CertificateEncodingException {

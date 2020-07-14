@@ -75,15 +75,8 @@ public class HashicorpDockerNode implements HashicorpNode {
   The full HTTP Path will be returned.
    */
   @Override
-  public void addSecretsToVault(final Map<String, String> entries, final String path) {
+  public String addSecretsToVault(final Map<String, String> entries, final String path) {
     hashicorpVaultDocker.addSecretsToVault(entries, path);
-  }
-
-  @Override
-  public String getHttpApiPathForSecret(final String secretPath) {
-    // *ALL* Hashicorp Http API endpoints are prefixed by "/v1"
-    // KV-V2 insert "data" after the rootpath, and before the signing key path (so, just gotta
-    // handle that)
-    return hashicorpVaultDocker.getHttpApiPathForSecret(secretPath);
+    return getHttpApiPathForSecret(path);
   }
 }
