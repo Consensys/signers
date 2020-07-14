@@ -24,7 +24,7 @@ public interface HashicorpNode {
   String VAULT_ROOT_PATH = "secret";
 
   /**
-   * Create Create a dockerized Hashicorp Vault process and start it.
+   * Create a dockerized Hashicorp Vault process and start it.
    *
    * @param dockerClient Instance of com.github.dockerjava.api.DockerClient
    * @param withTls if TLS should be enabled
@@ -62,10 +62,6 @@ public interface HashicorpNode {
     } catch (final Exception e) {
       throw new RuntimeException("Failed to create Hashicorp Node.", e);
     }
-  }
-
-  static void main(String[] args) {
-    createAndStartHashicorp(Path.of("/Users/usmansaleem/Downloads/vault"), false);
   }
 
   void shutdown();
