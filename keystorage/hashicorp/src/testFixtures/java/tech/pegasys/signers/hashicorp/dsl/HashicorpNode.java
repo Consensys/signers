@@ -12,17 +12,19 @@
  */
 package tech.pegasys.signers.hashicorp.dsl;
 
-import com.github.dockerjava.api.DockerClient;
 import tech.pegasys.signers.hashicorp.dsl.certificates.SelfSignedCertificate;
 
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
+import com.github.dockerjava.api.DockerClient;
+
 public interface HashicorpNode {
 
   /**
    * Create Create a dockerized Hashicorp Vault process and start it.
+   *
    * @param dockerClient Instance of com.github.dockerjava.api.DockerClient
    * @param withTls if TLS should be enabled
    * @return An instance of HashicorpNode backed by Dockerized Vault
@@ -43,16 +45,17 @@ public interface HashicorpNode {
 
   /**
    * Create a local Hashicorp Vault process and start it.
-   * @param vault Path to vault binary
+   *
+   * @param vaultBinary Path to vault binary
    * @param withTls if TLS should be enabled
    * @return An instance of HashicorpNode backed by a local vault process.
    */
-  static HashicorpNode createAndStartHashicorp(final Path vault, final boolean withTls) {
+  static HashicorpNode createAndStartHashicorp(final Path vaultBinary, final boolean withTls) {
     try {
       final HashicorpLocalNode hashicorpNode =
-              withTls
-                      ? new HashicorpLocalNode(vault, SelfSignedCertificate.generate())
-                      : new HashicorpLocalNode(vault);
+          withTls
+              ? new HashicorpLocalNode(vaultBinary, SelfSignedCertificate.generate())
+              : new HashicorpLocalNode(vaultBinary);
       hashicorpNode.start();
       return hashicorpNode;
     } catch (final Exception e) {

@@ -12,18 +12,12 @@
  */
 package tech.pegasys.signers.keystorage.hashicorp.tests;
 
-import com.github.dockerjava.api.DockerClient;
-import io.vertx.core.Vertx;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import tech.pegasys.signers.hashicorp.HashicorpConnection;
 import tech.pegasys.signers.hashicorp.HashicorpConnectionFactory;
 import tech.pegasys.signers.hashicorp.config.HashicorpKeyConfig;
 import tech.pegasys.signers.hashicorp.config.loader.toml.TomlConfigLoader;
-import tech.pegasys.signers.hashicorp.dsl.DockerClientFactory;
 import tech.pegasys.signers.hashicorp.dsl.HashicorpNode;
 import tech.pegasys.signers.hashicorp.dsl.certificates.CertificateHelpers;
 import tech.pegasys.signers.hashicorp.util.HashicorpConfigUtil;
@@ -34,14 +28,19 @@ import java.security.cert.CertificateEncodingException;
 import java.util.Collections;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.vertx.core.Vertx;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class LocalHashicorpVaultAccessAcceptanceTest {
 
   private static final Logger LOG = LogManager.getLogger();
   private static final Path runDirectory = Path.of(System.getProperty("user.dir"));
   private static final Path vaultInstallDir =
-          Path.of(System.getProperty("vaultInstallDir", runDirectory.resolve("build").toString()));
+      Path.of(System.getProperty("vaultInstallDir", runDirectory.resolve("build").toString()));
   private static final Path executablePath = vaultInstallDir.resolve("vault");
 
   private final Vertx vertx = Vertx.vertx();
