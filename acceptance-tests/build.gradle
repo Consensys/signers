@@ -67,7 +67,10 @@ task downloadAndExtractHashicorpVault(dependsOn: downloadHashicorpVault, type: C
   into buildDir
 }
 
-task acceptanceTest(dependsOn: [rootProject.installDist, downloadAndExtractHashicorpVault], type: Test) {
+task acceptanceTest(dependsOn: [
+  rootProject.installDist,
+  downloadAndExtractHashicorpVault
+], type: Test) {
   mustRunAfter rootProject.subprojects*.test
   description = 'Runs Signer utility acceptance tests.'
   group = 'verification'
