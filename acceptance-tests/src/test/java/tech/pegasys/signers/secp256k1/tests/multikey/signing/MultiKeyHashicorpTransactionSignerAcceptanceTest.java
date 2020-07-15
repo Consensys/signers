@@ -14,7 +14,6 @@ package tech.pegasys.signers.secp256k1.tests.multikey.signing;
 
 import static tech.pegasys.signers.secp256k1.MultiKeyTomlFileUtil.createHashicorpTomlFileAt;
 
-import tech.pegasys.signers.hashicorp.dsl.DockerClientFactory;
 import tech.pegasys.signers.secp256k1.HashicorpSigningParams;
 import tech.pegasys.signers.secp256k1.tests.multikey.HashicorpHelpers;
 
@@ -34,8 +33,7 @@ public class MultiKeyHashicorpTransactionSignerAcceptanceTest
 
   @BeforeAll
   static void preSetup() {
-    hashicorpNode =
-        HashicorpHelpers.createLoadedHashicorpVault(new DockerClientFactory().create(), false);
+    hashicorpNode = HashicorpHelpers.createLoadedHashicorpVault(false);
   }
 
   @Test
