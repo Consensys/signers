@@ -133,6 +133,7 @@ public class HashicorpNode {
                     }
                   }
                 })
+            .destroyOnExit()
             .start()
             .getFuture();
 
@@ -295,8 +296,8 @@ public class HashicorpNode {
     return new ProcessExecutor(command)
         .readOutput(true)
         .redirectOutput(Slf4jStream.of(getClass()).asInfo())
-        .redirectError(Slf4jStream.of(getClass()).asInfo())
         .environment("VAULT_SKIP_VERIFY", "true")
+        .destroyOnExit()
         .execute()
         .outputUTF8();
   }
