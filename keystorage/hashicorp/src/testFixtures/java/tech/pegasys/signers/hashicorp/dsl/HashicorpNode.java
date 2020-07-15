@@ -294,6 +294,7 @@ public class HashicorpNode {
       throws InterruptedException, TimeoutException, IOException {
     return new ProcessExecutor(command)
         .readOutput(true)
+        .redirectOutput(Slf4jStream.of(getClass()).asInfo())
         .redirectError(Slf4jStream.of(getClass()).asInfo())
         .environment("VAULT_SKIP_VERIFY", "true")
         .execute()
