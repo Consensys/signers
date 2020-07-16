@@ -65,8 +65,8 @@ def vaultDownloadUrl() {
   // see gradle.properties for Hashicorp Vault URL
   switch (osdetector.os) {
     case "windows":
-          return "${hashicorpVaultUrl}/${hashicorpVaultVersion}/vault_${hashicorpVaultVersion}_windows_amd64.zip"
-          break
+      return "${hashicorpVaultUrl}/${hashicorpVaultVersion}/vault_${hashicorpVaultVersion}_windows_amd64.zip"
+      break
     case "linux":
       return "${hashicorpVaultUrl}/${hashicorpVaultVersion}/vault_${hashicorpVaultVersion}_linux_amd64.zip"
       break
