@@ -249,7 +249,7 @@ task deploy() {}
 
 subprojects {
 
-  if (file('src/main/java').directory) {
+  if (file('src/main/java').directory || file('src/testFixtures').directory) {
     apply plugin: 'com.jfrog.bintray'
     apply plugin: 'maven-publish'
 
