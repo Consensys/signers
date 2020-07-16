@@ -43,6 +43,8 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 public class HashicorpNode {
   private static final Logger LOG = LogManager.getLogger();
+  private static final Logger VAULT_PROCESS_LOG =
+      LogManager.getLogger(HashicorpNode.class + ".VaultServer");
 
   // automatically sets by gradle test tasks. Should be set manually in IDE if not using gradle
   private static final String vaultBinary = System.getProperty("vaultBinary");
@@ -118,12 +120,11 @@ public class HashicorpNode {
                 new LogOutputStream() {
                   @Override
                   protected void processLine(final String line) {
-                    LOG.info(line);
+                    VAULT_PROCESS_LOG.info(line);
 
                     // process Vault port (i.e. cluster port - 1)
-                    if (line.contains("cluster address")) {
-                      final Matcher matcher = portPattern.matcher(line);
-                      matcher.find();
+                    final Matcher matcher = portPattern.matcher(line);
+                    if (matcher.find()) {
                       port.set(Integer.parseInt(matcher.group(1)) - 1);
                     }
 
