@@ -44,9 +44,8 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 public class HashicorpNode {
   private static final Logger LOG = LogManager.getLogger();
 
-  // these should be set by gradle test tasks or manually in IDE for individual test execution
-  private static final String vaultInstallDir = System.getProperty("vaultInstallDir");
-  private static final String vaultBinary = System.getProperty("vaultBinary", "vault");
+  // automatically sets by gradle test tasks. Should be set manually in IDE if not using gradle
+  private static final String vaultBinary = System.getProperty("vaultBinary");
 
   private static final String VAULT_ROOT_PATH = "secret";
 
@@ -72,11 +71,11 @@ public class HashicorpNode {
    * @return A started instance of HashicorpNode
    */
   public static HashicorpNode createAndStartHashicorp(final boolean withTls) {
-    if (vaultInstallDir == null) {
-      throw new IllegalStateException("System property [vaultInstallDir] is missing.");
+    if (vaultBinary == null) {
+      throw new IllegalStateException("System property [vaultBinary] is missing.");
     }
 
-    final Path vault = Path.of(vaultInstallDir).resolve(vaultBinary);
+    final Path vault = Path.of(vaultBinary);
     if (!vault.toFile().exists()) {
       throw new IllegalStateException("Vault binary doesn't exist. " + vault.toString());
     }

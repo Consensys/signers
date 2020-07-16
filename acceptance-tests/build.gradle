@@ -53,29 +53,45 @@ dependencies {
 test.enabled = false
 
 def vaultBinary () {
-  if (osdetector.os == "windows") {
-    return "vault.exe"
+  switch (osdetector.os) {
+    case "windows":
+      return new File(buildDir, "vault.exe").toString()
+    default:
+      return new File(buildDir, "vault").toString()
   }
-  return "vault"
 }
 
-task downloadHashicorpVaultDist(type: Download) {
+def vaultDownloadUrl() {
+  // see gradle.properties for Hashicorp Vault URL
+  switch (osdetector.os) {
+    case "windows":
+          return "${hashicorpVaultUrl}/${hashicorpVaultVersion}/vault_${hashicorpVaultVersion}_windows_amd64.zip"
+          break
+    case "linux":
+      return "${hashicorpVaultUrl}/${hashicorpVaultVersion}/vault_${hashicorpVaultVersion}_linux_amd64.zip"
+      break
+    case "osx":
+      return "${hashicorpVaultUrl}/${hashicorpVaultVersion}/vault_${hashicorpVaultVersion}_darwin_amd64.zip"
+      break
+  }
+}
+
+task downloadVault(type: Download) {
   src {
-    // see gradle.properties for Hashicorp Vault URL
-    return project.property("hashicorpVaultUrl.${osdetector.os}")
+    return vaultDownloadUrl()
   }
   dest new File(buildDir, "hashicorp.zip")
   onlyIfModified true
 }
 
-task extractHashicorpVaultDist(dependsOn: downloadHashicorpVaultDist, type: Copy) {
-  from zipTree(downloadHashicorpVaultDist.dest)
+task extractVault(dependsOn: downloadVault, type: Copy) {
+  from zipTree(downloadVault.dest)
   into buildDir
 }
 
 task acceptanceTest(dependsOn: [
   rootProject.installDist,
-  extractHashicorpVaultDist
+  extractVault
 ], type: Test) {
   inputs.property "integration.date", LocalTime.now() // so it runs at every invocation
 
@@ -83,7 +99,6 @@ task acceptanceTest(dependsOn: [
   description = 'Runs Signer utility acceptance tests.'
   group = 'verification'
 
-  systemProperty 'vaultInstallDir', "${buildDir}"
   systemProperty 'vaultBinary', vaultBinary()
 
   useJUnitPlatform()
