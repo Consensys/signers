@@ -12,24 +12,14 @@
  */
 package tech.pegasys.signers.hashicorp.dsl;
 
-// This assumes there is a Vault Server running at the vault URL (for AT, typically in a docker)
 public class HashicorpVaultCommands {
 
-  private final String vaultUrl;
   private final String vaultCommand;
-
-  public HashicorpVaultCommands(final String vaultUrl) {
-    this.vaultCommand = "vault";
-    this.vaultUrl = vaultUrl;
-  }
+  private final String vaultUrl;
 
   public HashicorpVaultCommands(final String vaultCommand, final String vaultUrl) {
     this.vaultCommand = vaultCommand;
     this.vaultUrl = vaultUrl;
-  }
-
-  public String[] statusCommand() {
-    return new String[] {vaultCommand, "status", "-address=" + vaultUrl};
   }
 
   public String[] initCommand() {
@@ -61,9 +51,5 @@ public class HashicorpVaultCommands {
     return new String[] {
       vaultCommand, "kv", "put", "-address=" + vaultUrl, path, paramString,
     };
-  }
-
-  public String[] loginCommand(final String rootToken) {
-    return new String[] {vaultCommand, "login", "-address=" + vaultUrl, rootToken};
   }
 }

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.CertificateEncodingException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Future;
@@ -104,7 +105,6 @@ public class HashicorpNode {
 
     final HashicorpVaultTokens hashicorpVaultTokens = initVault();
     unseal(hashicorpVaultTokens.getUnsealKey());
-    login(hashicorpVaultTokens.getRootToken());
     enableHashicorpKeyValueV2Engine();
   }
 
@@ -272,15 +272,6 @@ public class HashicorpNode {
     LOG.info("Hashicorp vault is unsealed");
   }
 
-  private void login(final String rootToken)
-      throws InterruptedException, TimeoutException, IOException {
-    LOG.info("Login Hashicorp vault CLI ...");
-    final String commandOutput =
-        executeCommandAndGetOutput(hashicorpVaultCommands.loginCommand(rootToken));
-    assertThat(commandOutput.contains(getVaultToken())).isTrue();
-    LOG.info("Hashicorp vault CLI login successful");
-  }
-
   private void enableHashicorpKeyValueV2Engine()
       throws InterruptedException, TimeoutException, IOException {
     LOG.info("Mounting /secret kv-v2 in Hashicorp vault ...");
@@ -296,9 +287,18 @@ public class HashicorpNode {
     return new ProcessExecutor(command)
         .readOutput(true)
         .redirectOutput(Slf4jStream.of(getClass()).asInfo())
-        .environment("VAULT_SKIP_VERIFY", "true")
+        .environment(getEnvironmentMap())
         .destroyOnExit()
         .execute()
         .outputUTF8();
+  }
+
+  private Map<String, String> getEnvironmentMap() {
+    final Map<String, String> environment = new HashMap<>();
+    environment.put("VAULT_SKIP_VERIFY", "true");
+    if (vaultToken != null) {
+      environment.put("VAULT_TOKEN", vaultToken);
+    }
+    return environment;
   }
 }
