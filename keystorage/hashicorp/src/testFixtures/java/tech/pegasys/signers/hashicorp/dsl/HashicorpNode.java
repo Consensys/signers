@@ -45,8 +45,8 @@ public class HashicorpNode {
   private static final Logger LOG = LogManager.getLogger();
 
   // these should be set by gradle test tasks or manually in IDE for individual test execution
-  private static String vaultInstallDir = System.getProperty("vaultInstallDir");
-  private static String vaultBinary = System.getProperty("vaultBinary", "vault");
+  private static final String vaultInstallDir = System.getProperty("vaultInstallDir");
+  private static final String vaultBinary = System.getProperty("vaultBinary", "vault");
 
   private static final String VAULT_ROOT_PATH = "secret";
 
@@ -55,7 +55,7 @@ public class HashicorpNode {
   private final Pattern portPattern = Pattern.compile(".*cluster address: \".*:(\\d+)\".*");
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  private final String host = "127.0.0.1";
+  private static final String HOST = "127.0.0.1";
   private final AtomicInteger port = new AtomicInteger(0);
 
   // initialized after start
@@ -155,7 +155,7 @@ public class HashicorpNode {
   }
 
   public String getHost() {
-    return host;
+    return HOST;
   }
 
   public int getPort() {
