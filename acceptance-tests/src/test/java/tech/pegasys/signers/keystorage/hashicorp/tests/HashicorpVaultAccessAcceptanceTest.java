@@ -18,7 +18,6 @@ import tech.pegasys.signers.hashicorp.HashicorpConnection;
 import tech.pegasys.signers.hashicorp.HashicorpConnectionFactory;
 import tech.pegasys.signers.hashicorp.config.HashicorpKeyConfig;
 import tech.pegasys.signers.hashicorp.config.loader.toml.TomlConfigLoader;
-import tech.pegasys.signers.hashicorp.dsl.DockerClientFactory;
 import tech.pegasys.signers.hashicorp.dsl.HashicorpNode;
 import tech.pegasys.signers.hashicorp.dsl.certificates.CertificateHelpers;
 import tech.pegasys.signers.hashicorp.util.HashicorpConfigUtil;
@@ -29,7 +28,6 @@ import java.security.cert.CertificateEncodingException;
 import java.util.Collections;
 import java.util.Optional;
 
-import com.github.dockerjava.api.DockerClient;
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,9 +38,8 @@ import org.junit.jupiter.api.io.TempDir;
 public class HashicorpVaultAccessAcceptanceTest {
 
   private static final Logger LOG = LogManager.getLogger();
-
   private final Vertx vertx = Vertx.vertx();
-  private final DockerClient docker = new DockerClientFactory().create();
+
   private HashicorpNode hashicorpNode;
 
   private final String SECRET_KEY = "storedSecetKey";
@@ -65,17 +62,11 @@ public class HashicorpVaultAccessAcceptanceTest {
     } catch (final Exception e) {
       LOG.error("Failed to shutdown Hashicorp Node.", e);
     }
-
-    try {
-      docker.close();
-    } catch (final Exception e) {
-      LOG.error("Failed to close docker.", e);
-    }
   }
 
   @Test
   void keyCanBeExtractedFromVault() throws IOException {
-    hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, false);
+    hashicorpNode = HashicorpNode.createAndStartHashicorp(false);
     hashicorpNode.addSecretsToVault(
         Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);
 
@@ -100,7 +91,7 @@ public class HashicorpVaultAccessAcceptanceTest {
   @Test
   void keyCanBeExtractedFromVaultOverTlsUsingWhitelist(@TempDir final Path testDir)
       throws IOException, CertificateEncodingException {
-    hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
+    hashicorpNode = HashicorpNode.createAndStartHashicorp(true);
 
     final Path fingerprintFile =
         CertificateHelpers.createFingerprintFile(
@@ -133,7 +124,7 @@ public class HashicorpVaultAccessAcceptanceTest {
   void canConnectToHashicorpVaultUsingPkcs12Certificate(@TempDir final Path testDir)
       throws IOException {
     final String TRUST_STORE_PASSWORD = "password";
-    hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
+    hashicorpNode = HashicorpNode.createAndStartHashicorp(true);
 
     hashicorpNode.addSecretsToVault(
         Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);
@@ -164,7 +155,7 @@ public class HashicorpVaultAccessAcceptanceTest {
   void canConnectToHashicorpVaultUsingJksCertificate(@TempDir final Path testDir)
       throws IOException {
     final String TRUST_STORE_PASSWORD = "password";
-    hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
+    hashicorpNode = HashicorpNode.createAndStartHashicorp(true);
 
     hashicorpNode.addSecretsToVault(
         Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);
@@ -194,7 +185,7 @@ public class HashicorpVaultAccessAcceptanceTest {
   @Test
   void canConnectToHashicorpVaultUsingPemCertificate(@TempDir final Path testDir)
       throws IOException, CertificateEncodingException {
-    hashicorpNode = HashicorpNode.createAndStartHashicorp(docker, true);
+    hashicorpNode = HashicorpNode.createAndStartHashicorp(true);
 
     hashicorpNode.addSecretsToVault(
         Collections.singletonMap(SECRET_KEY, SECRET_VALUE), KEY_SUBPATH);

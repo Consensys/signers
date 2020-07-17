@@ -49,9 +49,12 @@ dependencies {
 
   errorprone("com.google.errorprone:error_prone_core")
 
-  testFixturesImplementation 'com.github.docker-java:docker-java'
   testFixturesImplementation 'org.apache.logging.log4j:log4j-api'
+  testFixturesImplementation 'org.bouncycastle:bcpkix-jdk15on'
+  testFixturesImplementation 'org.bouncycastle:bcprov-jdk15on'
+  testFixturesImplementation 'com.fasterxml.jackson.core:jackson-databind'
   testFixturesImplementation 'org.assertj:assertj-core'
   testFixturesImplementation 'org.awaitility:awaitility'
   testFixturesImplementation 'org.apache.tuweni:tuweni-net'
+  testFixturesImplementation 'org.zeroturnaround:zt-exec'
 }
