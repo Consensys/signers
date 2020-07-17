@@ -31,7 +31,7 @@ class FileBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
   static final String FILE_ETHEREUM_ADDRESS = "0x" + FILENAME;
 
   @Test
-  void validFileBasedTomlFileProducesSignerWhicReportsMatchingAddress(@TempDir Path tomlDirectory)
+  void validFileBasedTomlFileProducesSignerWhichReportsMatchingAddress(@TempDir Path tomlDirectory)
       throws URISyntaxException {
     createFileBasedTomlFileAt(
         tomlDirectory.resolve("arbitrary_prefix" + FILENAME + ".toml").toAbsolutePath(),
@@ -69,26 +69,5 @@ class FileBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
     setup(tomlDirectory);
 
     assertThat(signerProvider.availableAddresses()).containsOnly(FILE_ETHEREUM_ADDRESS);
-  }
-
-  @Test
-  void incorrectlyNamedFileBasedSignerIsNotLoaded(@TempDir Path tomlDirectory)
-      throws URISyntaxException {
-    createFileBasedTomlFileAt(
-        tomlDirectory.resolve("ffffffffffffffffffffffffffffffffffffffff.toml").toAbsolutePath(),
-        new File(
-                Resources.getResource(
-                        "secp256k1/UTC--2019-12-05T05-17-11.151993000Z--a01f618424b0113a9cebdc6cb66ca5b48e9120c5.key")
-                    .toURI())
-            .getAbsolutePath(),
-        new File(
-                Resources.getResource(
-                        "secp256k1/UTC--2019-12-05T05-17-11.151993000Z--a01f618424b0113a9cebdc6cb66ca5b48e9120c5.password")
-                    .toURI())
-            .getAbsolutePath());
-
-    setup(tomlDirectory);
-
-    assertThat(signerProvider.availableAddresses()).isEmpty();
   }
 }
