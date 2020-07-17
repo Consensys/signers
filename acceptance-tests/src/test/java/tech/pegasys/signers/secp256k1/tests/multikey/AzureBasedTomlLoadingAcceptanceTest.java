@@ -49,17 +49,4 @@ public class AzureBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
 
     assertThat(signerProvider.availableAddresses()).containsOnly(AZURE_ETHEREUM_ADDRESS);
   }
-
-  @Test
-  void incorrectlyNamedAzureFileIsNotLoaded(@TempDir Path tomlDirectory) {
-    createAzureTomlFileAt(
-        tomlDirectory.resolve("ffffffffffffffffffffffffffffffffffffffff.toml"),
-        clientId,
-        clientSecret,
-        keyVaultName);
-
-    setup(tomlDirectory);
-
-    assertThat(signerProvider.availableAddresses()).isEmpty();
-  }
 }
