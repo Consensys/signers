@@ -11,6 +11,11 @@
  * specific language governing permissions and limitations under the License.
  */
 
+plugins {
+  id "de.undercouch.download" version "4.1.0"
+  id "com.google.osdetector" version "1.6.2"
+}
+
 apply plugin: 'java-library'
 apply plugin: 'java-test-fixtures'
 
@@ -53,13 +58,56 @@ dependencies {
 
 test.enabled = false
 
-task acceptanceTest(type: Test) {
+def vaultBinary () {
+  switch (osdetector.os) {
+    case "windows":
+      return new File(buildDir, "vault.exe").toString()
+    default:
+      return new File(buildDir, "vault").toString()
+  }
+}
+
+def vaultDownloadUrl() {
+  // see gradle.properties for Hashicorp Vault URL
+  switch (osdetector.os) {
+    case "windows":
+      return "${hashicorpVaultUrl}/${hashicorpVaultVersion}/vault_${hashicorpVaultVersion}_windows_amd64.zip"
+      break
+    case "linux":
+      return "${hashicorpVaultUrl}/${hashicorpVaultVersion}/vault_${hashicorpVaultVersion}_linux_amd64.zip"
+      break
+    case "osx":
+      return "${hashicorpVaultUrl}/${hashicorpVaultVersion}/vault_${hashicorpVaultVersion}_darwin_amd64.zip"
+      break
+  }
+}
+
+task downloadVault(type: Download) {
+  src {
+    return vaultDownloadUrl()
+  }
+  dest new File(buildDir, "hashicorp.zip")
+  onlyIfModified true
+}
+
+task extractVault(dependsOn: downloadVault, type: Copy) {
+  from zipTree(downloadVault.dest)
+  into buildDir
+}
+
+task acceptanceTest(dependsOn: [
+  rootProject.installDist,
+  extractVault
+], type: Test) {
+  inputs.property "integration.date", LocalTime.now() // so it runs at every invocation
+
   mustRunAfter rootProject.subprojects*.test
   description = 'Runs Signer utility acceptance tests.'
   group = 'verification'
+
+  systemProperty 'vaultBinary', vaultBinary()
 
   useJUnitPlatform()
   // toggle to show standard out and standard error of the test JVM(s) on the console
   testLogging.showStandardStreams = false
 }
-acceptanceTest.dependsOn(rootProject.installDist)

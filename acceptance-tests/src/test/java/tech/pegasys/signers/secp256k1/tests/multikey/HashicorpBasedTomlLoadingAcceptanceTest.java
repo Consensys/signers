@@ -15,7 +15,6 @@ package tech.pegasys.signers.secp256k1.tests.multikey;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.signers.secp256k1.MultiKeyTomlFileUtil.createHashicorpTomlFileAt;
 
-import tech.pegasys.signers.hashicorp.dsl.DockerClientFactory;
 import tech.pegasys.signers.secp256k1.HashicorpSigningParams;
 
 import java.nio.file.Path;
@@ -34,8 +33,7 @@ class HashicorpBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase
 
   @BeforeAll
   static void setUpBase() {
-    hashicorpNode =
-        HashicorpHelpers.createLoadedHashicorpVault(new DockerClientFactory().create(), false);
+    hashicorpNode = HashicorpHelpers.createLoadedHashicorpVault(false);
   }
 
   @Test
@@ -43,14 +41,6 @@ class HashicorpBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase
     createHashicorpTomlFileAt(tempDir.resolve(FILENAME + ".toml"), hashicorpNode);
     setup(tempDir);
     assertThat(signerProvider.availableAddresses()).containsOnly(HASHICORP_ETHEREUM_ADDRESS);
-  }
-
-  @Test
-  void incorrectlyNamedHashicorpConfigFileIsNotLoaded(@TempDir final Path tempDir) {
-    createHashicorpTomlFileAt(
-        tempDir.resolve("ffffffffffffffffffffffffffffffffffffffff.toml"), hashicorpNode);
-    setup(tempDir);
-    assertThat(signerProvider.availableAddresses()).isEmpty();
   }
 
   @AfterAll
