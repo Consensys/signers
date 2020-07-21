@@ -13,7 +13,7 @@
 package tech.pegasys.signers.secp256k1.azure;
 
 import tech.pegasys.signers.secp256k1.api.Signature;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -23,28 +23,26 @@ import com.microsoft.azure.keyvault.models.KeyOperationResult;
 import com.microsoft.azure.keyvault.webkey.JsonWebKeySignatureAlgorithm;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.bytes.Bytes;
 import org.web3j.crypto.ECDSASignature;
 import org.web3j.crypto.Hash;
-import org.web3j.crypto.Keys;
 import org.web3j.crypto.Sign;
 
-public class AzureKeyVaultTransactionSigner implements TransactionSigner {
+public class AzureKeyVaultSigner implements Signer {
 
   private static final Logger LOG = LogManager.getLogger();
 
   private final KeyVaultClientCustom client;
   private final String keyId;
-  private final BigInteger publicKey;
-  private final String address;
+  private final Bytes publicKey;
   private final JsonWebKeySignatureAlgorithm signingAlgo =
       new JsonWebKeySignatureAlgorithm("ECDSA256");
 
-  public AzureKeyVaultTransactionSigner(
-      final KeyVaultClientCustom client, final String keyId, final BigInteger publicKey) {
+  public AzureKeyVaultSigner(
+      final KeyVaultClientCustom client, final String keyId, final Bytes publicKey) {
     this.client = client;
     this.keyId = keyId;
     this.publicKey = publicKey;
-    this.address = "0x" + Keys.getAddress(publicKey);
   }
 
   @Override
@@ -82,7 +80,13 @@ public class AzureKeyVaultTransactionSigner implements TransactionSigner {
         BigInteger.valueOf(headerByte), canonicalSignature.r, canonicalSignature.s);
   }
 
+  @Override
+  public String getPublicKey() {
+    return publicKey.toHexString();
+  }
+
   private int recoverKeyIndex(final ECDSASignature sig, final byte[] hash) {
+    final BigInteger publicKey = new BigInteger(1, this.publicKey.toArrayUnsafe());
     for (int i = 0; i < 4; i++) {
       final BigInteger k = Sign.recoverFromSignature(i, sig, hash);
       LOG.trace("recovered key: {}", k);
@@ -91,10 +95,5 @@ public class AzureKeyVaultTransactionSigner implements TransactionSigner {
       }
     }
     return -1;
-  }
-
-  @Override
-  public String getAddress() {
-    return address;
   }
 }

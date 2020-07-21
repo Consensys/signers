@@ -22,7 +22,7 @@ import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.copyMe
 
 import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
-import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultTransactionSignerFactory;
+import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
@@ -43,8 +43,8 @@ class MultiKeyTransactionSignerProviderTest {
   @TempDir Path configsDirectory;
 
   private SigningMetadataTomlConfigLoader loader = mock(SigningMetadataTomlConfigLoader.class);
-  final AzureKeyVaultTransactionSignerFactory azureFactory =
-      new AzureKeyVaultTransactionSignerFactory(new AzureKeyVaultAuthenticator());
+  final AzureKeyVaultSignerFactory azureFactory =
+      new AzureKeyVaultSignerFactory(new AzureKeyVaultAuthenticator());
   private MultiKeyTransactionSignerProvider signerFactory =
       new MultiKeyTransactionSignerProvider(loader, azureFactory, null);
   private FileBasedSigningMetadataFile metadataFile;

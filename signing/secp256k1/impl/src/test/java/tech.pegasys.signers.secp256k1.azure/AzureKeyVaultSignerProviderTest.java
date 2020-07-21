@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import tech.pegasys.signers.secp256k1.DefaultTransactionSigner;
 import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 
 import java.math.BigInteger;
@@ -32,7 +33,7 @@ import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
 
 @ExtendWith(MockitoExtension.class)
-public class AzureKeyVaultTransactionSignerProviderTest {
+public class AzureKeyVaultSignerProviderTest {
 
   @Test
   public void generatedTransactionSignerHasExpectedAddress() {
@@ -55,10 +56,9 @@ public class AzureKeyVaultTransactionSignerProviderTest {
     when(mockAuthenticator.getAuthenticatedClient(config.getClientId(), config.getClientSecret()))
         .thenReturn(mockClient);
 
-    AzureKeyVaultTransactionSignerFactory factory =
-        new AzureKeyVaultTransactionSignerFactory(mockAuthenticator);
+    final AzureKeyVaultSignerFactory factory = new AzureKeyVaultSignerFactory(mockAuthenticator);
 
-    TransactionSigner signer = factory.createSigner(config);
+    final TransactionSigner signer = new DefaultTransactionSigner(factory.createSigner(config));
     assertThat(signer.getAddress()).isEqualTo(expectedAddress);
   }
 }

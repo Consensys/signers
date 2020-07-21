@@ -14,7 +14,7 @@ package tech.pegasys.signers.secp256k1.filebased;
 
 import static tech.pegasys.signers.secp256k1.common.PasswordFileUtil.readPasswordFromFile;
 
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
 
 import java.io.FileNotFoundException;
@@ -36,8 +36,7 @@ public class FileBasedSignerFactory {
   private static final String DECRYPTING_KEY_FILE_MESSAGE =
       "Error when decrypting key for the file based signer. ";
 
-  public static TransactionSigner createSigner(
-      final Path keyFilePath, final Path passwordFilePath) {
+  public static Signer createSigner(final Path keyFilePath, final Path passwordFilePath) {
     final String password;
     try {
       password = readPasswordFromFile(passwordFilePath);
@@ -51,7 +50,7 @@ public class FileBasedSignerFactory {
     }
     try {
       final Credentials credentials = WalletUtils.loadCredentials(password, keyFilePath.toFile());
-      return new CredentialTransactionSigner(credentials);
+      return new CredentialSigner(credentials);
     } catch (final IOException e) {
       final String message = READ_AUTH_FILE_MESSAGE + keyFilePath.toString();
       LOG.error(message, e);
