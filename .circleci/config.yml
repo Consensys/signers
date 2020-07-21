@@ -71,16 +71,17 @@ commands:
           path: build/test-reports
           destination: test-reports
 
-  notify:
-    description: "Notify Slack"
-    steps:
-      - slack/status:
-          fail_only: true
-          only_for_branches: 'master'
-          
+  # TODO: add SLACK_WEBHOOK secret
+  #notify:
+    #description: "Notify Slack"
+    #steps:
+      #- slack/status:
+          #fail_only: true
+          #only_for_branches: 'master'
+
 jobs:
   build:
-    executor: executor_large
+    executor: executor_med
     steps:
       - prepare
       - run:
@@ -102,7 +103,7 @@ jobs:
           no_output_timeout: 20m
           command: |
             ./gradlew --no-daemon --parallel acceptanceTest
-      - notify
+      #- notify
       - capture_test_results
       - capture_test_reports
       - save_cache:
