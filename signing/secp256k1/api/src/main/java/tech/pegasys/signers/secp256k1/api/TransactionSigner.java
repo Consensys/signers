@@ -12,9 +12,12 @@
  */
 package tech.pegasys.signers.secp256k1.api;
 
-public interface TransactionSigner {
-
-  Signature sign(final byte[] data);
+/**
+ * This interface, and the "getAddress" API is to be removed, going forward Signers should implement
+ * the "Signer" interface directly.
+ */
+@Deprecated
+public interface TransactionSigner extends Signer {
 
   String getAddress();
 }

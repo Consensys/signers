@@ -18,6 +18,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.CONFIG_FILE_EXTENSION;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.LOWERCASE_ADDRESS;
+import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.LOWER_CASE_PUBLIC_KEY;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.copyMetadataFileToDirectory;
 
 import tech.pegasys.signers.secp256k1.api.TransactionSigner;
@@ -84,6 +85,7 @@ class MultiKeyTransactionSignerProviderTest {
     final Optional<TransactionSigner> signer = signerFactory.getSigner(LOWERCASE_ADDRESS);
     assertThat(signer).isNotEmpty();
     assertThat(signer.get().getAddress()).isEqualTo("0x" + LOWERCASE_ADDRESS);
+    assertThat(signer.get().getPublicKey()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
   }
 
   @Test
@@ -91,6 +93,7 @@ class MultiKeyTransactionSignerProviderTest {
     final Collection<SigningMetadataFile> files = Collections.singleton(metadataFile);
     when(loader.loadAvailableSigningMetadataTomlConfigs()).thenReturn(files);
     assertThat(signerFactory.availableAddresses()).containsExactly("0x" + LOWERCASE_ADDRESS);
+    assertThat(signerFactory.availablePublicKeys()).containsExactly("0x" + LOWER_CASE_PUBLIC_KEY);
   }
 
   @Test
@@ -107,5 +110,6 @@ class MultiKeyTransactionSignerProviderTest {
     assertThat(capitalisedMetadata.getBaseFilename())
         .isNotEqualTo(signer.getAddress().substring(2));
     assertThat(signer.getAddress()).isEqualTo("0x" + LOWERCASE_ADDRESS);
+    assertThat(signer.getPublicKey()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
   }
 }

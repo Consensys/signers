@@ -19,7 +19,15 @@ public interface TransactionSignerProvider {
 
   Optional<TransactionSigner> getSigner(String address);
 
+  /**
+   * Deprecated in fovour of availablePublicKeys().
+   *
+   * @return A set of strings representing the Ethereum Addresses of available signers.
+   */
+  @Deprecated
   Set<String> availableAddresses();
+
+  Set<String> availablePublicKeys();
 
   default void shutdown() {}
 }

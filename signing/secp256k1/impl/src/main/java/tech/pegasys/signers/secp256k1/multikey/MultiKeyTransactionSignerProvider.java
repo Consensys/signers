@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import io.vertx.core.Vertx;
@@ -74,10 +75,19 @@ public class MultiKeyTransactionSignerProvider
 
   @Override
   public Set<String> availableAddresses() {
+    return availableFields(TransactionSigner::getAddress);
+  }
+
+  @Override
+  public Set<String> availablePublicKeys() {
+    return availableFields(TransactionSigner::getPublicKey);
+  }
+
+  private Set<String> availableFields(final Function<TransactionSigner, String> fn) {
     return signingMetadataTomlConfigLoader.loadAvailableSigningMetadataTomlConfigs().stream()
         .map(metadataFile -> metadataFile.createSigner(this))
         .filter(Objects::nonNull)
-        .map(TransactionSigner::getAddress)
+        .map(fn)
         .collect(Collectors.toSet());
   }
 

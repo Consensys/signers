@@ -45,4 +45,13 @@ public class SingleTransactionSignerProvider implements TransactionSignerProvide
       return Collections.emptySet();
     }
   }
+
+  @Override
+  public Set<String> availablePublicKeys() {
+    if (signer.getPublicKey() != null) {
+      return Set.of(signer.getPublicKey());
+    } else {
+      return Collections.emptySet();
+    }
+  }
 }

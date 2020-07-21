@@ -58,6 +58,7 @@ public class FileBasedTransactionSignerTest {
 
     assertThat(signer).isNotNull();
     assertThat(signer.getAddress()).isNotEmpty();
+    assertThat(signer.getPublicKey()).isNotEmpty();
   }
 
   @Test

@@ -31,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
+import org.web3j.utils.Numeric;
 
 @ExtendWith(MockitoExtension.class)
 public class AzureKeyVaultSignerProviderTest {
@@ -60,5 +61,7 @@ public class AzureKeyVaultSignerProviderTest {
 
     final TransactionSigner signer = new DefaultTransactionSigner(factory.createSigner(config));
     assertThat(signer.getAddress()).isEqualTo(expectedAddress);
+    assertThat(signer.getAddress())
+        .isEqualTo(Numeric.toHexStringWithPrefix(web3jKeyPair.getPublicKey()));
   }
 }

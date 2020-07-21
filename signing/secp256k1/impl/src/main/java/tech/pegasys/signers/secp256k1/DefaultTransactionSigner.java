@@ -20,17 +20,29 @@ import org.web3j.crypto.Keys;
 
 public class DefaultTransactionSigner implements TransactionSigner {
 
-  private Signer signer;
+  private final Signer signer;
 
-  public DefaultTransactionSigner(Signer signer) {
+  public DefaultTransactionSigner(final Signer signer) {
     this.signer = signer;
   }
 
   @Override
-  public Signature sign(byte[] data) {
+  public Signature sign(final byte[] data) {
     return signer.sign(data);
   }
 
+  @Override
+  public String getPublicKey() {
+    return signer.getPublicKey();
+  }
+
+  /**
+   * Deprecated in favour of using getPublicKey, caller is responsible for deriving information
+   * (such as Ethereum Address) from the key as necessary.
+   *
+   * @return The Ethereum address of this signer.
+   */
+  @Deprecated
   @Override
   public String getAddress() {
     return "0x" + Keys.getAddress(signer.getPublicKey());
