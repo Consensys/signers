@@ -33,7 +33,7 @@ dependencies {
   testImplementation project(':keystorage:hashicorp')
   testImplementation project(':keystorage:hsm')
   testImplementation project(':keystorage:cavium')
-  testImplementation 'com.github.docker-java:docker-java'
+
   testImplementation 'org.junit.jupiter:junit-jupiter-api'
   testImplementation 'io.vertx:vertx-core'
   testImplementation 'io.vertx:vertx-web'
