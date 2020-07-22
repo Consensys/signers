@@ -29,8 +29,8 @@ public class SingleTransactionSignerProvider implements TransactionSignerProvide
   }
 
   @Override
-  public Optional<TransactionSigner> getSigner(final String address) {
-    if (signer.getAddress() != null && signer.getAddress().equalsIgnoreCase(address)) {
+  public Optional<TransactionSigner> getSigner(final String publicKey) {
+    if (signer.getPublicKey() != null && signer.getPublicKey().equalsIgnoreCase(publicKey)) {
       return Optional.of(signer);
     } else {
       return Optional.empty();

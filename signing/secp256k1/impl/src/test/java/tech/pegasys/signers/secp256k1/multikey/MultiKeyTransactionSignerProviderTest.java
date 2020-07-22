@@ -80,7 +80,7 @@ class MultiKeyTransactionSignerProviderTest {
 
   @Test
   void getSignerForAvailableMetadataReturnsSigner() {
-    when(loader.loadMetadataForAddress(LOWERCASE_ADDRESS)).thenReturn(Optional.of(metadataFile));
+    when(loader.loadMetadataForPublicKey(LOWERCASE_ADDRESS)).thenReturn(Optional.of(metadataFile));
 
     final Optional<TransactionSigner> signer = signerFactory.getSigner(LOWERCASE_ADDRESS);
     assertThat(signer).isNotEmpty();

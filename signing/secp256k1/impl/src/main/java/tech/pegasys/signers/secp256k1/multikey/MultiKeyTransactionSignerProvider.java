@@ -67,9 +67,9 @@ public class MultiKeyTransactionSignerProvider
   }
 
   @Override
-  public Optional<TransactionSigner> getSigner(final String address) {
+  public Optional<TransactionSigner> getSigner(final String publicKey) {
     return signingMetadataTomlConfigLoader
-        .loadMetadataForAddress(address)
+        .loadMetadataForPublicKey(publicKey)
         .map(metadataFile -> metadataFile.createSigner(this));
   }
 

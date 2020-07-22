@@ -70,7 +70,7 @@ class SigningMetadataTomlConfigLoaderTest {
             configsDirectory, LOWERCASE_ADDRESS + CONFIG_FILE_EXTENSION, KEY_FILE, PASSWORD_FILE);
 
     final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(LOWERCASE_ADDRESS);
+        loader.loadMetadataForPublicKey(LOWERCASE_ADDRESS);
 
     assertThat(loadedMetadataFile).isNotEmpty();
     final FileBasedSigningMetadataFile fileBasedSigningMetadata =
@@ -88,7 +88,7 @@ class SigningMetadataTomlConfigLoaderTest {
             configsDirectory, PREFIX_MIXEDCASE_FILENAME, KEY_FILE, PASSWORD_FILE);
 
     final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(PREFIX_MIXEDCASE_ADDRESS);
+        loader.loadMetadataForPublicKey(PREFIX_MIXEDCASE_ADDRESS);
 
     assertThat(loadedMetadataFile).isNotEmpty();
     final FileBasedSigningMetadataFile fileBasedSigningMetadata =
@@ -104,7 +104,7 @@ class SigningMetadataTomlConfigLoaderTest {
     copyMetadataFileToDirectory(
         configsDirectory, UNKNOWN_TYPE_SIGNER_FILENAME, KEY_FILE, PASSWORD_FILE);
     final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(UNKNOWN_TYPE_SIGNER_ADDRESS);
+        loader.loadMetadataForPublicKey(UNKNOWN_TYPE_SIGNER_ADDRESS);
 
     assertThat(loadedMetadataFile).isEmpty();
   }
@@ -114,7 +114,7 @@ class SigningMetadataTomlConfigLoaderTest {
     copyMetadataFileToDirectory(
         configsDirectory, MISSING_KEY_PATH_FILENAME, KEY_FILE, PASSWORD_FILE);
     final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(MISSING_KEY_PATH_ADDRESS);
+        loader.loadMetadataForPublicKey(MISSING_KEY_PATH_ADDRESS);
 
     assertThat(loadedMetadataFile).isEmpty();
   }
@@ -124,7 +124,7 @@ class SigningMetadataTomlConfigLoaderTest {
     copyMetadataFileToDirectory(
         configsDirectory, MISSING_PASSWORD_PATH_FILENAME, KEY_FILE, PASSWORD_FILE);
     final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(MISSING_PASSWORD_PATH_ADDRESS);
+        loader.loadMetadataForPublicKey(MISSING_PASSWORD_PATH_ADDRESS);
 
     assertThat(loadedMetadataFile).isEmpty();
   }
@@ -136,7 +136,7 @@ class SigningMetadataTomlConfigLoaderTest {
             configsDirectory, LOWERCASE_ADDRESS + CONFIG_FILE_EXTENSION, KEY_FILE, PASSWORD_FILE);
 
     final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress("0x" + LOWERCASE_ADDRESS);
+        loader.loadMetadataForPublicKey("0x" + LOWERCASE_ADDRESS);
 
     assertThat(loadedMetadataFile).isNotEmpty();
     final FileBasedSigningMetadataFile fileBasedSigningMetadata =
@@ -152,7 +152,7 @@ class SigningMetadataTomlConfigLoaderTest {
     copyMetadataFileToDirectory(
         configsDirectory, MISSING_KEY_AND_PASSWORD_PATH_FILENAME, KEY_FILE, PASSWORD_FILE);
     final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(MISSING_KEY_AND_PASSWORD_PATH_ADDRESS);
+        loader.loadMetadataForPublicKey(MISSING_KEY_AND_PASSWORD_PATH_ADDRESS);
 
     assertThat(loadedMetadataFile).isEmpty();
   }
@@ -164,7 +164,7 @@ class SigningMetadataTomlConfigLoaderTest {
     copyMetadataFileToDirectory(
         configsDirectory, PREFIX_LOWERCASE_DUPLICATE_FILENAME_1, KEY_FILE, PASSWORD_FILE);
     final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(PREFIX_LOWERCASE_DUPLICATE_ADDRESS);
+        loader.loadMetadataForPublicKey(PREFIX_LOWERCASE_DUPLICATE_ADDRESS);
 
     assertThat(loadedMetadataFile).isEmpty();
   }
@@ -172,7 +172,7 @@ class SigningMetadataTomlConfigLoaderTest {
   @Test
   void loadKeyPasswordNotEndingWithAddressReturnsEmpty() {
     final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(SUFFIX_ADDRESS);
+        loader.loadMetadataForPublicKey(SUFFIX_ADDRESS);
 
     assertThat(loadedMetadataFile).isEmpty();
   }

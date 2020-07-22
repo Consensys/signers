@@ -50,15 +50,15 @@ public class SigningMetadataTomlConfigLoader {
     this.tomlConfigsDirectory = rootDirectory;
   }
 
-  Optional<SigningMetadataFile> loadMetadataForAddress(final String address) {
+  Optional<SigningMetadataFile> loadMetadataForPublicKey(final String publicKey) {
     final List<SigningMetadataFile> matchingMetadata =
         loadAvailableSigningMetadataTomlConfigs().stream()
             .filter(
-                toml -> toml.getBaseFilename().toLowerCase().endsWith(normalizeAddress(address)))
+                toml -> toml.getBaseFilename().toLowerCase().endsWith(normalizeAddress(publicKey)))
             .collect(Collectors.toList());
 
     if (matchingMetadata.size() > 1) {
-      LOG.error("Found multiple signing metadata TOML file matches for address " + address);
+      LOG.error("Found multiple signing metadata TOML file matches for public key " + publicKey);
       return Optional.empty();
     } else if (matchingMetadata.isEmpty()) {
       return Optional.empty();
