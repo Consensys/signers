@@ -29,8 +29,17 @@ public class SingleTransactionSignerProvider implements TransactionSignerProvide
   }
 
   @Override
-  public Optional<TransactionSigner> getSigner(final String publicKey) {
-    if (signer.getPublicKey() != null && signer.getPublicKey().equalsIgnoreCase(publicKey)) {
+  public Optional<TransactionSigner> getSigner(final String address) {
+    if (signer.getAddress() != null && signer.getAddress().equalsIgnoreCase(address)) {
+      return Optional.of(signer);
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  @Override
+  public Optional<TransactionSigner> getSigner(final PublicKey publicKey) {
+    if (signer.getPublicKey() != null && signer.getPublicKey().equals(publicKey)) {
       return Optional.of(signer);
     } else {
       return Optional.empty();
@@ -47,7 +56,7 @@ public class SingleTransactionSignerProvider implements TransactionSignerProvide
   }
 
   @Override
-  public Set<String> availablePublicKeys() {
+  public Set<PublicKey> availablePublicKeys() {
     if (signer.getPublicKey() != null) {
       return Set.of(signer.getPublicKey());
     } else {

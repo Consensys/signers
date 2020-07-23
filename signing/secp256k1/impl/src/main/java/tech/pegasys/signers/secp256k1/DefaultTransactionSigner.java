@@ -12,10 +12,12 @@
  */
 package tech.pegasys.signers.secp256k1;
 
+import tech.pegasys.signers.secp256k1.api.PublicKey;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 
+import org.apache.tuweni.bytes.Bytes;
 import org.web3j.crypto.Keys;
 
 public class DefaultTransactionSigner implements TransactionSigner {
@@ -32,7 +34,7 @@ public class DefaultTransactionSigner implements TransactionSigner {
   }
 
   @Override
-  public String getPublicKey() {
+  public PublicKey getPublicKey() {
     return signer.getPublicKey();
   }
 
@@ -45,6 +47,6 @@ public class DefaultTransactionSigner implements TransactionSigner {
   @Deprecated
   @Override
   public String getAddress() {
-    return "0x" + Keys.getAddress(signer.getPublicKey());
+    return Bytes.wrap(Keys.getAddress(signer.getPublicKey().getValue())).toHexString();
   }
 }

@@ -12,9 +12,7 @@
  */
 package tech.pegasys.signers.secp256k1.api;
 
-public interface Signer {
+public interface PublicKey {
 
-  Signature sign(final byte[] data);
-
-  PublicKey getPublicKey();
+  byte[] getValue();
 }

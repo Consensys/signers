@@ -17,6 +17,7 @@ import static tech.pegasys.signers.secp256k1.MultiKeyTomlFileUtil.createAzureTom
 
 import java.nio.file.Path;
 
+import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -50,6 +51,9 @@ public class AzureBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
     setup(tomlDirectory);
 
     assertThat(signerProvider.availableAddresses()).containsOnly(AZURE_ETHEREUM_ADDRESS);
-    assertThat(signerProvider.availablePublicKeys()).containsOnly(AZURE_PUBLIC_KEY);
+    assertThat(
+            signerProvider.availablePublicKeys().stream()
+                .map(pk -> Bytes.wrap(pk.getValue()).toUnprefixedHexString()))
+        .containsOnly(AZURE_PUBLIC_KEY);
   }
 }

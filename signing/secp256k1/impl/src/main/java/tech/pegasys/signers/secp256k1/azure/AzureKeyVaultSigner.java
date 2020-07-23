@@ -12,6 +12,8 @@
  */
 package tech.pegasys.signers.secp256k1.azure;
 
+import tech.pegasys.signers.secp256k1.PublicKeyImpl;
+import tech.pegasys.signers.secp256k1.api.PublicKey;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
 
@@ -34,7 +36,7 @@ public class AzureKeyVaultSigner implements Signer {
 
   private final KeyVaultClientCustom client;
   private final String keyId;
-  private final Bytes publicKey;
+  private final PublicKeyImpl publicKey;
   private final JsonWebKeySignatureAlgorithm signingAlgo =
       new JsonWebKeySignatureAlgorithm("ECDSA256");
 
@@ -42,7 +44,7 @@ public class AzureKeyVaultSigner implements Signer {
       final KeyVaultClientCustom client, final String keyId, final Bytes publicKey) {
     this.client = client;
     this.keyId = keyId;
-    this.publicKey = publicKey;
+    this.publicKey = new PublicKeyImpl(publicKey);
   }
 
   @Override
@@ -81,12 +83,12 @@ public class AzureKeyVaultSigner implements Signer {
   }
 
   @Override
-  public String getPublicKey() {
-    return publicKey.toHexString();
+  public PublicKey getPublicKey() {
+    return publicKey;
   }
 
   private int recoverKeyIndex(final ECDSASignature sig, final byte[] hash) {
-    final BigInteger publicKey = new BigInteger(1, this.publicKey.toArrayUnsafe());
+    final BigInteger publicKey = new BigInteger(1, this.publicKey.getValue());
     for (int i = 0; i < 4; i++) {
       final BigInteger k = Sign.recoverFromSignature(i, sig, hash);
       LOG.trace("recovered key: {}", k);

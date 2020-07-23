@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import com.google.common.io.Resources;
+import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -51,7 +52,10 @@ class FileBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
     setup(tomlDirectory);
 
     assertThat(signerProvider.availableAddresses()).containsOnly(FILE_ETHEREUM_ADDRESS);
-    assertThat(signerProvider.availablePublicKeys()).containsOnly(FILE_PUBLIC_KEY);
+    assertThat(
+            signerProvider.availablePublicKeys().stream()
+                .map(pk -> Bytes.wrap(pk.getValue()).toHexString()))
+        .containsOnly(FILE_PUBLIC_KEY);
   }
 
   @Test
@@ -72,6 +76,9 @@ class FileBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
     setup(tomlDirectory);
 
     assertThat(signerProvider.availableAddresses()).containsOnly(FILE_ETHEREUM_ADDRESS);
-    assertThat(signerProvider.availablePublicKeys()).containsOnly(FILE_PUBLIC_KEY);
+    assertThat(
+            signerProvider.availablePublicKeys().stream()
+                .map(pk -> Bytes.wrap(pk.getValue()).toHexString()))
+        .containsOnly(FILE_PUBLIC_KEY);
   }
 }

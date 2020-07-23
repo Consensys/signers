@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.Optional;
 
 import com.google.common.io.Resources;
+import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -80,12 +81,12 @@ class MultiKeyTransactionSignerProviderTest {
 
   @Test
   void getSignerForAvailableMetadataReturnsSigner() {
-    when(loader.loadMetadataForPublicKey(LOWERCASE_ADDRESS)).thenReturn(Optional.of(metadataFile));
+    when(loader.loadMetadata(LOWERCASE_ADDRESS)).thenReturn(Optional.of(metadataFile));
 
     final Optional<TransactionSigner> signer = signerFactory.getSigner(LOWERCASE_ADDRESS);
     assertThat(signer).isNotEmpty();
     assertThat(signer.get().getAddress()).isEqualTo("0x" + LOWERCASE_ADDRESS);
-    assertThat(signer.get().getPublicKey()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
+    assertThat(signer.get().getPublicKey().toString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
   }
 
   @Test
@@ -93,7 +94,10 @@ class MultiKeyTransactionSignerProviderTest {
     final Collection<SigningMetadataFile> files = Collections.singleton(metadataFile);
     when(loader.loadAvailableSigningMetadataTomlConfigs()).thenReturn(files);
     assertThat(signerFactory.availableAddresses()).containsExactly("0x" + LOWERCASE_ADDRESS);
-    assertThat(signerFactory.availablePublicKeys()).containsExactly("0x" + LOWER_CASE_PUBLIC_KEY);
+    assertThat(
+            signerFactory.availablePublicKeys().stream()
+                .map(pk -> Bytes.wrap(pk.getValue()).toUnprefixedHexString()))
+        .containsExactly(LOWER_CASE_PUBLIC_KEY);
   }
 
   @Test
@@ -110,6 +114,9 @@ class MultiKeyTransactionSignerProviderTest {
     assertThat(capitalisedMetadata.getBaseFilename())
         .isNotEqualTo(signer.getAddress().substring(2));
     assertThat(signer.getAddress()).isEqualTo("0x" + LOWERCASE_ADDRESS);
-    assertThat(signer.getPublicKey()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
+    assertThat(
+            signerFactory.availablePublicKeys().stream()
+                .map(pk -> Bytes.wrap(pk.getValue()).toHexString()))
+        .containsExactly(LOWER_CASE_PUBLIC_KEY);
   }
 }

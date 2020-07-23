@@ -62,6 +62,6 @@ public class AzureKeyVaultSignerProviderTest {
     final TransactionSigner signer = new DefaultTransactionSigner(factory.createSigner(config));
     assertThat(signer.getAddress()).isEqualTo(expectedAddress);
     assertThat(signer.getPublicKey())
-        .isEqualTo(Numeric.toHexStringWithPrefix(web3jKeyPair.getPublicKey()));
+        .isEqualTo(Numeric.toHexStringNoPrefix(web3jKeyPair.getPublicKey()));
   }
 }

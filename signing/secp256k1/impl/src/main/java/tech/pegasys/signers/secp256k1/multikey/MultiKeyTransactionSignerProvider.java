@@ -13,6 +13,7 @@
 package tech.pegasys.signers.secp256k1.multikey;
 
 import tech.pegasys.signers.secp256k1.DefaultTransactionSigner;
+import tech.pegasys.signers.secp256k1.api.PublicKey;
 import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 import tech.pegasys.signers.secp256k1.api.TransactionSignerProvider;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.bytes.Bytes;
 
 public class MultiKeyTransactionSignerProvider
     implements TransactionSignerProvider, MultiSignerFactory {
@@ -67,9 +69,17 @@ public class MultiKeyTransactionSignerProvider
   }
 
   @Override
-  public Optional<TransactionSigner> getSigner(final String publicKey) {
+  public Optional<TransactionSigner> getSigner(final PublicKey publicKey) {
+    final String identifier = Bytes.wrap(publicKey.getValue()).toUnprefixedHexString();
     return signingMetadataTomlConfigLoader
-        .loadMetadataForPublicKey(publicKey)
+        .loadMetadata(identifier)
+        .map(metadataFile -> metadataFile.createSigner(this));
+  }
+
+  @Override
+  public Optional<TransactionSigner> getSigner(final String address) {
+    return signingMetadataTomlConfigLoader
+        .loadMetadata(address)
         .map(metadataFile -> metadataFile.createSigner(this));
   }
 
@@ -79,11 +89,11 @@ public class MultiKeyTransactionSignerProvider
   }
 
   @Override
-  public Set<String> availablePublicKeys() {
+  public Set<PublicKey> availablePublicKeys() {
     return availableFields(TransactionSigner::getPublicKey);
   }
 
-  private Set<String> availableFields(final Function<TransactionSigner, String> fn) {
+  private <T> Set<T> availableFields(final Function<TransactionSigner, T> fn) {
     return signingMetadataTomlConfigLoader.loadAvailableSigningMetadataTomlConfigs().stream()
         .map(metadataFile -> metadataFile.createSigner(this))
         .filter(Objects::nonNull)

@@ -17,7 +17,16 @@ import java.util.Set;
 
 public interface TransactionSignerProvider {
 
+  /**
+   * Deprecated in favour of getSigner taking a PublicKey identifier.
+   *
+   * @param address The Ethereum address of the signer being reqeusted
+   * @return A transactionSigner if a matching signer is found.
+   */
+  @Deprecated
   Optional<TransactionSigner> getSigner(String address);
+
+  Optional<TransactionSigner> getSigner(PublicKey publicKey);
 
   /**
    * Deprecated in fovour of availablePublicKeys().
@@ -27,7 +36,7 @@ public interface TransactionSignerProvider {
   @Deprecated
   Set<String> availableAddresses();
 
-  Set<String> availablePublicKeys();
+  Set<PublicKey> availablePublicKeys();
 
   default void shutdown() {}
 }
