@@ -114,9 +114,6 @@ class MultiKeyTransactionSignerProviderTest {
     assertThat(capitalisedMetadata.getBaseFilename())
         .isNotEqualTo(signer.getAddress().substring(2));
     assertThat(signer.getAddress()).isEqualTo("0x" + LOWERCASE_ADDRESS);
-    assertThat(
-            signerFactory.availablePublicKeys().stream()
-                .map(pk -> Bytes.wrap(pk.getValue()).toHexString()))
-        .containsExactly(LOWER_CASE_PUBLIC_KEY);
+    assertThat(signer.getPublicKey().toString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
   }
 }
