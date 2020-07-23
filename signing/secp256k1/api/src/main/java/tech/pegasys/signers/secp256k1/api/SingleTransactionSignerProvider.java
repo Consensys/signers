@@ -48,19 +48,11 @@ public class SingleTransactionSignerProvider implements TransactionSignerProvide
 
   @Override
   public Set<String> availableAddresses() {
-    if (signer.getAddress() != null) {
-      return Set.of(signer.getAddress());
-    } else {
-      return Collections.emptySet();
-    }
+    return signer.getAddress() != null ? Set.of(signer.getAddress()) : Collections.emptySet();
   }
 
   @Override
   public Set<PublicKey> availablePublicKeys() {
-    if (signer.getPublicKey() != null) {
-      return Set.of(signer.getPublicKey());
-    } else {
-      return Collections.emptySet();
-    }
+    return signer.getPublicKey() != null ? Set.of(signer.getPublicKey()) : Collections.emptySet();
   }
 }

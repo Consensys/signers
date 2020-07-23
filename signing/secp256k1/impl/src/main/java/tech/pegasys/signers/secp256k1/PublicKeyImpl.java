@@ -21,7 +21,7 @@ import org.web3j.utils.Numeric;
 
 public class PublicKeyImpl implements PublicKey {
 
-  static final int PUBLIC_KEY_SIZE = 64;
+  private static final int PUBLIC_KEY_SIZE = 64;
 
   private final Bytes value;
 
