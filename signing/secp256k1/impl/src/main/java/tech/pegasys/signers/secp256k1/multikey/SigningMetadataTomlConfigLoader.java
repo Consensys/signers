@@ -66,7 +66,7 @@ public class SigningMetadataTomlConfigLoader {
                 toml ->
                     toml.getBaseFilename()
                         .toLowerCase()
-                        .endsWith(identityFilenameTranslator.apply(identifier)))
+                        .endsWith(identityFilenameTranslator.apply(identifier).toLowerCase()))
             .collect(Collectors.toList());
 
     if (matchingMetadata.size() > 1) {
@@ -187,12 +187,11 @@ public class SigningMetadataTomlConfigLoader {
     return Optional.of(new TomlTableAdapter(signingTable));
   }
 
-  private String stripHexAndLowerCase(final String address) {
-    if (address.startsWith("0x")) {
-      return address.replace("0x", "").toLowerCase();
-    } else {
-      return address.toLowerCase();
+  private String stripHexAndLowerCase(final String identifier) {
+    if (identifier.startsWith("0x")) {
+      return identifier.replace("0x", "");
     }
+    return identifier;
   }
 
   private Path makeRelativePathAbsolute(final String input) {
