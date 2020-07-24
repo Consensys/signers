@@ -24,14 +24,11 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.toml.TomlInvalidTypeException;
@@ -42,34 +39,21 @@ public class SigningMetadataTomlConfigLoader {
 
   private static final Logger LOG = LogManager.getLogger();
 
-  private static final String CONFIG_FILE_EXTENSION = ".toml";
-  private static final String GLOB_CONFIG_MATCHER = "**" + CONFIG_FILE_EXTENSION;
-
   private final Path tomlConfigsDirectory;
-  private final Function<String, String> identityFilenameTranslator;
-
-  public SigningMetadataTomlConfigLoader(
-      final Path rootDirectory, final Function<String, String> identityFilenameTranslator) {
-    this.tomlConfigsDirectory = rootDirectory;
-    this.identityFilenameTranslator = identityFilenameTranslator;
-  }
 
   public SigningMetadataTomlConfigLoader(final Path rootDirectory) {
-    this(rootDirectory, SigningMetadataTomlConfigLoader::stripHexPrefix);
+    this.tomlConfigsDirectory = rootDirectory;
   }
 
-  Optional<SigningMetadataFile> loadMetadata(final String identifier) {
+  Optional<SigningMetadataFile> loadMetadata(
+      final DirectoryStream.Filter<Path> configFileSelector) {
     final List<SigningMetadataFile> matchingMetadata =
-        loadAvailableSigningMetadataTomlConfigs().stream()
-            .filter(
-                toml ->
-                    toml.getBaseFilename()
-                        .toLowerCase()
-                        .endsWith(identityFilenameTranslator.apply(identifier).toLowerCase()))
-            .collect(Collectors.toList());
+        loadAvailableSigningMetadataTomlConfigs(configFileSelector);
 
     if (matchingMetadata.size() > 1) {
-      LOG.error("Found multiple signing metadata TOML file matches for identifier " + identifier);
+      LOG.error(
+          "Found multiple signing metadata TOML file matches for filter "
+              + configFileSelector.toString());
       return Optional.empty();
     } else if (matchingMetadata.isEmpty()) {
       return Optional.empty();
@@ -78,18 +62,19 @@ public class SigningMetadataTomlConfigLoader {
     }
   }
 
-  Collection<SigningMetadataFile> loadAvailableSigningMetadataTomlConfigs() {
-    final Collection<SigningMetadataFile> metadataConfigs = new HashSet<>();
+  ImmutableList<SigningMetadataFile> loadAvailableSigningMetadataTomlConfigs(
+      final DirectoryStream.Filter<Path> configFileSelector) {
+    final List<SigningMetadataFile> metadataConfigs = Lists.newArrayList();
 
     try (final DirectoryStream<Path> directoryStream =
-        Files.newDirectoryStream(tomlConfigsDirectory, GLOB_CONFIG_MATCHER)) {
+        Files.newDirectoryStream(tomlConfigsDirectory, configFileSelector)) {
       for (final Path file : directoryStream) {
         getMetadataInfo(file).ifPresent(metadataConfigs::add);
       }
-      return metadataConfigs;
+      return ImmutableList.copyOf(metadataConfigs);
     } catch (final IOException e) {
       LOG.warn("Error searching for signing metadata TOML files", e);
-      return Collections.emptySet();
+      return ImmutableList.of();
     }
   }
 
@@ -184,13 +169,6 @@ public class SigningMetadataTomlConfigLoader {
       return Optional.empty();
     }
     return Optional.of(new TomlTableAdapter(signingTable));
-  }
-
-  private static String stripHexPrefix(final String identifier) {
-    if (identifier.startsWith("0x")) {
-      return identifier.replace("0x", "");
-    }
-    return identifier;
   }
 
   private Path makeRelativePathAbsolute(final String input) {

@@ -48,7 +48,7 @@ class MultiKeyTransactionSignerProviderTest {
   final AzureKeyVaultSignerFactory azureFactory =
       new AzureKeyVaultSignerFactory(new AzureKeyVaultAuthenticator());
   private MultiKeyTransactionSignerProvider signerFactory =
-      new MultiKeyTransactionSignerProvider(loader, azureFactory, null);
+      new MultiKeyTransactionSignerProvider(loader, azureFactory, null, identityFilenameTranslator);
   private FileBasedSigningMetadataFile metadataFile;
   private final String KEY_FILENAME = "k.key";
   private final String PASSWORD_FILENAME = "p.password";
@@ -111,7 +111,7 @@ class MultiKeyTransactionSignerProviderTest {
 
     final TransactionSigner signer = signerFactory.createSigner(capitalisedMetadata);
     assertThat(signer).isNotNull();
-    assertThat(capitalisedMetadata.getBaseFilename())
+    assertThat(capitalisedMetadata.getFilename())
         .isNotEqualTo(signer.getAddress().substring(2));
     assertThat(signer.getAddress()).isEqualTo("0x" + LOWERCASE_ADDRESS);
     assertThat(signer.getPublicKey().toString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
