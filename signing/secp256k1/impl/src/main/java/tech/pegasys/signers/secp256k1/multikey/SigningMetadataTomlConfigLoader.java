@@ -55,8 +55,7 @@ public class SigningMetadataTomlConfigLoader {
   }
 
   public SigningMetadataTomlConfigLoader(final Path rootDirectory) {
-    this.tomlConfigsDirectory = rootDirectory;
-    identityFilenameTranslator = this::stripHexAndLowerCase;
+    this(rootDirectory, SigningMetadataTomlConfigLoader::stripHexPrefix);
   }
 
   Optional<SigningMetadataFile> loadMetadata(final String identifier) {
@@ -187,7 +186,7 @@ public class SigningMetadataTomlConfigLoader {
     return Optional.of(new TomlTableAdapter(signingTable));
   }
 
-  private String stripHexAndLowerCase(final String identifier) {
+  private static String stripHexPrefix(final String identifier) {
     if (identifier.startsWith("0x")) {
       return identifier.replace("0x", "");
     }
