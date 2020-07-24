@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -45,16 +46,27 @@ public class SigningMetadataTomlConfigLoader {
   private static final String GLOB_CONFIG_MATCHER = "**" + CONFIG_FILE_EXTENSION;
 
   private final Path tomlConfigsDirectory;
+  private final Function<String, String> identityFilenameTranslator;
+
+  public SigningMetadataTomlConfigLoader(
+      final Path rootDirectory, final Function<String, String> identityFilenameTranslator) {
+    this.tomlConfigsDirectory = rootDirectory;
+    this.identityFilenameTranslator = identityFilenameTranslator;
+  }
 
   public SigningMetadataTomlConfigLoader(final Path rootDirectory) {
     this.tomlConfigsDirectory = rootDirectory;
+    identityFilenameTranslator = this::stripHexAndLowerCase;
   }
 
   Optional<SigningMetadataFile> loadMetadata(final String identifier) {
     final List<SigningMetadataFile> matchingMetadata =
         loadAvailableSigningMetadataTomlConfigs().stream()
             .filter(
-                toml -> toml.getBaseFilename().toLowerCase().endsWith(normalizeAddress(identifier)))
+                toml ->
+                    toml.getBaseFilename()
+                        .toLowerCase()
+                        .endsWith(identityFilenameTranslator.apply(identifier)))
             .collect(Collectors.toList());
 
     if (matchingMetadata.size() > 1) {
@@ -175,7 +187,7 @@ public class SigningMetadataTomlConfigLoader {
     return Optional.of(new TomlTableAdapter(signingTable));
   }
 
-  private String normalizeAddress(final String address) {
+  private String stripHexAndLowerCase(final String address) {
     if (address.startsWith("0x")) {
       return address.replace("0x", "").toLowerCase();
     } else {
