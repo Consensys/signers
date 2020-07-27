@@ -12,30 +12,12 @@
  */
 package tech.pegasys.signers.secp256k1.tests.multikey;
 
-import tech.pegasys.signers.secp256k1.api.FileSelector;
-import tech.pegasys.signers.secp256k1.api.PublicKey;
+import tech.pegasys.signers.secp256k1.DefaultFileSelector;
 import tech.pegasys.signers.secp256k1.multikey.MultiKeySignerProvider;
 
-import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.Path;
 
 public class MultiKeyAcceptanceTestBase {
-
-  private static class DefaultFileSelector implements FileSelector<PublicKey> {
-
-    @Override
-    public Filter<Path> getAllConfigFilesFilter() {
-      return entry -> entry.getFileName().toString().endsWith("toml");
-    }
-
-    @Override
-    public Filter<Path> getSpecificConfigFileFilter(final PublicKey publicKey) {
-      return entry -> {
-        final String filename = publicKey.toString().substring(2); // remove 0x prefix
-        return entry.getFileName().toString().endsWith(filename + ".toml");
-      };
-    }
-  }
 
   protected MultiKeySignerProvider signerProvider;
 

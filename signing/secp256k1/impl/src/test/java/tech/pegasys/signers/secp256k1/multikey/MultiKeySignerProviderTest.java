@@ -23,12 +23,12 @@ import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.LOWERC
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.LOWER_CASE_PUBLIC_KEY;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.copyMetadataFileToDirectory;
 
+import tech.pegasys.signers.secp256k1.PublicKeyImpl;
 import tech.pegasys.signers.secp256k1.api.FileSelector;
 import tech.pegasys.signers.secp256k1.api.PublicKey;
 import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory;
-import tech.pegasys.signers.secp256k1.common.StubbedPublicKey;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
@@ -96,7 +96,7 @@ class MultiKeySignerProviderTest {
     when(loader.loadMetadata(any())).thenReturn(Optional.of(metadataFile));
 
     final Optional<Signer> signer =
-        signerFactory.getSigner(new StubbedPublicKey(LOWER_CASE_PUBLIC_KEY));
+        signerFactory.getSigner(new PublicKeyImpl(Bytes.fromHexString(LOWER_CASE_PUBLIC_KEY)));
     assertThat(signer).isNotEmpty();
     assertThat(signer.get().getPublicKey().toString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
 

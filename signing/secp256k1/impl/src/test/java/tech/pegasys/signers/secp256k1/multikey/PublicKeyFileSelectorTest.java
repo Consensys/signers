@@ -13,14 +13,15 @@
 package tech.pegasys.signers.secp256k1.multikey;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.filter;
 
-import tech.pegasys.signers.secp256k1.common.StubbedPublicKey;
+import tech.pegasys.signers.secp256k1.PublicKeyImpl;
+import tech.pegasys.signers.secp256k1.api.PublicKey;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.Path;
 
+import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.Test;
 
 class PublicKeyFileSelectorTest {
@@ -29,7 +30,7 @@ class PublicKeyFileSelectorTest {
   void acceptsSimplePubKeyPathWithTomlExtension() throws IOException {
     final PublicKeyFileSelector fileSelector = new PublicKeyFileSelector();
 
-    final StubbedPublicKey publicKey = new StubbedPublicKey("A".repeat(40));
+    final PublicKey publicKey = new PublicKeyImpl(Bytes.fromHexString("A".repeat(40)));
 
     final Filter<Path> filter = fileSelector.getSpecificConfigFileFilter(publicKey);
 
