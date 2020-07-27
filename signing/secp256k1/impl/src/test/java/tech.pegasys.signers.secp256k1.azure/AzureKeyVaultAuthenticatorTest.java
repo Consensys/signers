@@ -91,8 +91,6 @@ public class AzureKeyVaultAuthenticatorTest {
 
   @Test
   public void ensureCanFindKeysAndSign() {
-    final String EXPECTED_ADDRESS = "0xfe3b557e8fb62b89f4916b721be55ceb828dbd73";
-
     final AzureConfigBuilder configBuilder = createValidConfigBuilder();
     final Signer signer = factory.createSigner(configBuilder.build());
 
