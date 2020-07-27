@@ -28,7 +28,7 @@ public class AzureBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
   static final String clientId = System.getenv("AZURE_CLIENT_ID");
   static final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
   static final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
-  static final String AZURE_PUBLIC_KEY =
+  public static final String PUBLIC_KEY_HEX_STRING =
       "09b02f8a5fddd222ade4ea4528faefc399623af3f736be3c44f03e2df22fb792f3931a4d9573d333ca74343305762a753388c3422a86d98b713fc91c1ea04842";
 
   @BeforeAll
@@ -41,13 +41,16 @@ public class AzureBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
   @Test
   void azureSignersAreCreatedAndExpectedAddressIsReported(@TempDir Path tomlDirectory) {
     createAzureTomlFileAt(
-        tomlDirectory.resolve(AZURE_PUBLIC_KEY + ".toml"), clientId, clientSecret, keyVaultName);
+        tomlDirectory.resolve(PUBLIC_KEY_HEX_STRING + ".toml"),
+        clientId,
+        clientSecret,
+        keyVaultName);
 
     setup(tomlDirectory);
 
     assertThat(
             signerProvider.availablePublicKeys().stream()
                 .map(pk -> Bytes.wrap(pk.getValue()).toUnprefixedHexString()))
-        .containsOnly(AZURE_PUBLIC_KEY);
+        .containsOnly(PUBLIC_KEY_HEX_STRING);
   }
 }

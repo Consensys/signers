@@ -29,7 +29,7 @@ import org.web3j.utils.Numeric;
 
 class HashicorpTlsBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
 
-  static final String FILENAME =
+  public static final String PUBLIC_KEY_HEX_STRING =
       "09b02f8a5fddd222ade4ea4528faefc399623af3f736be3c44f03e2df22fb792f3931a4d9573d333ca74343305762a753388c3422a86d98b713fc91c1ea04842";
 
   private static HashicorpSigningParams hashicorpNode;
@@ -41,13 +41,13 @@ class HashicorpTlsBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
 
   @Test
   void hashicorpSignerIsCreatedAndExpectedAddressIsReported(@TempDir final Path tempDir) {
-    createHashicorpTomlFileAt(tempDir.resolve(FILENAME + ".toml"), hashicorpNode);
+    createHashicorpTomlFileAt(tempDir.resolve(PUBLIC_KEY_HEX_STRING + ".toml"), hashicorpNode);
     setup(tempDir);
     assertThat(
             signerProvider.availablePublicKeys().stream()
                 .map(PublicKey::getValue)
                 .collect(Collectors.toList()))
-        .containsOnly(Numeric.hexStringToByteArray(FILENAME));
+        .containsOnly(Numeric.hexStringToByteArray(PUBLIC_KEY_HEX_STRING));
   }
 
   @AfterAll
