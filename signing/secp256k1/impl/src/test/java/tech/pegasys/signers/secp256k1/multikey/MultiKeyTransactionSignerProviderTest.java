@@ -44,6 +44,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 
 class MultiKeyTransactionSignerProviderTest {
 
@@ -53,7 +54,8 @@ class MultiKeyTransactionSignerProviderTest {
       mock(SigningMetadataTomlConfigLoader.class);
   final AzureKeyVaultSignerFactory azureFactory =
       new AzureKeyVaultSignerFactory(new AzureKeyVaultAuthenticator());
-  private final FileSelector<PublicKey> fileSelector = mock(FileSelector.class);
+
+  @Mock private FileSelector<PublicKey> fileSelector;
   private final MultiKeyTransactionSignerProvider signerFactory =
       new MultiKeyTransactionSignerProvider(loader, azureFactory, null, fileSelector);
   private FileBasedSigningMetadataFile metadataFile;
