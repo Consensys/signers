@@ -17,8 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import tech.pegasys.signers.secp256k1.DefaultTransactionSigner;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -29,7 +28,6 @@ import com.microsoft.azure.keyvault.webkey.JsonWebKey;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.utils.Numeric;
 
@@ -39,7 +37,6 @@ public class AzureKeyVaultSignerProviderTest {
   @Test
   public void generatedTransactionSignerHasExpectedAddress() {
     final ECKeyPair web3jKeyPair = ECKeyPair.create(BigInteger.valueOf(5));
-    final String expectedAddress = Credentials.create(web3jKeyPair).getAddress();
 
     final AzureConfig config =
         new AzureConfig("arbitraryKeyVault", "keyName", "keyVersion", "clientId", "clientSecret");
@@ -59,8 +56,7 @@ public class AzureKeyVaultSignerProviderTest {
 
     final AzureKeyVaultSignerFactory factory = new AzureKeyVaultSignerFactory(mockAuthenticator);
 
-    final TransactionSigner signer = new DefaultTransactionSigner(factory.createSigner(config));
-    assertThat(signer.getAddress()).isEqualTo(expectedAddress);
+    final Signer signer = factory.createSigner(config);
     assertThat(signer.getPublicKey().toString())
         .isEqualTo(Numeric.toHexStringWithPrefix(web3jKeyPair.getPublicKey()));
   }

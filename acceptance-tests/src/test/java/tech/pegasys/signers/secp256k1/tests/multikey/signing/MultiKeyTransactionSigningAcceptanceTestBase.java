@@ -20,7 +20,7 @@ import static org.web3j.utils.Numeric.toBigInt;
 import static org.web3j.utils.Numeric.toBytesPadded;
 
 import tech.pegasys.signers.secp256k1.api.Signature;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.common.StubbedPublicKey;
 import tech.pegasys.signers.secp256k1.tests.multikey.MultiKeyAcceptanceTestBase;
 
@@ -41,7 +41,7 @@ public class MultiKeyTransactionSigningAcceptanceTestBase extends MultiKeyAccept
       "0x9b02f8a5fddd222ade4ea4528faefc399623af3f736be3c44f03e2df22fb792f3931a4d9573d333ca74343305762a753388c3422a86d98b713fc91c1ea04842";
 
   void verifySignature() {
-    final Optional<TransactionSigner> signer =
+    final Optional<Signer> signer =
         signerProvider.getSigner(new StubbedPublicKey(PUBLIC_KEY_HEX_STRING));
     assertThat(signer).isNotEmpty();
 

@@ -12,7 +12,7 @@
  */
 package tech.pegasys.signers.secp256k1.multikey.metadata;
 
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.multikey.MultiSignerFactory;
 
 public abstract class SigningMetadataFile {
@@ -27,5 +27,5 @@ public abstract class SigningMetadataFile {
     return filename;
   }
 
-  public abstract TransactionSigner createSigner(final MultiSignerFactory factory);
+  public abstract Signer createSigner(final MultiSignerFactory factory);
 }

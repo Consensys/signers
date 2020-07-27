@@ -12,11 +12,10 @@
  */
 package tech.pegasys.signers.secp256k1.multikey;
 
-import tech.pegasys.signers.secp256k1.DefaultTransactionSigner;
 import tech.pegasys.signers.secp256k1.api.FileSelector;
 import tech.pegasys.signers.secp256k1.api.PublicKey;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
-import tech.pegasys.signers.secp256k1.api.TransactionSignerProvider;
+import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.api.SignerProvider;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory;
 import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
@@ -37,8 +36,7 @@ import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class MultiKeyTransactionSignerProvider
-    implements TransactionSignerProvider, MultiSignerFactory {
+public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactory {
 
   private static final Logger LOG = LogManager.getLogger();
 
@@ -47,7 +45,7 @@ public class MultiKeyTransactionSignerProvider
   private final HashicorpSignerFactory hashicorpSignerFactory;
   private final FileSelector<PublicKey> configFileSelector;
 
-  public static MultiKeyTransactionSignerProvider create(
+  public static MultiKeySignerProvider create(
       final Path rootDir, final FileSelector<PublicKey> configFileSelector) {
     final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader =
         new SigningMetadataTomlConfigLoader(rootDir);
@@ -57,11 +55,11 @@ public class MultiKeyTransactionSignerProvider
 
     final HashicorpSignerFactory hashicorpSignerFactory = new HashicorpSignerFactory(Vertx.vertx());
 
-    return new MultiKeyTransactionSignerProvider(
+    return new MultiKeySignerProvider(
         signingMetadataTomlConfigLoader, azureFactory, hashicorpSignerFactory, configFileSelector);
   }
 
-  public MultiKeyTransactionSignerProvider(
+  public MultiKeySignerProvider(
       final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader,
       final AzureKeyVaultSignerFactory azureFactory,
       final HashicorpSignerFactory hashicorpSignerFactory,
@@ -73,7 +71,7 @@ public class MultiKeyTransactionSignerProvider
   }
 
   @Override
-  public Optional<TransactionSigner> getSigner(final PublicKey publicKey) {
+  public Optional<Signer> getSigner(final PublicKey publicKey) {
     return signingMetadataTomlConfigLoader
         .loadMetadata(configFileSelector.getSpecificConfigFileFilter(publicKey))
         .map(metadataFile -> metadataFile.createSigner(this));
@@ -86,7 +84,7 @@ public class MultiKeyTransactionSignerProvider
         .stream()
         .map(
             metadataFile -> {
-              final TransactionSigner signer = metadataFile.createSigner(this);
+              final Signer signer = metadataFile.createSigner(this);
               try {
                 if ((signer != null)
                     && configFileSelector
@@ -101,14 +99,14 @@ public class MultiKeyTransactionSignerProvider
               }
             })
         .filter(Objects::nonNull)
-        .map(TransactionSigner::getPublicKey)
+        .map(Signer::getPublicKey)
         .collect(Collectors.toSet());
   }
 
   @Override
-  public TransactionSigner createSigner(final AzureSigningMetadataFile metadataFile) {
+  public Signer createSigner(final AzureSigningMetadataFile metadataFile) {
     try {
-      return new DefaultTransactionSigner(azureFactory.createSigner(metadataFile.getConfig()));
+      return azureFactory.createSigner(metadataFile.getConfig());
     } catch (final TransactionSignerInitializationException e) {
       LOG.error("Failed to construct Azure signer from " + metadataFile.getFilename());
       return null;
@@ -116,9 +114,9 @@ public class MultiKeyTransactionSignerProvider
   }
 
   @Override
-  public TransactionSigner createSigner(final HashicorpSigningMetadataFile metadataFile) {
+  public Signer createSigner(final HashicorpSigningMetadataFile metadataFile) {
     try {
-      return new DefaultTransactionSigner(hashicorpSignerFactory.create(metadataFile.getConfig()));
+      return hashicorpSignerFactory.create(metadataFile.getConfig());
     } catch (final TransactionSignerInitializationException e) {
       LOG.error("Failed to construct Hashicorp signer from " + metadataFile.getFilename());
       return null;
@@ -126,11 +124,10 @@ public class MultiKeyTransactionSignerProvider
   }
 
   @Override
-  public TransactionSigner createSigner(final FileBasedSigningMetadataFile metadataFile) {
+  public Signer createSigner(final FileBasedSigningMetadataFile metadataFile) {
     try {
-      return new DefaultTransactionSigner(
-          FileBasedSignerFactory.createSigner(
-              metadataFile.getKeyPath(), metadataFile.getPasswordPath()));
+      return FileBasedSignerFactory.createSigner(
+          metadataFile.getKeyPath(), metadataFile.getPasswordPath());
 
     } catch (final TransactionSignerInitializationException e) {
       LOG.error("Unable to load signer with key " + metadataFile.getKeyPath().getFileName(), e);

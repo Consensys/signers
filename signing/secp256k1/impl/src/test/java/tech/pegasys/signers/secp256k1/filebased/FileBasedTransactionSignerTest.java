@@ -16,8 +16,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-import tech.pegasys.signers.secp256k1.DefaultTransactionSigner;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
 
 import java.io.File;
@@ -52,12 +51,9 @@ public class FileBasedTransactionSignerTest {
     final File keyFile = new File(fileName);
     final File pwdFile = createFile(MY_PASSWORD);
 
-    final TransactionSigner signer =
-        new DefaultTransactionSigner(
-            FileBasedSignerFactory.createSigner(keyFile.toPath(), pwdFile.toPath()));
+    final Signer signer = FileBasedSignerFactory.createSigner(keyFile.toPath(), pwdFile.toPath());
 
     assertThat(signer).isNotNull();
-    assertThat(signer.getAddress()).isNotEmpty();
     assertThat(signer.getPublicKey()).isNotNull();
   }
 

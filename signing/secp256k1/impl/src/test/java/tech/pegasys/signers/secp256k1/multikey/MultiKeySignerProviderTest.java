@@ -25,7 +25,7 @@ import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.copyMe
 
 import tech.pegasys.signers.secp256k1.api.FileSelector;
 import tech.pegasys.signers.secp256k1.api.PublicKey;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory;
 import tech.pegasys.signers.secp256k1.common.StubbedPublicKey;
@@ -49,7 +49,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class MultiKeyTransactionSignerProviderTest {
+class MultiKeySignerProviderTest {
 
   @TempDir Path configsDirectory;
 
@@ -59,7 +59,7 @@ class MultiKeyTransactionSignerProviderTest {
       new AzureKeyVaultSignerFactory(new AzureKeyVaultAuthenticator());
 
   @Mock private FileSelector<PublicKey> fileSelector;
-  private MultiKeyTransactionSignerProvider signerFactory;
+  private MultiKeySignerProvider signerFactory;
   private FileBasedSigningMetadataFile metadataFile;
   private final String KEY_FILENAME = "k.key";
   private final String PASSWORD_FILENAME = "p.password";
@@ -88,17 +88,16 @@ class MultiKeyTransactionSignerProviderTest {
     } catch (Exception e) {
       fail("Error copying metadata files", e);
     }
-    signerFactory = new MultiKeyTransactionSignerProvider(loader, azureFactory, null, fileSelector);
+    signerFactory = new MultiKeySignerProvider(loader, azureFactory, null, fileSelector);
   }
 
   @Test
   void getSignerForAvailableMetadataReturnsSigner() {
     when(loader.loadMetadata(any())).thenReturn(Optional.of(metadataFile));
 
-    final Optional<TransactionSigner> signer =
+    final Optional<Signer> signer =
         signerFactory.getSigner(new StubbedPublicKey(LOWER_CASE_PUBLIC_KEY));
     assertThat(signer).isNotEmpty();
-    assertThat(signer.get().getAddress()).isEqualTo("0x" + LOWERCASE_ADDRESS);
     assertThat(signer.get().getPublicKey().toString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
 
     final ArgumentCaptor<PublicKey> publicKeyCaptor = ArgumentCaptor.forClass(PublicKey.class);
@@ -129,10 +128,8 @@ class MultiKeyTransactionSignerProviderTest {
             Path.of(Resources.getResource("metadata-toml-configs").toURI())
                 .resolve(PASSWORD_FILENAME));
 
-    final TransactionSigner signer = signerFactory.createSigner(capitalisedMetadata);
+    final Signer signer = signerFactory.createSigner(capitalisedMetadata);
     assertThat(signer).isNotNull();
-    assertThat(capitalisedMetadata.getFilename()).isNotEqualTo(signer.getAddress().substring(2));
-    assertThat(signer.getAddress()).isEqualTo("0x" + LOWERCASE_ADDRESS);
     assertThat(signer.getPublicKey().toString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
   }
 }

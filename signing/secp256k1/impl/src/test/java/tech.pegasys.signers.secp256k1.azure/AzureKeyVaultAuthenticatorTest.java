@@ -14,11 +14,9 @@ package tech.pegasys.signers.secp256k1.azure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.web3j.crypto.Keys.getAddress;
 
-import tech.pegasys.signers.secp256k1.DefaultTransactionSigner;
 import tech.pegasys.signers.secp256k1.api.Signature;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.azure.AzureConfig.AzureConfigBuilder;
 import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
 
@@ -96,9 +94,7 @@ public class AzureKeyVaultAuthenticatorTest {
     final String EXPECTED_ADDRESS = "0xfe3b557e8fb62b89f4916b721be55ceb828dbd73";
 
     final AzureConfigBuilder configBuilder = createValidConfigBuilder();
-    final TransactionSigner signer =
-        new DefaultTransactionSigner(factory.createSigner(configBuilder.build()));
-    assertThat(signer.getAddress()).isEqualTo(EXPECTED_ADDRESS);
+    final Signer signer = factory.createSigner(configBuilder.build());
 
     byte[] data = {1, 2, 3};
     final Signature signature = signer.sign(data);
@@ -111,7 +107,7 @@ public class AzureKeyVaultAuthenticatorTest {
             new ECDSASignature(signature.getR(), signature.getS()),
             dataHash);
 
-    assertThat("0x" + getAddress(publicKey)).isEqualTo(signer.getAddress());
+    assertThat(publicKey).isEqualTo(new BigInteger(1, signer.getPublicKey().getValue()));
   }
 
   @Test

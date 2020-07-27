@@ -15,9 +15,9 @@ package tech.pegasys.signers.secp256k1.api;
 import java.util.Optional;
 import java.util.Set;
 
-public interface TransactionSignerProvider {
+public interface SignerProvider {
 
-  Optional<TransactionSigner> getSigner(PublicKey publicKey);
+  Optional<Signer> getSigner(PublicKey publicKey);
 
   Set<PublicKey> availablePublicKeys();
 
