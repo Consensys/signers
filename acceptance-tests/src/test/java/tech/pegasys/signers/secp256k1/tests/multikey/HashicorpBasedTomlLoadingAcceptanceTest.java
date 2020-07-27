@@ -43,7 +43,7 @@ class HashicorpBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase
   void hashicorpSignerIsCreatedAndExpectedAddressIsReported(@TempDir final Path tempDir) {
     createHashicorpTomlFileAt(tempDir.resolve(FILENAME + ".toml"), hashicorpNode);
     setup(tempDir);
-    assertThat(signerProvider.availableAddresses()).containsOnly(HASHICORP_ETHEREUM_ADDRESS);
+
     assertThat(
             signerProvider.availablePublicKeys().stream()
                 .map(pk -> Bytes.wrap(pk.getValue()).toHexString()))

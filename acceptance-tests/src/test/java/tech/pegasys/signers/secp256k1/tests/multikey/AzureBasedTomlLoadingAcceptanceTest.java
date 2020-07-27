@@ -50,7 +50,6 @@ public class AzureBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
 
     setup(tomlDirectory);
 
-    assertThat(signerProvider.availableAddresses()).containsOnly(AZURE_ETHEREUM_ADDRESS);
     assertThat(
             signerProvider.availablePublicKeys().stream()
                 .map(pk -> Bytes.wrap(pk.getValue()).toUnprefixedHexString()))

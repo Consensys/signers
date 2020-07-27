@@ -14,41 +14,48 @@ package tech.pegasys.signers.secp256k1.multikey;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.CONFIG_FILE_EXTENSION;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.LOWERCASE_ADDRESS;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.LOWER_CASE_PUBLIC_KEY;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.copyMetadataFileToDirectory;
 
+import tech.pegasys.signers.secp256k1.api.FileSelector;
+import tech.pegasys.signers.secp256k1.api.PublicKey;
 import tech.pegasys.signers.secp256k1.api.TransactionSigner;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory;
+import tech.pegasys.signers.secp256k1.common.StubbedPublicKey;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Optional;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 
 class MultiKeyTransactionSignerProviderTest {
 
   @TempDir Path configsDirectory;
 
-  private SigningMetadataTomlConfigLoader loader = mock(SigningMetadataTomlConfigLoader.class);
+  private final SigningMetadataTomlConfigLoader loader =
+      mock(SigningMetadataTomlConfigLoader.class);
   final AzureKeyVaultSignerFactory azureFactory =
       new AzureKeyVaultSignerFactory(new AzureKeyVaultAuthenticator());
-  private MultiKeyTransactionSignerProvider signerFactory =
-      new MultiKeyTransactionSignerProvider(loader, azureFactory, null, identityFilenameTranslator);
+  private final FileSelector<PublicKey> fileSelector = mock(FileSelector.class);
+  private final MultiKeyTransactionSignerProvider signerFactory =
+      new MultiKeyTransactionSignerProvider(loader, azureFactory, null, fileSelector);
   private FileBasedSigningMetadataFile metadataFile;
   private final String KEY_FILENAME = "k.key";
   private final String PASSWORD_FILENAME = "p.password";
@@ -81,19 +88,25 @@ class MultiKeyTransactionSignerProviderTest {
 
   @Test
   void getSignerForAvailableMetadataReturnsSigner() {
-    when(loader.loadMetadata(LOWERCASE_ADDRESS)).thenReturn(Optional.of(metadataFile));
+    when(loader.loadMetadata(any())).thenReturn(Optional.of(metadataFile));
 
-    final Optional<TransactionSigner> signer = signerFactory.getSigner(LOWERCASE_ADDRESS);
+    final Optional<TransactionSigner> signer =
+        signerFactory.getSigner(new StubbedPublicKey(LOWER_CASE_PUBLIC_KEY));
     assertThat(signer).isNotEmpty();
     assertThat(signer.get().getAddress()).isEqualTo("0x" + LOWERCASE_ADDRESS);
     assertThat(signer.get().getPublicKey().toString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
+
+    final ArgumentCaptor<PublicKey> publicKeyCaptor = ArgumentCaptor.forClass(PublicKey.class);
+    verify(fileSelector).getSpecificConfigFileFilter(publicKeyCaptor.capture());
+
+    assertThat(publicKeyCaptor.getValue()).isEqualTo(LOWER_CASE_PUBLIC_KEY);
   }
 
   @Test
   void getAddresses() {
-    final Collection<SigningMetadataFile> files = Collections.singleton(metadataFile);
-    when(loader.loadAvailableSigningMetadataTomlConfigs()).thenReturn(files);
-    assertThat(signerFactory.availableAddresses()).containsExactly("0x" + LOWERCASE_ADDRESS);
+    final ImmutableList<SigningMetadataFile> files = ImmutableList.of(metadataFile);
+    when(loader.loadAvailableSigningMetadataTomlConfigs(any())).thenReturn(files);
+    assertThat(signerFactory.availablePublicKeys().size()).isOne();
     assertThat(
             signerFactory.availablePublicKeys().stream()
                 .map(pk -> Bytes.wrap(pk.getValue()).toUnprefixedHexString()))
@@ -111,8 +124,7 @@ class MultiKeyTransactionSignerProviderTest {
 
     final TransactionSigner signer = signerFactory.createSigner(capitalisedMetadata);
     assertThat(signer).isNotNull();
-    assertThat(capitalisedMetadata.getFilename())
-        .isNotEqualTo(signer.getAddress().substring(2));
+    assertThat(capitalisedMetadata.getFilename()).isNotEqualTo(signer.getAddress().substring(2));
     assertThat(signer.getAddress()).isEqualTo("0x" + LOWERCASE_ADDRESS);
     assertThat(signer.getPublicKey().toString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
   }

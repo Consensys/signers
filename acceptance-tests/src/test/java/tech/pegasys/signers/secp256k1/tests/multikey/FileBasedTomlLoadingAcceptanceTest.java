@@ -51,7 +51,6 @@ class FileBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
 
     setup(tomlDirectory);
 
-    assertThat(signerProvider.availableAddresses()).containsOnly(FILE_ETHEREUM_ADDRESS);
     assertThat(
             signerProvider.availablePublicKeys().stream()
                 .map(pk -> Bytes.wrap(pk.getValue()).toHexString()))
@@ -75,7 +74,6 @@ class FileBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
 
     setup(tomlDirectory);
 
-    assertThat(signerProvider.availableAddresses()).containsOnly(FILE_ETHEREUM_ADDRESS);
     assertThat(
             signerProvider.availablePublicKeys().stream()
                 .map(pk -> Bytes.wrap(pk.getValue()).toHexString()))

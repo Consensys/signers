@@ -12,7 +12,6 @@
  */
 package tech.pegasys.signers.secp256k1.multikey;
 
-import java.io.IOException;
 import tech.pegasys.signers.secp256k1.DefaultTransactionSigner;
 import tech.pegasys.signers.secp256k1.api.FileSelector;
 import tech.pegasys.signers.secp256k1.api.PublicKey;
@@ -27,11 +26,11 @@ import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HashicorpSigningMetadataFile;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import io.vertx.core.Vertx;
@@ -81,40 +80,26 @@ public class MultiKeyTransactionSignerProvider
   }
 
   @Override
-  public Optional<TransactionSigner> getSigner(final String address) {
-    return signingMetadataTomlConfigLoader
-        .loadMetadata(configFileSelector.getSpecificConfigFileFilter(address))
-        .map(metadataFile -> metadataFile.createSigner(this));
-  }
-
-  @Override
-  public Set<String> availableAddresses() {
-    return availableFields(TransactionSigner::getAddress);
-  }
-
-  @Override
   public Set<PublicKey> availablePublicKeys() {
-    return availableFields(TransactionSigner::getPublicKey);
-  }
-
-  private <T> Set<T> availableFields(final Function<TransactionSigner, T> fn) {
     return signingMetadataTomlConfigLoader
         .loadAvailableSigningMetadataTomlConfigs(configFileSelector.getCollectiveFilter()).stream()
-        .map(metadataFile -> {
-          final TransactionSigner signer = metadataFile.createSigner(this);
-          try {
-            if ((signer != null) && configFileSelector
-                .getSpecificConfigFileFilter(signer.getPublicKey())
-                .accept(Path.of(metadataFile.getFilename()))) {
-              return signer;
-            }
-            return null;
-          } catch(final IOException e) {
-            return null;
-          }
-        })
+        .map(
+            metadataFile -> {
+              final TransactionSigner signer = metadataFile.createSigner(this);
+              try {
+                if ((signer != null)
+                    && configFileSelector
+                        .getSpecificConfigFileFilter(signer.getPublicKey())
+                        .accept(Path.of(metadataFile.getFilename()))) {
+                  return signer;
+                }
+                return null;
+              } catch (final IOException e) {
+                return null;
+              }
+            })
         .filter(Objects::nonNull)
-        .map(fn)
+        .map(TransactionSigner::getPublicKey)
         .collect(Collectors.toSet());
   }
 

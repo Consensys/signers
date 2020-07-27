@@ -10,19 +10,23 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.secp256k1.api;
+package tech.pegasys.signers.secp256k1.common;
+
+import tech.pegasys.signers.secp256k1.api.FileSelector;
+import tech.pegasys.signers.secp256k1.api.PublicKey;
 
 import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.Path;
 
-/*
-A set of rules regarding how key files are to be selected.
-Should be overridden by the calling application to define their naming
-convention.
- */
-public interface FileSelector<T> {
+public class StubbedFileSelector implements FileSelector<PublicKey> {
 
-  Filter<Path> getCollectiveFilter();
+  @Override
+  public Filter<Path> getCollectiveFilter() {
+    return entry -> entry.getFileName().endsWith("toml");
+  }
 
-  Filter<Path> getSpecificConfigFileFilter(T selectionCriterion);
+  @Override
+  public Filter<Path> getSpecificConfigFileFilter(final PublicKey selectionCriterion) {
+    return entry -> entry.getFileName().endsWith(selectionCriterion.toString());
+  }
 }

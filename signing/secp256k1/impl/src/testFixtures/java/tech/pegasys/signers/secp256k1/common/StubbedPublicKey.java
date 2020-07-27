@@ -10,19 +10,27 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.secp256k1.api;
+package tech.pegasys.signers.secp256k1.common;
 
-import java.nio.file.DirectoryStream.Filter;
-import java.nio.file.Path;
+import tech.pegasys.signers.secp256k1.api.PublicKey;
 
-/*
-A set of rules regarding how key files are to be selected.
-Should be overridden by the calling application to define their naming
-convention.
- */
-public interface FileSelector<T> {
+import org.apache.tuweni.bytes.Bytes;
 
-  Filter<Path> getCollectiveFilter();
+public class StubbedPublicKey implements PublicKey {
 
-  Filter<Path> getSpecificConfigFileFilter(T selectionCriterion);
+  private final String keyHexString;
+
+  public StubbedPublicKey(final String keyHexString) {
+    this.keyHexString = keyHexString;
+  }
+
+  @Override
+  public byte[] getValue() {
+    return Bytes.fromHexString(keyHexString).toArrayUnsafe();
+  }
+
+  @Override
+  public String toString() {
+    return keyHexString;
+  }
 }

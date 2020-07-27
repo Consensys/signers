@@ -21,6 +21,7 @@ import static org.web3j.utils.Numeric.toBytesPadded;
 
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.common.StubbedPublicKey;
 import tech.pegasys.signers.secp256k1.tests.multikey.MultiKeyAcceptanceTestBase;
 
 import java.math.BigInteger;
@@ -33,13 +34,15 @@ import org.web3j.crypto.Sign.SignatureData;
 
 public class MultiKeyTransactionSigningAcceptanceTestBase extends MultiKeyAcceptanceTestBase {
 
-  private static final String ADDRESS = "fe3b557e8fb62b89f4916b721be55ceb828dbd73";
   private static final byte[] DATA_TO_SIGN = "42".getBytes(UTF_8);
   private static final String PRIVATE_KEY =
       "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63";
+  static final String PUBLIC_KEY_HEX_STRING =
+      "0x9b02f8a5fddd222ade4ea4528faefc399623af3f736be3c44f03e2df22fb792f3931a4d9573d333ca74343305762a753388c3422a86d98b713fc91c1ea04842";
 
   void verifySignature() {
-    final Optional<TransactionSigner> signer = signerProvider.getSigner(ADDRESS);
+    final Optional<TransactionSigner> signer =
+        signerProvider.getSigner(new StubbedPublicKey(PUBLIC_KEY_HEX_STRING));
     assertThat(signer).isNotEmpty();
 
     final BigInteger privateKey = new BigInteger(1, Bytes.fromHexString(PRIVATE_KEY).toArray());

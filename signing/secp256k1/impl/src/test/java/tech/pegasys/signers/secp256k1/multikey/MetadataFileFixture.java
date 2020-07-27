@@ -14,11 +14,13 @@ package tech.pegasys.signers.secp256k1.multikey;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+import tech.pegasys.signers.secp256k1.common.AddressPostFixFilter;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -30,6 +32,8 @@ public class MetadataFileFixture {
   public static String LOWER_CASE_PUBLIC_KEY =
       "af80b90d25145da28c583359beb47b21796b2fe1a23c1511e443e7a64dfdb27d7434c380f0aa4c500e220aa1a9d068514b1ff4d5019e624e7ba1efe82b340a59";
   public static String LOWERCASE_ADDRESS = "627306090abab3a6e1400e9345bc60c78a8bef57";
+  public static Filter<Path> LOWERCASE_ADDRESS_FILE_FILTER =
+      new AddressPostFixFilter(LOWER_CASE_PUBLIC_KEY);
   public static String PREFIX_ADDRESS = "fe3b557e8fb62b89f4916b721be55ceb828dbd73";
   public static String UNKNOWN_TYPE_SIGNER_ADDRESS = "fe3b557e8fb62b89f4916b721be55ceb828dbd75";
   public static String UNKNOWN_TYPE_SIGNER_FILENAME =
@@ -46,10 +50,6 @@ public class MetadataFileFixture {
       "missing_key_and_password_file_"
           + MISSING_KEY_AND_PASSWORD_PATH_ADDRESS
           + CONFIG_FILE_EXTENSION;
-
-  public static String PREFIX_MIXEDCASE_ADDRESS = "f17f52151ebef6c7334fad080c5704d77216b732";
-  public static String PREFIX_MIXEDCASE_FILENAME =
-      "UTC--2019-10-23T04-00-04.860366000Z--" + PREFIX_MIXEDCASE_ADDRESS + CONFIG_FILE_EXTENSION;
 
   public static String SUFFIX_ADDRESS = "627306090abab3a6e1400e9345bc60c78a8bef60";
   public static String PREFIX_LOWERCASE_DUPLICATE_ADDRESS =

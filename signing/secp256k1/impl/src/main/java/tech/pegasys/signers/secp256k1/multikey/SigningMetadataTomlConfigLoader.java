@@ -45,7 +45,7 @@ public class SigningMetadataTomlConfigLoader {
     this.tomlConfigsDirectory = rootDirectory;
   }
 
-  Optional<SigningMetadataFile> loadMetadata(
+  public Optional<SigningMetadataFile> loadMetadata(
       final DirectoryStream.Filter<Path> configFileSelector) {
     final List<SigningMetadataFile> matchingMetadata =
         loadAvailableSigningMetadataTomlConfigs(configFileSelector);

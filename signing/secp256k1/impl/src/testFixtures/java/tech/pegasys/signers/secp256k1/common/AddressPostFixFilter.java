@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.secp256k1.multikey;
+package tech.pegasys.signers.secp256k1.common;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -19,30 +19,30 @@ import java.util.List;
 
 import com.google.common.base.Splitter;
 
-class AddressFileMatcher implements DirectoryStream.Filter<Path> {
+public class AddressPostFixFilter implements DirectoryStream.Filter<Path> {
 
+  private static final String fileExtension = "toml";
   private final String addressToMatch;
-  final String extension;
 
-  public AddressFileMatcher(final String addressToMatch, final String extension) {
-    if (addressToMatch.startsWith("0x")) {
-      this.addressToMatch = addressToMatch.replace("0x", "");
-    } else {
-      this.addressToMatch = addressToMatch;
-    }
-    this.extension = extension;
+  public AddressPostFixFilter(final String addressToMatch) {
+    this.addressToMatch = addressToMatch;
   }
 
   @Override
   public boolean accept(final Path entry) throws IOException {
-    final String filename = entry.getFileName().toString();
-    final List<String> tokens = Splitter.onPattern("\\.(?=[^\\.]+$)").splitToList(filename);
+
+    final List<String> tokens =
+        Splitter.onPattern("\\.(?=[^\\.]+$)").splitToList(entry.getFileName().toString());
 
     if (tokens.size() < 2) {
       return false;
     }
 
-    return tokens.get(0).toLowerCase().endsWith(addressToMatch.toLowerCase())
-        && (tokens.get(tokens.size() - 1).equals(extension));
+    return tokens.get(0).toLowerCase().equals(addressToMatch.toLowerCase())
+        && hasExpectedFileExtension(entry);
+  }
+
+  private boolean hasExpectedFileExtension(final Path entry) {
+    return entry.getFileName().toString().toLowerCase().endsWith(fileExtension.toLowerCase());
   }
 }
