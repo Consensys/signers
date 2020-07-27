@@ -22,7 +22,7 @@ convention.
  */
 public interface FileSelector<T> {
 
-  Filter<Path> getCollectiveFilter();
+  Filter<Path> getAllConfigFilesFilter();
 
   Filter<Path> getSpecificConfigFileFilter(T selectionCriterion);
 }

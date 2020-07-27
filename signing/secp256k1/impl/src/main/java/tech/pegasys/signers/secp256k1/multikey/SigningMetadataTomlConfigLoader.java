@@ -12,6 +12,8 @@
  */
 package tech.pegasys.signers.secp256k1.multikey;
 
+import static java.util.Collections.emptyList;
+
 import tech.pegasys.signers.hashicorp.config.HashicorpKeyConfig;
 import tech.pegasys.signers.hashicorp.config.loader.toml.TomlConfigLoader;
 import tech.pegasys.signers.secp256k1.azure.AzureConfig.AzureConfigBuilder;
@@ -74,7 +76,7 @@ public class SigningMetadataTomlConfigLoader {
       return ImmutableList.copyOf(metadataConfigs);
     } catch (final IOException e) {
       LOG.warn("Error searching for signing metadata TOML files", e);
-      return ImmutableList.of();
+      return emptyList();
     }
   }
 

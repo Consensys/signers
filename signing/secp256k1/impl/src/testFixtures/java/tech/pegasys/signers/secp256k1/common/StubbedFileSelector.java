@@ -21,7 +21,7 @@ import java.nio.file.Path;
 public class StubbedFileSelector implements FileSelector<PublicKey> {
 
   @Override
-  public Filter<Path> getCollectiveFilter() {
+  public Filter<Path> getAllConfigFilesFilter() {
     return entry -> entry.getFileName().endsWith("toml");
   }
 

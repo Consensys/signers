@@ -24,7 +24,7 @@ public class MultiKeyAcceptanceTestBase {
   private static class DefaultFileSelector implements FileSelector<PublicKey> {
 
     @Override
-    public Filter<Path> getCollectiveFilter() {
+    public Filter<Path> getAllConfigFilesFilter() {
       return entry -> entry.getFileName().toString().endsWith("toml");
     }
 

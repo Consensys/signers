@@ -82,7 +82,8 @@ public class MultiKeyTransactionSignerProvider
   @Override
   public Set<PublicKey> availablePublicKeys() {
     return signingMetadataTomlConfigLoader
-        .loadAvailableSigningMetadataTomlConfigs(configFileSelector.getCollectiveFilter()).stream()
+        .loadAvailableSigningMetadataTomlConfigs(configFileSelector.getAllConfigFilesFilter())
+        .stream()
         .map(
             metadataFile -> {
               final TransactionSigner signer = metadataFile.createSigner(this);

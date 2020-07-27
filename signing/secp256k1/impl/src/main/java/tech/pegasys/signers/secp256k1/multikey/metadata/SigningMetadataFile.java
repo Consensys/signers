@@ -17,14 +17,14 @@ import tech.pegasys.signers.secp256k1.multikey.MultiSignerFactory;
 
 public abstract class SigningMetadataFile {
 
-  protected String baseFilename;
+  protected String filename;
 
   public SigningMetadataFile(final String filename) {
-    this.baseFilename = filename;
+    this.filename = filename;
   }
 
   public String getFilename() {
-    return baseFilename;
+    return filename;
   }
 
   public abstract TransactionSigner createSigner(final MultiSignerFactory factory);

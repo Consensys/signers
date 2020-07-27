@@ -33,7 +33,7 @@ public class PublicKeyFileSelector implements FileSelector<PublicKey> {
   final String fileExtension = "toml";
 
   @Override
-  public Filter<Path> getCollectiveFilter() {
+  public Filter<Path> getAllConfigFilesFilter() {
     return this::hasExpectedFileExtension;
   }
 
