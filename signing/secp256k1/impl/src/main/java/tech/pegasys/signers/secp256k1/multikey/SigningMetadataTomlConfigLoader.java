@@ -62,7 +62,7 @@ public class SigningMetadataTomlConfigLoader {
     }
   }
 
-  ImmutableList<SigningMetadataFile> loadAvailableSigningMetadataTomlConfigs(
+  List<SigningMetadataFile> loadAvailableSigningMetadataTomlConfigs(
       final DirectoryStream.Filter<Path> configFileSelector) {
     final List<SigningMetadataFile> metadataConfigs = Lists.newArrayList();
 

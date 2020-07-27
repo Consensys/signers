@@ -27,9 +27,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class FileBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
+
   static final String FILENAME =
       "b0de161ce49581aa75f25852fb1bb882c8921ff5f6eaca9329f5c5f34966085a704f0a555c148359ebaffbe0d92712386890606a5ac8e54563db8279f2120f5d";
-
   static final String FILE_PUBLIC_KEY = "0x" + FILENAME;
 
   @Test

@@ -95,6 +95,7 @@ public class MultiKeyTransactionSignerProvider
                 }
                 return null;
               } catch (final IOException e) {
+                LOG.warn("IO Exception raised while loading {}", metadataFile.getFilename());
                 return null;
               }
             })
