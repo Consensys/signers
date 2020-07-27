@@ -19,25 +19,20 @@ import tech.pegasys.signers.secp256k1.multikey.MultiKeyTransactionSignerProvider
 import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.Path;
 
-import org.web3j.crypto.Keys;
-
 public class MultiKeyAcceptanceTestBase {
 
   private static class DefaultFileSelector implements FileSelector<PublicKey> {
 
     @Override
     public Filter<Path> getCollectiveFilter() {
-      return entry -> entry.endsWith("toml");
+      return entry -> entry.getFileName().toString().endsWith("toml");
     }
 
     @Override
     public Filter<Path> getSpecificConfigFileFilter(final PublicKey publicKey) {
       return entry -> {
-        String addressToMatch = Keys.getAddress(publicKey.toString());
-        if (addressToMatch.startsWith("0x")) {
-          addressToMatch = addressToMatch.substring(2);
-        }
-        return entry.endsWith(addressToMatch + ".toml");
+        final String filename = publicKey.toString().substring(2); // remove 0x prefix
+        return entry.getFileName().toString().endsWith(filename + ".toml");
       };
     }
   }

@@ -29,8 +29,8 @@ class HashicorpBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase
 
   static final String HASHICORP_PUBLIC_KEY =
       "0x09b02f8a5fddd222ade4ea4528faefc399623af3f736be3c44f03e2df22fb792f3931a4d9573d333ca74343305762a753388c3422a86d98b713fc91c1ea04842";
-  static final String FILENAME = "fe3b557e8fb62b89f4916b721be55ceb828dbd73";
-  static final String HASHICORP_ETHEREUM_ADDRESS = "0x" + FILENAME;
+  static final String FILENAME =
+      "09b02f8a5fddd222ade4ea4528faefc399623af3f736be3c44f03e2df22fb792f3931a4d9573d333ca74343305762a753388c3422a86d98b713fc91c1ea04842";
 
   private static HashicorpSigningParams hashicorpNode;
 

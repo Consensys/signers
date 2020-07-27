@@ -27,17 +27,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class FileBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
+  static final String FILENAME =
+      "b0de161ce49581aa75f25852fb1bb882c8921ff5f6eaca9329f5c5f34966085a704f0a555c148359ebaffbe0d92712386890606a5ac8e54563db8279f2120f5d";
 
-  static final String FILE_PUBLIC_KEY =
-      "0xb0de161ce49581aa75f25852fb1bb882c8921ff5f6eaca9329f5c5f34966085a704f0a555c148359ebaffbe0d92712386890606a5ac8e54563db8279f2120f5d";
-  static final String FILENAME = "a01f618424b0113a9cebdc6cb66ca5b48e9120c5";
-  static final String FILE_ETHEREUM_ADDRESS = "0x" + FILENAME;
+  static final String FILE_PUBLIC_KEY = "0x" + FILENAME;
 
   @Test
   void validFileBasedTomlFileProducesSignerWhichReportsMatchingAddress(@TempDir Path tomlDirectory)
       throws URISyntaxException {
     createFileBasedTomlFileAt(
-        tomlDirectory.resolve("arbitrary_prefix" + FILENAME + ".toml").toAbsolutePath(),
+        tomlDirectory.resolve(FILENAME + ".toml").toAbsolutePath(),
         new File(
                 Resources.getResource(
                         "secp256k1/UTC--2019-12-05T05-17-11.151993000Z--a01f618424b0113a9cebdc6cb66ca5b48e9120c5.key")
@@ -64,7 +63,7 @@ class FileBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
         Files.writeString(
             tomlDirectory.resolve("password.txt"), String.format("password%nsecond line%n"));
     createFileBasedTomlFileAt(
-        tomlDirectory.resolve("arbitrary_prefix" + FILENAME + ".toml").toAbsolutePath(),
+        tomlDirectory.resolve(FILENAME + ".toml").toAbsolutePath(),
         new File(
                 Resources.getResource(
                         "secp256k1/UTC--2019-12-05T05-17-11.151993000Z--a01f618424b0113a9cebdc6cb66ca5b48e9120c5.key")
