@@ -13,7 +13,6 @@
 package tech.pegasys.signers.secp256k1.multikey;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.CONFIG_FILE_EXTENSION;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.KEY_FILE;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.LOWERCASE_ADDRESS;
@@ -22,8 +21,6 @@ import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.PREFIX
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.load;
 
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
-
-import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +31,8 @@ class FileBasedSigningMetadataFileTest {
     final FileBasedSigningMetadataFile fileBasedSigningMetadataFile =
         load(LOWERCASE_ADDRESS + CONFIG_FILE_EXTENSION, KEY_FILE, PASSWORD_FILE);
 
-    assertThat(fileBasedSigningMetadataFile.getFilename()).matches(LOWERCASE_ADDRESS);
+    assertThat(fileBasedSigningMetadataFile.getFilename())
+        .matches(LOWERCASE_ADDRESS + CONFIG_FILE_EXTENSION);
     assertThat(fileBasedSigningMetadataFile.getKeyPath().toFile().toString()).matches(KEY_FILE);
     assertThat(fileBasedSigningMetadataFile.getPasswordPath().toFile().toString())
         .matches(PASSWORD_FILE);
@@ -46,24 +44,10 @@ class FileBasedSigningMetadataFileTest {
     final FileBasedSigningMetadataFile fileBasedSigningMetadataFile =
         load(prefix + PREFIX_ADDRESS + CONFIG_FILE_EXTENSION, KEY_FILE, PASSWORD_FILE);
 
-    assertThat(fileBasedSigningMetadataFile.getFilename()).matches(prefix + PREFIX_ADDRESS);
+    assertThat(fileBasedSigningMetadataFile.getFilename())
+        .matches(prefix + PREFIX_ADDRESS + CONFIG_FILE_EXTENSION);
     assertThat(fileBasedSigningMetadataFile.getKeyPath().toFile().toString()).matches(KEY_FILE);
     assertThat(fileBasedSigningMetadataFile.getPasswordPath().toFile().toString())
         .matches(PASSWORD_FILE);
-  }
-
-  @Test
-  void keyWithInvalidExtensionThrowsIllegalArgumentException() {
-    final Path metadataFile = Path.of("invalid_extension.txt");
-    final Path keyFile = Path.of("valid_extension.key");
-    final Path passwordFile = Path.of("valid_extension.password");
-
-    assertThatThrownBy(
-            () -> {
-              new FileBasedSigningMetadataFile(
-                  metadataFile.getFileName().toString(), keyFile, passwordFile);
-            })
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("Invalid TOML config filename extension");
   }
 }

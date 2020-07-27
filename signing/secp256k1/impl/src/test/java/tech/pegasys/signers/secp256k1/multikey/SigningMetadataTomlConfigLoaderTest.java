@@ -146,16 +146,16 @@ class SigningMetadataTomlConfigLoaderTest {
     final FileBasedSigningMetadataFile metadataFile1 =
         copyMetadataFileToDirectory(
             configsDirectory, LOWERCASE_ADDRESS + CONFIG_FILE_EXTENSION, KEY_FILE, PASSWORD_FILE);
-    final FileBasedSigningMetadataFile metadataFile3 =
+    final FileBasedSigningMetadataFile metadataFile2 =
         copyMetadataFileToDirectory(
             configsDirectory,
             "bar_" + PREFIX_ADDRESS + CONFIG_FILE_EXTENSION,
             KEY_FILE_2,
             PASSWORD_FILE_2);
-    final FileBasedSigningMetadataFile metadataFile4 =
+    final FileBasedSigningMetadataFile metadataFile3 =
         copyMetadataFileToDirectory(
             configsDirectory, PREFIX_LOWERCASE_DUPLICATE_FILENAME_2, KEY_FILE_2, PASSWORD_FILE_2);
-    final FileBasedSigningMetadataFile metadataFile5 =
+    final FileBasedSigningMetadataFile metadataFile4 =
         copyMetadataFileToDirectory(
             configsDirectory, PREFIX_LOWERCASE_DUPLICATE_FILENAME_1, KEY_FILE, PASSWORD_FILE);
 
@@ -164,9 +164,9 @@ class SigningMetadataTomlConfigLoaderTest {
     final Collection<SigningMetadataFile> metadataFiles =
         loader.loadAvailableSigningMetadataTomlConfigs(filter);
 
-    assertThat(metadataFiles).hasSize(5);
+    assertThat(metadataFiles).hasSize(4);
     assertThat(metadataFiles)
-        .containsOnly(metadataFile1, metadataFile3, metadataFile4, metadataFile5);
+        .containsOnly(metadataFile1, metadataFile2, metadataFile3, metadataFile4);
   }
 
   private void copyFileIntoConfigDirectory(final String filename) {

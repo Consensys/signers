@@ -42,10 +42,13 @@ import com.google.common.io.Resources;
 import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class MultiKeyTransactionSignerProviderTest {
 
   @TempDir Path configsDirectory;
@@ -56,8 +59,7 @@ class MultiKeyTransactionSignerProviderTest {
       new AzureKeyVaultSignerFactory(new AzureKeyVaultAuthenticator());
 
   @Mock private FileSelector<PublicKey> fileSelector;
-  private final MultiKeyTransactionSignerProvider signerFactory =
-      new MultiKeyTransactionSignerProvider(loader, azureFactory, null, fileSelector);
+  private MultiKeyTransactionSignerProvider signerFactory;
   private FileBasedSigningMetadataFile metadataFile;
   private final String KEY_FILENAME = "k.key";
   private final String PASSWORD_FILENAME = "p.password";
@@ -86,6 +88,7 @@ class MultiKeyTransactionSignerProviderTest {
     } catch (Exception e) {
       fail("Error copying metadata files", e);
     }
+    signerFactory = new MultiKeyTransactionSignerProvider(loader, azureFactory, null, fileSelector);
   }
 
   @Test
@@ -101,13 +104,15 @@ class MultiKeyTransactionSignerProviderTest {
     final ArgumentCaptor<PublicKey> publicKeyCaptor = ArgumentCaptor.forClass(PublicKey.class);
     verify(fileSelector).getSpecificConfigFileFilter(publicKeyCaptor.capture());
 
-    assertThat(publicKeyCaptor.getValue()).isEqualTo(LOWER_CASE_PUBLIC_KEY);
+    assertThat(Bytes.wrap(publicKeyCaptor.getValue().getValue()).toUnprefixedHexString())
+        .isEqualTo(LOWER_CASE_PUBLIC_KEY);
   }
 
   @Test
   void getAddresses() {
     final ImmutableList<SigningMetadataFile> files = ImmutableList.of(metadataFile);
     when(loader.loadAvailableSigningMetadataTomlConfigs(any())).thenReturn(files);
+    when(fileSelector.getSpecificConfigFileFilter(any())).thenReturn(entry -> true);
     assertThat(signerFactory.availablePublicKeys().size()).isOne();
     assertThat(
             signerFactory.availablePublicKeys().stream()
