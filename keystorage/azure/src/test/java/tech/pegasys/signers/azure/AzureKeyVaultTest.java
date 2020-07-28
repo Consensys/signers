@@ -52,7 +52,8 @@ public class AzureKeyVaultTest {
     final AzureKeyVault azureKeyVault =
         new AzureKeyVault(CLIENT_ID, CLIENT_SECRET, "invalid", VAULT_NAME);
     assertThatExceptionOfType(RuntimeException.class)
-        .isThrownBy(() -> azureKeyVault.fetchSecret(SECRET_NAME));
+        .isThrownBy(() -> azureKeyVault.fetchSecret(SECRET_NAME))
+        .withMessageContaining("Tenant 'invalid' not found");
   }
 
   @Test
@@ -60,7 +61,8 @@ public class AzureKeyVaultTest {
     final AzureKeyVault azureKeyVault =
         new AzureKeyVault(CLIENT_ID, "invalid", TENANT_ID, VAULT_NAME);
     assertThatExceptionOfType(RuntimeException.class)
-        .isThrownBy(() -> azureKeyVault.fetchSecret(SECRET_NAME));
+        .isThrownBy(() -> azureKeyVault.fetchSecret(SECRET_NAME))
+        .withMessageContaining("Invalid client secret is provided");
   }
 
   @Test
@@ -68,7 +70,9 @@ public class AzureKeyVaultTest {
     final AzureKeyVault azureKeyVault =
         new AzureKeyVault("invalid", CLIENT_SECRET, TENANT_ID, VAULT_NAME);
     assertThatExceptionOfType(RuntimeException.class)
-        .isThrownBy(() -> azureKeyVault.fetchSecret(SECRET_NAME));
+        .isThrownBy(() -> azureKeyVault.fetchSecret(SECRET_NAME))
+        .withMessageContaining(
+            "Application with identifier 'invalid' was not found in the directory");
   }
 
   @Test
