@@ -10,22 +10,22 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.secp256k1.multikey.metadata;
+package tech.pegasys.signers.secp256k1.common;
 
-import tech.pegasys.signers.secp256k1.api.Signer;
-import tech.pegasys.signers.secp256k1.multikey.MultiSignerFactory;
-
-public abstract class SigningMetadataFile {
-
-  protected String filename;
-
-  public SigningMetadataFile(final String filename) {
-    this.filename = filename;
+public class SignerInitializationException extends RuntimeException {
+  public SignerInitializationException() {
+    super();
   }
 
-  public String getFilename() {
-    return filename;
+  public SignerInitializationException(final String message) {
+    super(message);
   }
 
-  public abstract Signer createSigner(final MultiSignerFactory factory);
+  public SignerInitializationException(final String message, final Throwable e) {
+    super(message, e);
+  }
+
+  public SignerInitializationException(final Throwable e) {
+    super(e);
+  }
 }

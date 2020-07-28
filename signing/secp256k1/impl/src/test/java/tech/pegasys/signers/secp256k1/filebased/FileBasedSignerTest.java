@@ -16,8 +16,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
-import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
+import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +29,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.WalletUtils;
 
-public class FileBasedTransactionSignerTest {
+public class FileBasedSignerTest {
 
   private static final String INVALID_PASSWORD = "invalid";
   private static String fileName;
@@ -51,11 +51,10 @@ public class FileBasedTransactionSignerTest {
     final File keyFile = new File(fileName);
     final File pwdFile = createFile(MY_PASSWORD);
 
-    final TransactionSigner signer =
-        FileBasedSignerFactory.createSigner(keyFile.toPath(), pwdFile.toPath());
+    final Signer signer = FileBasedSignerFactory.createSigner(keyFile.toPath(), pwdFile.toPath());
 
     assertThat(signer).isNotNull();
-    assertThat(signer.getAddress()).isNotEmpty();
+    assertThat(signer.getPublicKey()).isNotNull();
   }
 
   @Test
@@ -66,7 +65,7 @@ public class FileBasedTransactionSignerTest {
 
     assertThatThrownBy(
             () -> FileBasedSignerFactory.createSigner(keyFile.toPath(), pwdFile.toPath()))
-        .isInstanceOf(TransactionSignerInitializationException.class);
+        .isInstanceOf(SignerInitializationException.class);
   }
 
   @Test
@@ -77,7 +76,7 @@ public class FileBasedTransactionSignerTest {
     assertThatThrownBy(
             () ->
                 FileBasedSignerFactory.createSigner(keyFile.toPath(), Paths.get("nonExistingFile")))
-        .isInstanceOf(TransactionSignerInitializationException.class);
+        .isInstanceOf(SignerInitializationException.class);
   }
 
   @Test
@@ -88,7 +87,7 @@ public class FileBasedTransactionSignerTest {
     assertThatThrownBy(
             () ->
                 FileBasedSignerFactory.createSigner(Paths.get("nonExistingFile"), pwdFile.toPath()))
-        .isInstanceOf(TransactionSignerInitializationException.class);
+        .isInstanceOf(SignerInitializationException.class);
   }
 
   private static File createFile(final String s) throws IOException {

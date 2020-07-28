@@ -48,6 +48,7 @@ dependencies {
   testFixturesImplementation 'org.assertj:assertj-core'
   testFixturesImplementation(testFixtures(project(":keystorage:hashicorp")))
   testFixturesImplementation(testFixtures(project(":signing:secp256k1:impl")))
+  testFixturesImplementation project(':signing:secp256k1:api')
 }
 
 test.enabled = false

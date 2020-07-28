@@ -22,7 +22,6 @@ import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.MISSIN
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.MISSING_KEY_AND_PASSWORD_PATH_FILENAME;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.MISSING_KEY_PATH_ADDRESS;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.MISSING_KEY_PATH_FILENAME;
-import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.MISSING_PASSWORD_PATH_ADDRESS;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.MISSING_PASSWORD_PATH_FILENAME;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.PASSWORD_FILE;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.PASSWORD_FILE_2;
@@ -30,10 +29,7 @@ import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.PREFIX
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.PREFIX_LOWERCASE_DUPLICATE_ADDRESS;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.PREFIX_LOWERCASE_DUPLICATE_FILENAME_1;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.PREFIX_LOWERCASE_DUPLICATE_FILENAME_2;
-import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.PREFIX_MIXEDCASE_ADDRESS;
-import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.PREFIX_MIXEDCASE_FILENAME;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.SUFFIX_ADDRESS;
-import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.UNKNOWN_TYPE_SIGNER_ADDRESS;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.UNKNOWN_TYPE_SIGNER_FILENAME;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.copyMetadataFileToDirectory;
 
@@ -41,6 +37,7 @@ import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
+import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -63,32 +60,14 @@ class SigningMetadataTomlConfigLoaderTest {
   }
 
   @Test
-  void loadMetadataFilePopulatesKeyAndPasswordFilePaths() {
-
+  void singleValidFilesWhichMatchFilterAreLoaded() {
+    final Filter<Path> filter =
+        entry -> entry.toString().endsWith(LOWERCASE_ADDRESS + CONFIG_FILE_EXTENSION);
     final FileBasedSigningMetadataFile fileBasedSigningMetadataFile =
         copyMetadataFileToDirectory(
             configsDirectory, LOWERCASE_ADDRESS + CONFIG_FILE_EXTENSION, KEY_FILE, PASSWORD_FILE);
 
-    final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(LOWERCASE_ADDRESS);
-
-    assertThat(loadedMetadataFile).isNotEmpty();
-    final FileBasedSigningMetadataFile fileBasedSigningMetadata =
-        (FileBasedSigningMetadataFile) loadedMetadataFile.get();
-    assertThat(fileBasedSigningMetadata.getKeyPath())
-        .isEqualTo(fileBasedSigningMetadataFile.getKeyPath());
-    assertThat(fileBasedSigningMetadata.getPasswordPath())
-        .isEqualTo(fileBasedSigningMetadataFile.getPasswordPath());
-  }
-
-  @Test
-  void loadMetadataFileWithMixedCaseFilenamePopulatesKeyAndPasswordFilePaths() {
-    final FileBasedSigningMetadataFile fileBasedSigningMetadataFile =
-        copyMetadataFileToDirectory(
-            configsDirectory, PREFIX_MIXEDCASE_FILENAME, KEY_FILE, PASSWORD_FILE);
-
-    final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(PREFIX_MIXEDCASE_ADDRESS);
+    final Optional<SigningMetadataFile> loadedMetadataFile = loader.loadMetadata(filter);
 
     assertThat(loadedMetadataFile).isNotEmpty();
     final FileBasedSigningMetadataFile fileBasedSigningMetadata =
@@ -101,111 +80,93 @@ class SigningMetadataTomlConfigLoaderTest {
 
   @Test
   void loadMetadataFileWithUnknownTypeSignerFails() {
+    final Filter<Path> filter = entry -> entry.toString().endsWith(UNKNOWN_TYPE_SIGNER_FILENAME);
     copyMetadataFileToDirectory(
         configsDirectory, UNKNOWN_TYPE_SIGNER_FILENAME, KEY_FILE, PASSWORD_FILE);
-    final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(UNKNOWN_TYPE_SIGNER_ADDRESS);
+    final Optional<SigningMetadataFile> loadedMetadataFile = loader.loadMetadata(filter);
 
     assertThat(loadedMetadataFile).isEmpty();
   }
 
   @Test
   void loadMetadataFileWithMissingKeyPathIsEmpty() {
+    final Filter<Path> filter = entry -> entry.toString().endsWith(MISSING_KEY_PATH_ADDRESS);
     copyMetadataFileToDirectory(
         configsDirectory, MISSING_KEY_PATH_FILENAME, KEY_FILE, PASSWORD_FILE);
-    final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(MISSING_KEY_PATH_ADDRESS);
+    final Optional<SigningMetadataFile> loadedMetadataFile = loader.loadMetadata(filter);
 
     assertThat(loadedMetadataFile).isEmpty();
   }
 
   @Test
   void loadMetadataFileWithMissingPasswordPathIsEmpty() {
+    final Filter<Path> filter = entry -> entry.toString().endsWith(MISSING_PASSWORD_PATH_FILENAME);
     copyMetadataFileToDirectory(
         configsDirectory, MISSING_PASSWORD_PATH_FILENAME, KEY_FILE, PASSWORD_FILE);
-    final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(MISSING_PASSWORD_PATH_ADDRESS);
+    final Optional<SigningMetadataFile> loadedMetadataFile = loader.loadMetadata(filter);
 
     assertThat(loadedMetadataFile).isEmpty();
   }
 
   @Test
-  void loadMetadataFileWithHexPrefixReturnsFile() {
-    final FileBasedSigningMetadataFile fileBasedSigningMetadataFile =
-        copyMetadataFileToDirectory(
-            configsDirectory, LOWERCASE_ADDRESS + CONFIG_FILE_EXTENSION, KEY_FILE, PASSWORD_FILE);
-
-    final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress("0x" + LOWERCASE_ADDRESS);
-
-    assertThat(loadedMetadataFile).isNotEmpty();
-    final FileBasedSigningMetadataFile fileBasedSigningMetadata =
-        (FileBasedSigningMetadataFile) loadedMetadataFile.get();
-    assertThat(fileBasedSigningMetadata.getKeyPath())
-        .isEqualTo(fileBasedSigningMetadataFile.getKeyPath());
-    assertThat(fileBasedSigningMetadata.getPasswordPath())
-        .isEqualTo(fileBasedSigningMetadataFile.getPasswordPath());
-  }
-
-  @Test
   void loadMetadataFileWithMissingKeyAndPasswordPathIsEmpty() {
+    final Filter<Path> filter =
+        entry -> entry.toString().endsWith(MISSING_KEY_AND_PASSWORD_PATH_ADDRESS);
     copyMetadataFileToDirectory(
         configsDirectory, MISSING_KEY_AND_PASSWORD_PATH_FILENAME, KEY_FILE, PASSWORD_FILE);
-    final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(MISSING_KEY_AND_PASSWORD_PATH_ADDRESS);
+    final Optional<SigningMetadataFile> loadedMetadataFile = loader.loadMetadata(filter);
 
     assertThat(loadedMetadataFile).isEmpty();
   }
 
   @Test
   void multipleMatchesForSameAddressReturnsEmpty() {
+    final Filter<Path> filter =
+        entry -> entry.toString().endsWith(PREFIX_LOWERCASE_DUPLICATE_ADDRESS);
     copyMetadataFileToDirectory(
         configsDirectory, PREFIX_LOWERCASE_DUPLICATE_FILENAME_2, KEY_FILE, PASSWORD_FILE);
     copyMetadataFileToDirectory(
         configsDirectory, PREFIX_LOWERCASE_DUPLICATE_FILENAME_1, KEY_FILE, PASSWORD_FILE);
-    final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(PREFIX_LOWERCASE_DUPLICATE_ADDRESS);
+    final Optional<SigningMetadataFile> loadedMetadataFile = loader.loadMetadata(filter);
 
     assertThat(loadedMetadataFile).isEmpty();
   }
 
   @Test
   void loadKeyPasswordNotEndingWithAddressReturnsEmpty() {
-    final Optional<SigningMetadataFile> loadedMetadataFile =
-        loader.loadMetadataForAddress(SUFFIX_ADDRESS);
+    final Filter<Path> filter = entry -> entry.toString().endsWith(SUFFIX_ADDRESS);
+    final Optional<SigningMetadataFile> loadedMetadataFile = loader.loadMetadata(filter);
 
     assertThat(loadedMetadataFile).isEmpty();
   }
 
   @Test
   void loadAvailableConfigsReturnsAllValidMetadataFilesInDirectory() {
+    final Filter<Path> filter = entry -> true;
     final FileBasedSigningMetadataFile metadataFile1 =
         copyMetadataFileToDirectory(
             configsDirectory, LOWERCASE_ADDRESS + CONFIG_FILE_EXTENSION, KEY_FILE, PASSWORD_FILE);
     final FileBasedSigningMetadataFile metadataFile2 =
         copyMetadataFileToDirectory(
-            configsDirectory, PREFIX_MIXEDCASE_FILENAME, KEY_FILE, PASSWORD_FILE);
-    final FileBasedSigningMetadataFile metadataFile3 =
-        copyMetadataFileToDirectory(
             configsDirectory,
             "bar_" + PREFIX_ADDRESS + CONFIG_FILE_EXTENSION,
             KEY_FILE_2,
             PASSWORD_FILE_2);
-    final FileBasedSigningMetadataFile metadataFile4 =
+    final FileBasedSigningMetadataFile metadataFile3 =
         copyMetadataFileToDirectory(
             configsDirectory, PREFIX_LOWERCASE_DUPLICATE_FILENAME_2, KEY_FILE_2, PASSWORD_FILE_2);
-    final FileBasedSigningMetadataFile metadataFile5 =
+    final FileBasedSigningMetadataFile metadataFile4 =
         copyMetadataFileToDirectory(
             configsDirectory, PREFIX_LOWERCASE_DUPLICATE_FILENAME_1, KEY_FILE, PASSWORD_FILE);
 
     // duplicate files are loaded at this stage since addresses aren't checked until signers are
     // created
     final Collection<SigningMetadataFile> metadataFiles =
-        loader.loadAvailableSigningMetadataTomlConfigs();
+        loader.loadAvailableSigningMetadataTomlConfigs(filter);
 
-    assertThat(metadataFiles).hasSize(5);
+    assertThat(metadataFiles).hasSize(4);
     assertThat(metadataFiles)
-        .containsOnly(metadataFile1, metadataFile2, metadataFile3, metadataFile4, metadataFile5);
+        .containsOnly(metadataFile1, metadataFile2, metadataFile3, metadataFile4);
   }
 
   private void copyFileIntoConfigDirectory(final String filename) {
@@ -225,7 +186,7 @@ class SigningMetadataTomlConfigLoaderTest {
     copyFileIntoConfigDirectory("azureconfig.toml");
 
     final Collection<SigningMetadataFile> metadataFiles =
-        loader.loadAvailableSigningMetadataTomlConfigs();
+        loader.loadAvailableSigningMetadataTomlConfigs(entry -> true);
 
     assertThat(metadataFiles.size()).isOne();
     assertThat(metadataFiles.toArray()[0]).isInstanceOf(AzureSigningMetadataFile.class);
@@ -244,7 +205,7 @@ class SigningMetadataTomlConfigLoaderTest {
   void azureConfigWithIllegalValueTypeFailsToLoad() {
     copyFileIntoConfigDirectory("azureconfig_illegalValueType.toml");
     final Collection<SigningMetadataFile> metadataFiles =
-        loader.loadAvailableSigningMetadataTomlConfigs();
+        loader.loadAvailableSigningMetadataTomlConfigs(entry -> true);
 
     assertThat(metadataFiles.size()).isZero();
   }
@@ -254,7 +215,7 @@ class SigningMetadataTomlConfigLoaderTest {
     copyFileIntoConfigDirectory("azureconfig_missingField.toml");
 
     final Collection<SigningMetadataFile> metadataFiles =
-        loader.loadAvailableSigningMetadataTomlConfigs();
+        loader.loadAvailableSigningMetadataTomlConfigs(entry -> true);
 
     assertThat(metadataFiles.size()).isZero();
   }
@@ -264,7 +225,7 @@ class SigningMetadataTomlConfigLoaderTest {
     copyFileIntoConfigDirectory("key_password_relative_path.toml");
 
     final Collection<SigningMetadataFile> metadataFiles =
-        loader.loadAvailableSigningMetadataTomlConfigs();
+        loader.loadAvailableSigningMetadataTomlConfigs(entry -> true);
 
     assertThat(metadataFiles.size()).isOne();
     assertThat(metadataFiles.toArray()[0]).isInstanceOf(FileBasedSigningMetadataFile.class);
