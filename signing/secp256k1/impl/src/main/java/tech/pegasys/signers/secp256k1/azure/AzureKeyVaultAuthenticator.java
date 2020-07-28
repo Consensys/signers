@@ -12,7 +12,7 @@
  */
 package tech.pegasys.signers.secp256k1.azure;
 
-import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
 import java.net.MalformedURLException;
 import java.util.concurrent.ExecutionException;
@@ -57,7 +57,7 @@ public class AzureKeyVaultAuthenticator {
           return authResult.getAccessToken();
         } catch (final Exception e) {
           LOG.error(AUTHENTICATION_FAILURE_MESSAGE, e);
-          throw new TransactionSignerInitializationException(AUTHENTICATION_FAILURE_MESSAGE, e);
+          throw new SignerInitializationException(AUTHENTICATION_FAILURE_MESSAGE, e);
         }
       }
     };

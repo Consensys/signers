@@ -35,7 +35,7 @@ import org.web3j.utils.Numeric;
 public class AzureKeyVaultSignerProviderTest {
 
   @Test
-  public void generatedTransactionSignerHasExpectedAddress() {
+  public void generatedSignerHasExpectedAddress() {
     final ECKeyPair web3jKeyPair = ECKeyPair.create(BigInteger.valueOf(5));
 
     final AzureConfig config =

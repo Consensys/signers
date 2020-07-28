@@ -15,7 +15,7 @@ package tech.pegasys.signers.secp256k1.azure;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import tech.pegasys.signers.secp256k1.api.Signer;
-import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
 import java.net.UnknownHostException;
 
@@ -60,11 +60,11 @@ public class AzureKeyVaultSignerFactory {
       if (ex.response().raw().code() == 401) {
         LOG.debug(INACCESSIBLE_KEY_ERROR);
         LOG.trace(ex);
-        throw new TransactionSignerInitializationException(INACCESSIBLE_KEY_ERROR, ex);
+        throw new SignerInitializationException(INACCESSIBLE_KEY_ERROR, ex);
       } else {
         LOG.debug(INVALID_KEY_PARAMETERS_ERROR);
         LOG.trace(ex);
-        throw new TransactionSignerInitializationException(INVALID_KEY_PARAMETERS_ERROR, ex);
+        throw new SignerInitializationException(INVALID_KEY_PARAMETERS_ERROR, ex);
       }
     } catch (final RuntimeException ex) {
       final String errorMsg;
@@ -75,7 +75,7 @@ public class AzureKeyVaultSignerFactory {
       }
       LOG.debug(errorMsg);
       LOG.trace(ex);
-      throw new TransactionSignerInitializationException(errorMsg, ex);
+      throw new SignerInitializationException(errorMsg, ex);
     }
 
     final Bytes rawPublicKey = Bytes.concatenate(Bytes.wrap(key.x()), Bytes.wrap(key.y()));

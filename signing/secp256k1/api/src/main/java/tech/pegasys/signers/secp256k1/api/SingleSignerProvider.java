@@ -24,7 +24,7 @@ public class SingleSignerProvider implements SignerProvider {
   public SingleSignerProvider(final Signer signer) {
     if (signer == null) {
       throw new IllegalArgumentException(
-          "SingleTransactionSignerFactory requires a non-null TransactionSigner");
+          "SingleSignerFactory requires a non-null Signer");
     }
     this.signer = signer;
   }

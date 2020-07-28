@@ -17,7 +17,7 @@ import tech.pegasys.signers.hashicorp.HashicorpConnectionFactory;
 import tech.pegasys.signers.hashicorp.HashicorpException;
 import tech.pegasys.signers.hashicorp.config.HashicorpKeyConfig;
 import tech.pegasys.signers.secp256k1.api.Signer;
-import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 import tech.pegasys.signers.secp256k1.filebased.CredentialSigner;
 
 import io.vertx.core.Vertx;
@@ -40,7 +40,7 @@ public class HashicorpSignerFactory {
       final Credentials credentials = Credentials.create(secret);
       return new CredentialSigner(credentials);
     } catch (final HashicorpException e) {
-      throw new TransactionSignerInitializationException(
+      throw new SignerInitializationException(
           "Failed to extract secret from Hashicorp vault.", e);
     }
   }

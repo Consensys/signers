@@ -30,13 +30,13 @@ public class PasswordFileUtil {
    * @param path The file to read the password from
    * @return Password
    * @throws IOException For file operations
-   * @throws TransactionSignerInitializationException If password file is empty
+   * @throws SignerInitializationException If password file is empty
    */
   public static String readPasswordFromFile(final Path path) throws IOException {
     final String password = Files.asCharSource(path.toFile(), UTF_8).readFirstLine();
     if (password == null || password.isEmpty()) {
       LOG.error("Cannot read password from empty file: " + path);
-      throw new TransactionSignerInitializationException(
+      throw new SignerInitializationException(
           "Cannot read password from empty file: " + path);
     }
     return password;

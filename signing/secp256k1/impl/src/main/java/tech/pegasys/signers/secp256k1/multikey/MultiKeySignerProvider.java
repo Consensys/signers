@@ -18,7 +18,7 @@ import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.api.SignerProvider;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory;
-import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 import tech.pegasys.signers.secp256k1.filebased.FileBasedSignerFactory;
 import tech.pegasys.signers.secp256k1.hashicorp.HashicorpSignerFactory;
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
 public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactory {
 
@@ -82,32 +83,34 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
     return signingMetadataTomlConfigLoader
         .loadAvailableSigningMetadataTomlConfigs(configFileSelector.getAllConfigFilesFilter())
         .stream()
-        .map(
-            metadataFile -> {
-              final Signer signer = metadataFile.createSigner(this);
-              try {
-                if ((signer != null)
-                    && configFileSelector
-                        .getSpecificConfigFileFilter(signer.getPublicKey())
-                        .accept(Path.of(metadataFile.getFilename()))) {
-                  return signer;
-                }
-                return null;
-              } catch (final IOException e) {
-                LOG.warn("IO Exception raised while loading {}", metadataFile.getFilename());
-                return null;
-              }
-            })
+        .map(this::createSigner)
         .filter(Objects::nonNull)
         .map(Signer::getPublicKey)
         .collect(Collectors.toSet());
   }
 
+  private Signer createSigner(final SigningMetadataFile metadataFile) {
+    final Signer signer = metadataFile.createSigner(this);
+    try {
+      if ((signer != null)
+          && configFileSelector
+          .getSpecificConfigFileFilter(signer.getPublicKey())
+          .accept(Path.of(metadataFile.getFilename()))) {
+        return signer;
+      }
+      return null;
+    } catch (final IOException e) {
+      LOG.warn("IO Exception raised while loading {}", metadataFile.getFilename());
+      return null;
+    }
+  }
+
+
   @Override
   public Signer createSigner(final AzureSigningMetadataFile metadataFile) {
     try {
       return azureFactory.createSigner(metadataFile.getConfig());
-    } catch (final TransactionSignerInitializationException e) {
+    } catch (final SignerInitializationException e) {
       LOG.error("Failed to construct Azure signer from " + metadataFile.getFilename());
       return null;
     }
@@ -117,7 +120,7 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   public Signer createSigner(final HashicorpSigningMetadataFile metadataFile) {
     try {
       return hashicorpSignerFactory.create(metadataFile.getConfig());
-    } catch (final TransactionSignerInitializationException e) {
+    } catch (final SignerInitializationException e) {
       LOG.error("Failed to construct Hashicorp signer from " + metadataFile.getFilename());
       return null;
     }
@@ -129,7 +132,7 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
       return FileBasedSignerFactory.createSigner(
           metadataFile.getKeyPath(), metadataFile.getPasswordPath());
 
-    } catch (final TransactionSignerInitializationException e) {
+    } catch (final SignerInitializationException e) {
       LOG.error("Unable to load signer with key " + metadataFile.getKeyPath().getFileName(), e);
       return null;
     }

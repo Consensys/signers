@@ -12,6 +12,7 @@
  */
 package tech.pegasys.signers.secp256k1;
 
+import java.util.Objects;
 import tech.pegasys.signers.secp256k1.api.PublicKey;
 
 import java.math.BigInteger;
@@ -41,5 +42,22 @@ public class PublicKeyImpl implements PublicKey {
   @Override
   public String toString() {
     return value.toHexString();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    final PublicKeyImpl other = (PublicKeyImpl) o;
+    return other.value.compareTo(value) == 0;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(value);
   }
 }

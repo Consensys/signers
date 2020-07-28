@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.azure.AzureConfig.AzureConfigBuilder;
-import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
 import java.math.BigInteger;
 
@@ -121,7 +121,7 @@ public class AzureKeyVaultAuthenticatorTest {
             AzureKeyVaultSignerFactory.constructAzureKeyVaultUrl(invalidVaultName));
 
     assertThatThrownBy(() -> factory.createSigner(configBuilder.build()))
-        .isInstanceOf(TransactionSignerInitializationException.class)
+        .isInstanceOf(SignerInitializationException.class)
         .hasMessage(expectedMessage);
   }
 
@@ -131,12 +131,12 @@ public class AzureKeyVaultAuthenticatorTest {
 
     configBuilder.withKeyVersion("invalid_version");
     assertThatThrownBy(() -> factory.createSigner(configBuilder.build()))
-        .isInstanceOf(TransactionSignerInitializationException.class)
+        .isInstanceOf(SignerInitializationException.class)
         .hasMessage(AzureKeyVaultSignerFactory.INVALID_KEY_PARAMETERS_ERROR);
 
     configBuilder.withKeyVersion(validKeyVersion).withKeyName("invalid_keyname");
     assertThatThrownBy(() -> factory.createSigner(configBuilder.build()))
-        .isInstanceOf(TransactionSignerInitializationException.class)
+        .isInstanceOf(SignerInitializationException.class)
         .hasMessage(AzureKeyVaultSignerFactory.INVALID_KEY_PARAMETERS_ERROR);
   }
 
@@ -146,13 +146,13 @@ public class AzureKeyVaultAuthenticatorTest {
     configBuilder.withClientId("Invalid_id");
 
     assertThatThrownBy(() -> factory.createSigner(configBuilder.build()))
-        .isInstanceOf(TransactionSignerInitializationException.class)
+        .isInstanceOf(SignerInitializationException.class)
         .hasMessage(AzureKeyVaultSignerFactory.UNKNOWN_VAULT_ACCESS_ERROR);
 
     configBuilder.withClientId(clientId).withClientSecret("invalid_secret");
 
     assertThatThrownBy(() -> factory.createSigner(configBuilder.build()))
-        .isInstanceOf(TransactionSignerInitializationException.class)
+        .isInstanceOf(SignerInitializationException.class)
         .hasMessage(AzureKeyVaultSignerFactory.UNKNOWN_VAULT_ACCESS_ERROR);
   }
 
