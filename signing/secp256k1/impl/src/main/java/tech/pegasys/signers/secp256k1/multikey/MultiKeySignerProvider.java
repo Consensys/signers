@@ -24,6 +24,7 @@ import tech.pegasys.signers.secp256k1.hashicorp.HashicorpSignerFactory;
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HashicorpSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -35,7 +36,6 @@ import java.util.stream.Collectors;
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
 public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactory {
 
@@ -94,8 +94,8 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
     try {
       if ((signer != null)
           && configFileSelector
-          .getSpecificConfigFileFilter(signer.getPublicKey())
-          .accept(Path.of(metadataFile.getFilename()))) {
+              .getSpecificConfigFileFilter(signer.getPublicKey())
+              .accept(Path.of(metadataFile.getFilename()))) {
         return signer;
       }
       return null;
@@ -104,7 +104,6 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
       return null;
     }
   }
-
 
   @Override
   public Signer createSigner(final AzureSigningMetadataFile metadataFile) {

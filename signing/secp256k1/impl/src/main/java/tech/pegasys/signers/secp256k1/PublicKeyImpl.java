@@ -12,10 +12,10 @@
  */
 package tech.pegasys.signers.secp256k1;
 
-import java.util.Objects;
 import tech.pegasys.signers.secp256k1.api.PublicKey;
 
 import java.math.BigInteger;
+import java.util.Objects;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.web3j.utils.Numeric;

@@ -40,8 +40,7 @@ public class HashicorpSignerFactory {
       final Credentials credentials = Credentials.create(secret);
       return new CredentialSigner(credentials);
     } catch (final HashicorpException e) {
-      throw new SignerInitializationException(
-          "Failed to extract secret from Hashicorp vault.", e);
+      throw new SignerInitializationException("Failed to extract secret from Hashicorp vault.", e);
     }
   }
 

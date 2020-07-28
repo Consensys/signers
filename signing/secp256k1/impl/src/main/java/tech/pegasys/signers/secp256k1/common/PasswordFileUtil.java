@@ -36,8 +36,7 @@ public class PasswordFileUtil {
     final String password = Files.asCharSource(path.toFile(), UTF_8).readFirstLine();
     if (password == null || password.isEmpty()) {
       LOG.error("Cannot read password from empty file: " + path);
-      throw new SignerInitializationException(
-          "Cannot read password from empty file: " + path);
+      throw new SignerInitializationException("Cannot read password from empty file: " + path);
     }
     return password;
   }
