@@ -31,7 +31,7 @@ public class HashicorpSigningMetadataFile extends SigningMetadataFile {
   }
 
   @Override
-  public Signer createSigner(MultiSignerFactory factory) {
+  public Signer createSigner(final MultiSignerFactory factory) {
     return factory.createSigner(this);
   }
 }

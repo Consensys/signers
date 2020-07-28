@@ -29,7 +29,7 @@ public class DefaultFileSelector implements FileSelector<PublicKey> {
   public Filter<Path> getSpecificConfigFileFilter(final PublicKey publicKey) {
     return entry -> {
       final String filename = publicKey.toString().substring(2); // remove 0x prefix
-      return entry.getFileName().toString().endsWith(filename + ".toml");
+      return entry.getFileName().toString().equals(filename + ".toml");
     };
   }
 }

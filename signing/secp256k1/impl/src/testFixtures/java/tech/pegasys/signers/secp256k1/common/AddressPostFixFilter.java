@@ -15,13 +15,12 @@ package tech.pegasys.signers.secp256k1.common;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
-import java.util.List;
 
-import com.google.common.base.Splitter;
+import com.google.common.io.Files;
 
 public class AddressPostFixFilter implements DirectoryStream.Filter<Path> {
 
-  private static final String fileExtension = "toml";
+  private static final String FILE_EXTENSION = "toml";
   private final String addressToMatch;
 
   public AddressPostFixFilter(final String addressToMatch) {
@@ -30,19 +29,11 @@ public class AddressPostFixFilter implements DirectoryStream.Filter<Path> {
 
   @Override
   public boolean accept(final Path entry) throws IOException {
-
-    final List<String> tokens =
-        Splitter.onPattern("\\.(?=[^\\.]+$)").splitToList(entry.getFileName().toString());
-
-    if (tokens.size() < 2) {
-      return false;
-    }
-
-    return tokens.get(0).toLowerCase().equals(addressToMatch.toLowerCase())
+    return Files.getNameWithoutExtension(entry.toString()).equals(addressToMatch)
         && hasExpectedFileExtension(entry);
   }
 
   private boolean hasExpectedFileExtension(final Path entry) {
-    return entry.getFileName().toString().toLowerCase().endsWith(fileExtension.toLowerCase());
+    return Files.getFileExtension(entry.toString()).equals(FILE_EXTENSION);
   }
 }

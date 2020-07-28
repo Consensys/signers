@@ -42,9 +42,7 @@ public class MultiKeyFileBasedTransactionSignerAcceptanceTest
     Files.write(passwordPath, "pass".getBytes(UTF_8));
 
     createFileBasedTomlFileAt(
-        tomlDirectory.resolve("arbitrary_prefix" + FILENAME + ".toml"),
-        keyPath,
-        passwordPath.toString());
+        tomlDirectory.resolve(FILENAME + ".toml"), keyPath, passwordPath.toString());
 
     setup(tomlDirectory);
     verifySignature();
