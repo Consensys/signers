@@ -10,11 +10,18 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.signers.azure;
 
-rootProject.name='signers'
-include 'bls-keystore'
-include 'keystorage:hashicorp'
-include 'keystorage:azure'
-include 'acceptance-tests'
-include 'signing:secp256k1:api'
-include 'signing:secp256k1:impl'
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+class AzureVaultTest {
+
+  @Test
+  void fetchSecret() {
+    Assertions.assertThatExceptionOfType(UnsupportedOperationException.class)
+        .isThrownBy(() -> new AzureVault().fetchSecret("test"));
+  }
+}
