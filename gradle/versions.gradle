@@ -22,8 +22,9 @@ dependencyManagement {
     dependency 'com.microsoft.aad:adal4j:0.0.2'
 
     dependency 'com.microsoft.azure:azure-keyvault:1.2.2'
-    
+
     dependency 'com.azure:azure-security-keyvault-secrets:4.1.5'
+    dependency 'com.azure:azure-identity:1.0.9'
 
     dependency 'commons-cli:commons-cli:1.4'
 
