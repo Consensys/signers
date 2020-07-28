@@ -12,8 +12,10 @@
  */
 package tech.pegasys.signers.secp256k1.filebased;
 
+import tech.pegasys.signers.secp256k1.PublicKeyImpl;
+import tech.pegasys.signers.secp256k1.api.PublicKey;
 import tech.pegasys.signers.secp256k1.api.Signature;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 
 import java.math.BigInteger;
 
@@ -21,12 +23,14 @@ import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Sign;
 import org.web3j.crypto.Sign.SignatureData;
 
-public class CredentialTransactionSigner implements TransactionSigner {
+public class CredentialSigner implements Signer {
 
   private final Credentials credentials;
+  private final PublicKeyImpl publicKey;
 
-  public CredentialTransactionSigner(final Credentials credentials) {
+  public CredentialSigner(final Credentials credentials) {
     this.credentials = credentials;
+    this.publicKey = new PublicKeyImpl(credentials.getEcKeyPair().getPublicKey());
   }
 
   @Override
@@ -39,7 +43,7 @@ public class CredentialTransactionSigner implements TransactionSigner {
   }
 
   @Override
-  public String getAddress() {
-    return credentials.getAddress();
+  public PublicKey getPublicKey() {
+    return publicKey;
   }
 }

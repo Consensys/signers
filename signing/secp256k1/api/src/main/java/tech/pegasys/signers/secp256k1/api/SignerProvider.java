@@ -10,22 +10,16 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.secp256k1.common;
+package tech.pegasys.signers.secp256k1.api;
 
-public class TransactionSignerInitializationException extends RuntimeException {
-  public TransactionSignerInitializationException() {
-    super();
-  }
+import java.util.Optional;
+import java.util.Set;
 
-  public TransactionSignerInitializationException(final String message) {
-    super(message);
-  }
+public interface SignerProvider {
 
-  public TransactionSignerInitializationException(final String message, final Throwable e) {
-    super(message, e);
-  }
+  Optional<Signer> getSigner(PublicKey publicKey);
 
-  public TransactionSignerInitializationException(final Throwable e) {
-    super(e);
-  }
+  Set<PublicKey> availablePublicKeys();
+
+  default void shutdown() {}
 }

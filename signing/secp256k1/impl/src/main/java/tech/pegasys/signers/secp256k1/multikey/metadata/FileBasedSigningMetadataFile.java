@@ -12,7 +12,7 @@
  */
 package tech.pegasys.signers.secp256k1.multikey.metadata;
 
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.multikey.MultiSignerFactory;
 
 import java.nio.file.Path;
@@ -48,18 +48,18 @@ public class FileBasedSigningMetadataFile extends SigningMetadataFile {
       return false;
     }
     final FileBasedSigningMetadataFile that = (FileBasedSigningMetadataFile) o;
-    return Objects.equal(baseFilename, that.baseFilename)
+    return Objects.equal(filename, that.filename)
         && Objects.equal(keyPath, that.keyPath)
         && Objects.equal(passwordPath, that.passwordPath);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(baseFilename, keyPath, passwordPath);
+    return Objects.hashCode(filename, keyPath, passwordPath);
   }
 
   @Override
-  public TransactionSigner createSigner(final MultiSignerFactory factory) {
+  public Signer createSigner(final MultiSignerFactory factory) {
     return factory.createSigner(this);
   }
 }

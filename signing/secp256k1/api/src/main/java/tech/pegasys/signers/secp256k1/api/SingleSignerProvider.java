@@ -12,25 +12,26 @@
  */
 package tech.pegasys.signers.secp256k1.api;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
-public class SingleTransactionSignerProvider implements TransactionSignerProvider {
+public class SingleSignerProvider implements SignerProvider {
 
-  private final TransactionSigner signer;
+  private final Signer signer;
 
-  public SingleTransactionSignerProvider(final TransactionSigner signer) {
+  public SingleSignerProvider(final Signer signer) {
     if (signer == null) {
-      throw new IllegalArgumentException(
-          "SingleTransactionSignerFactory requires a non-null TransactionSigner");
+      throw new IllegalArgumentException("SingleSignerFactory requires a non-null Signer");
     }
     this.signer = signer;
   }
 
   @Override
-  public Optional<TransactionSigner> getSigner(final String address) {
-    if (signer.getAddress() != null && signer.getAddress().equalsIgnoreCase(address)) {
+  public Optional<Signer> getSigner(final PublicKey publicKey) {
+    if ((signer.getPublicKey() != null)
+        && Arrays.equals(signer.getPublicKey().getValue(), publicKey.getValue())) {
       return Optional.of(signer);
     } else {
       return Optional.empty();
@@ -38,11 +39,7 @@ public class SingleTransactionSignerProvider implements TransactionSignerProvide
   }
 
   @Override
-  public Set<String> availableAddresses() {
-    if (signer.getAddress() != null) {
-      return Set.of(signer.getAddress());
-    } else {
-      return Collections.emptySet();
-    }
+  public Set<PublicKey> availablePublicKeys() {
+    return signer.getPublicKey() != null ? Set.of(signer.getPublicKey()) : Collections.emptySet();
   }
 }

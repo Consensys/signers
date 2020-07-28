@@ -44,7 +44,7 @@ class PasswordFileUtilTest {
   @Test
   void emptyFileThrowsException(@TempDir final Path tempDir) throws IOException {
     final Path passwordFile = Files.write(tempDir.resolve("password.txt"), new byte[0]);
-    assertThatExceptionOfType(TransactionSignerInitializationException.class)
+    assertThatExceptionOfType(SignerInitializationException.class)
         .isThrownBy(() -> PasswordFileUtil.readPasswordFromFile(passwordFile))
         .withMessage("Cannot read password from empty file: %s", passwordFile);
   }
@@ -52,7 +52,7 @@ class PasswordFileUtilTest {
   @Test
   void fileWithEolOnlyThrowsException(@TempDir final Path tempDir) throws IOException {
     final Path passwordFile = Files.write(tempDir.resolve("password.txt"), "\n".getBytes(UTF_8));
-    assertThatExceptionOfType(TransactionSignerInitializationException.class)
+    assertThatExceptionOfType(SignerInitializationException.class)
         .isThrownBy(() -> PasswordFileUtil.readPasswordFromFile(passwordFile))
         .withMessage("Cannot read password from empty file: %s", passwordFile);
   }

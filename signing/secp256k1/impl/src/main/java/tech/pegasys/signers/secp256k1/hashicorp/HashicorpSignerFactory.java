@@ -16,9 +16,9 @@ import tech.pegasys.signers.hashicorp.HashicorpConnection;
 import tech.pegasys.signers.hashicorp.HashicorpConnectionFactory;
 import tech.pegasys.signers.hashicorp.HashicorpException;
 import tech.pegasys.signers.hashicorp.config.HashicorpKeyConfig;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
-import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
-import tech.pegasys.signers.secp256k1.filebased.CredentialTransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
+import tech.pegasys.signers.secp256k1.filebased.CredentialSigner;
 
 import io.vertx.core.Vertx;
 import org.web3j.crypto.Credentials;
@@ -31,17 +31,16 @@ public class HashicorpSignerFactory {
     this.vertx = vertx;
   }
 
-  public TransactionSigner create(final HashicorpKeyConfig keyConfig) {
+  public Signer create(final HashicorpKeyConfig keyConfig) {
     try {
       final HashicorpConnectionFactory connectionFactory = new HashicorpConnectionFactory(vertx);
       final HashicorpConnection connection =
           connectionFactory.create(keyConfig.getConnectionParams());
       final String secret = connection.fetchKey(keyConfig.getKeyDefinition());
       final Credentials credentials = Credentials.create(secret);
-      return new CredentialTransactionSigner(credentials);
+      return new CredentialSigner(credentials);
     } catch (final HashicorpException e) {
-      throw new TransactionSignerInitializationException(
-          "Failed to extract secret from Hashicorp vault.", e);
+      throw new SignerInitializationException("Failed to extract secret from Hashicorp vault.", e);
     }
   }
 

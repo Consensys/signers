@@ -14,12 +14,11 @@ package tech.pegasys.signers.secp256k1.azure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.web3j.crypto.Keys.getAddress;
 
 import tech.pegasys.signers.secp256k1.api.Signature;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.azure.AzureConfig.AzureConfigBuilder;
-import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
 import java.math.BigInteger;
 
@@ -47,8 +46,7 @@ public class AzureKeyVaultAuthenticatorTest {
   private static final String validKeyVersion = "7c01fe58d68148bba5824ce418241092";
 
   private final AzureKeyVaultAuthenticator authenticator = new AzureKeyVaultAuthenticator();
-  final AzureKeyVaultTransactionSignerFactory factory =
-      new AzureKeyVaultTransactionSignerFactory(authenticator);
+  final AzureKeyVaultSignerFactory factory = new AzureKeyVaultSignerFactory(authenticator);
 
   @BeforeAll
   public static void setup() {
@@ -93,11 +91,8 @@ public class AzureKeyVaultAuthenticatorTest {
 
   @Test
   public void ensureCanFindKeysAndSign() {
-    final String EXPECTED_ADDRESS = "0xfe3b557e8fb62b89f4916b721be55ceb828dbd73";
-
     final AzureConfigBuilder configBuilder = createValidConfigBuilder();
-    final TransactionSigner signer = factory.createSigner(configBuilder.build());
-    assertThat(signer.getAddress()).isEqualTo(EXPECTED_ADDRESS);
+    final Signer signer = factory.createSigner(configBuilder.build());
 
     byte[] data = {1, 2, 3};
     final Signature signature = signer.sign(data);
@@ -110,7 +105,7 @@ public class AzureKeyVaultAuthenticatorTest {
             new ECDSASignature(signature.getR(), signature.getS()),
             dataHash);
 
-    assertThat("0x" + getAddress(publicKey)).isEqualTo(signer.getAddress());
+    assertThat(publicKey).isEqualTo(new BigInteger(1, signer.getPublicKey().getValue()));
   }
 
   @Test
@@ -122,11 +117,11 @@ public class AzureKeyVaultAuthenticatorTest {
 
     final String expectedMessage =
         String.format(
-            AzureKeyVaultTransactionSignerFactory.INVALID_VAULT_PARAMETERS_ERROR_PATTERN,
-            AzureKeyVaultTransactionSignerFactory.constructAzureKeyVaultUrl(invalidVaultName));
+            AzureKeyVaultSignerFactory.INVALID_VAULT_PARAMETERS_ERROR_PATTERN,
+            AzureKeyVaultSignerFactory.constructAzureKeyVaultUrl(invalidVaultName));
 
     assertThatThrownBy(() -> factory.createSigner(configBuilder.build()))
-        .isInstanceOf(TransactionSignerInitializationException.class)
+        .isInstanceOf(SignerInitializationException.class)
         .hasMessage(expectedMessage);
   }
 
@@ -136,13 +131,13 @@ public class AzureKeyVaultAuthenticatorTest {
 
     configBuilder.withKeyVersion("invalid_version");
     assertThatThrownBy(() -> factory.createSigner(configBuilder.build()))
-        .isInstanceOf(TransactionSignerInitializationException.class)
-        .hasMessage(AzureKeyVaultTransactionSignerFactory.INVALID_KEY_PARAMETERS_ERROR);
+        .isInstanceOf(SignerInitializationException.class)
+        .hasMessage(AzureKeyVaultSignerFactory.INVALID_KEY_PARAMETERS_ERROR);
 
     configBuilder.withKeyVersion(validKeyVersion).withKeyName("invalid_keyname");
     assertThatThrownBy(() -> factory.createSigner(configBuilder.build()))
-        .isInstanceOf(TransactionSignerInitializationException.class)
-        .hasMessage(AzureKeyVaultTransactionSignerFactory.INVALID_KEY_PARAMETERS_ERROR);
+        .isInstanceOf(SignerInitializationException.class)
+        .hasMessage(AzureKeyVaultSignerFactory.INVALID_KEY_PARAMETERS_ERROR);
   }
 
   @Test
@@ -151,14 +146,14 @@ public class AzureKeyVaultAuthenticatorTest {
     configBuilder.withClientId("Invalid_id");
 
     assertThatThrownBy(() -> factory.createSigner(configBuilder.build()))
-        .isInstanceOf(TransactionSignerInitializationException.class)
-        .hasMessage(AzureKeyVaultTransactionSignerFactory.UNKNOWN_VAULT_ACCESS_ERROR);
+        .isInstanceOf(SignerInitializationException.class)
+        .hasMessage(AzureKeyVaultSignerFactory.UNKNOWN_VAULT_ACCESS_ERROR);
 
     configBuilder.withClientId(clientId).withClientSecret("invalid_secret");
 
     assertThatThrownBy(() -> factory.createSigner(configBuilder.build()))
-        .isInstanceOf(TransactionSignerInitializationException.class)
-        .hasMessage(AzureKeyVaultTransactionSignerFactory.UNKNOWN_VAULT_ACCESS_ERROR);
+        .isInstanceOf(SignerInitializationException.class)
+        .hasMessage(AzureKeyVaultSignerFactory.UNKNOWN_VAULT_ACCESS_ERROR);
   }
 
   @Test

@@ -13,7 +13,7 @@
 package tech.pegasys.signers.secp256k1.multikey.metadata;
 
 import tech.pegasys.signers.hashicorp.config.HashicorpKeyConfig;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.multikey.MultiSignerFactory;
 
 public class HashicorpSigningMetadataFile extends SigningMetadataFile {
@@ -31,7 +31,7 @@ public class HashicorpSigningMetadataFile extends SigningMetadataFile {
   }
 
   @Override
-  public TransactionSigner createSigner(MultiSignerFactory factory) {
+  public Signer createSigner(final MultiSignerFactory factory) {
     return factory.createSigner(this);
   }
 }

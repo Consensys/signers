@@ -14,21 +14,20 @@ package tech.pegasys.signers.secp256k1.azure;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
-import tech.pegasys.signers.secp256k1.common.TransactionSignerInitializationException;
+import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
-import java.math.BigInteger;
 import java.net.UnknownHostException;
 
-import com.google.common.primitives.Bytes;
 import com.microsoft.azure.keyvault.KeyIdentifier;
 import com.microsoft.azure.keyvault.KeyVaultClientCustom;
 import com.microsoft.azure.keyvault.models.KeyVaultErrorException;
 import com.microsoft.azure.keyvault.webkey.JsonWebKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.bytes.Bytes;
 
-public class AzureKeyVaultTransactionSignerFactory {
+public class AzureKeyVaultSignerFactory {
 
   public static final String INACCESSIBLE_KEY_ERROR = "Failed to authenticate to vault.";
   public static final String INVALID_KEY_PARAMETERS_ERROR =
@@ -42,12 +41,11 @@ public class AzureKeyVaultTransactionSignerFactory {
   private static final String AZURE_URL_PATTERN = "https://%s.vault.azure.net";
   private final AzureKeyVaultAuthenticator vaultAuthenticator;
 
-  public AzureKeyVaultTransactionSignerFactory(
-      final AzureKeyVaultAuthenticator vaultAuthenticator) {
+  public AzureKeyVaultSignerFactory(final AzureKeyVaultAuthenticator vaultAuthenticator) {
     this.vaultAuthenticator = vaultAuthenticator;
   }
 
-  public TransactionSigner createSigner(final AzureConfig config) {
+  public Signer createSigner(final AzureConfig config) {
     checkNotNull(config, "Config must be specified");
     final KeyVaultClientCustom client =
         vaultAuthenticator.getAuthenticatedClient(config.getClientId(), config.getClientSecret());
@@ -62,11 +60,11 @@ public class AzureKeyVaultTransactionSignerFactory {
       if (ex.response().raw().code() == 401) {
         LOG.debug(INACCESSIBLE_KEY_ERROR);
         LOG.trace(ex);
-        throw new TransactionSignerInitializationException(INACCESSIBLE_KEY_ERROR, ex);
+        throw new SignerInitializationException(INACCESSIBLE_KEY_ERROR, ex);
       } else {
         LOG.debug(INVALID_KEY_PARAMETERS_ERROR);
         LOG.trace(ex);
-        throw new TransactionSignerInitializationException(INVALID_KEY_PARAMETERS_ERROR, ex);
+        throw new SignerInitializationException(INVALID_KEY_PARAMETERS_ERROR, ex);
       }
     } catch (final RuntimeException ex) {
       final String errorMsg;
@@ -77,12 +75,11 @@ public class AzureKeyVaultTransactionSignerFactory {
       }
       LOG.debug(errorMsg);
       LOG.trace(ex);
-      throw new TransactionSignerInitializationException(errorMsg, ex);
+      throw new SignerInitializationException(errorMsg, ex);
     }
 
-    final byte[] rawPublicKey = Bytes.concat(key.x(), key.y());
-    final BigInteger publicKey = new BigInteger(1, rawPublicKey);
-    return new AzureKeyVaultTransactionSigner(client, keyIdentifier.toString(), publicKey);
+    final Bytes rawPublicKey = Bytes.concatenate(Bytes.wrap(key.x()), Bytes.wrap(key.y()));
+    return new AzureKeyVaultSigner(client, keyIdentifier.toString(), rawPublicKey);
   }
 
   public static String constructAzureKeyVaultUrl(final String keyVaultName) {

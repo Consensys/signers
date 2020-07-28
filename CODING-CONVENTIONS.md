@@ -37,7 +37,7 @@ Simple does not mean the fewest lines of code. Simple code is:
 ## 2.2 Idiomatic Java 
 
 Signing utilities embraces typical Java idioms including using an Object Oriented approach to design. This includes:   
-* Providing alternate behaviours via polymorphism instead of having conditional logic scattered through the codebase. For example, `TransactionSigner` provides a standard interface to signing operations. 
+* Providing alternate behaviours via polymorphism instead of having conditional logic scattered through the codebase. For example, `Signer` provides a standard interface to signing operations. 
 * Encapsulating behaviour and data together in classes. 
 * Embracing modern Java features like Optional, Streams and lambdas when they make code simpler and clearer. 
 

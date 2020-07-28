@@ -51,8 +51,6 @@ public class KeyImporter {
     webKey.withCrv(new JsonWebKeyCurveName("SECP256K1"));
     webKey.withKeyOps(Lists.newArrayList(JsonWebKeyOperation.SIGN, JsonWebKeyOperation.VERIFY));
     client.importKey(
-        AzureKeyVaultTransactionSignerFactory.constructAzureKeyVaultUrl(keyVaultName),
-        keyName,
-        webKey);
+        AzureKeyVaultSignerFactory.constructAzureKeyVaultUrl(keyVaultName), keyName, webKey);
   }
 }
