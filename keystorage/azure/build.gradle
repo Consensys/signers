@@ -27,6 +27,8 @@ testFixturesJar {
 
 dependencies {
   implementation 'org.apache.logging.log4j:log4j-api'
+  implementation 'com.azure:azure-security-keyvault-secrets'
+  implementation 'com.azure:azure-identity'
 
   runtimeOnly 'org.apache.logging.log4j:log4j-core'
   runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
