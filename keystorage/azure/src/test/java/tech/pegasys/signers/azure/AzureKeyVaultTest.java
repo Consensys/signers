@@ -22,21 +22,20 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class AzureKeyVaultTest {
-  private static final String CLIENT_ID = System.getenv("KS_AZURE_CLIENT_ID");
-  private static final String CLIENT_SECRET = System.getenv("KS_AZURE_CLIENT_SECRET");
-  private static final String TENANT_ID = System.getenv("KS_AZURE_TENANT_ID");
-  private static final String VAULT_NAME = System.getenv("KS_AZURE_VAULT_NAME");
+  private static final String CLIENT_ID = System.getenv("AZURE_CLIENT_ID");
+  private static final String CLIENT_SECRET = System.getenv("AZURE_CLIENT_SECRET");
+  private static final String TENANT_ID = System.getenv("AZURE_TENANT_ID");
+  private static final String VAULT_NAME = System.getenv("AZURE_KEY_VAULT_NAME");
   private static final String SECRET_NAME = "TEST-KEY";
   private static final String EXPECTED_KEY =
       "3ee2224386c82ffea477e2adf28a2929f5c349165a4196158c7f3a2ecca40f35";
 
   @BeforeAll
   public static void setup() {
-    Assumptions.assumeTrue(CLIENT_ID != null, "Set KS_AZURE_CLIENT_ID environment variable");
-    Assumptions.assumeTrue(
-        CLIENT_SECRET != null, "Set KS_AZURE_CLIENT_SECRET environment variable");
-    Assumptions.assumeTrue(TENANT_ID != null, "Set KS_AZURE_TENANT_ID environment variable");
-    Assumptions.assumeTrue(VAULT_NAME != null, "Set KS_AZURE_VAULT_NAME environment variable");
+    Assumptions.assumeTrue(CLIENT_ID != null, "Set AZURE_CLIENT_ID environment variable");
+    Assumptions.assumeTrue(CLIENT_SECRET != null, "Set AZURE_CLIENT_SECRET environment variable");
+    Assumptions.assumeTrue(TENANT_ID != null, "Set AZURE_TENANT_ID environment variable");
+    Assumptions.assumeTrue(VAULT_NAME != null, "Set AZURE_KEY_VAULT_NAME environment variable");
   }
 
   @Test
