@@ -138,7 +138,7 @@ class MultiKeySignerProviderTest {
 
     final FileBasedSigningMetadataFile capitalisedMetadata =
         new FileBasedSigningMetadataFile(
-            LOWERCASE_ADDRESS.toUpperCase() + ".toml",
+            LOWERCASE_ADDRESS + ".toml",
             Path.of(Resources.getResource("metadata-toml-configs").toURI()).resolve(KEY_FILENAME),
             Path.of(Resources.getResource("metadata-toml-configs").toURI())
                 .resolve(PASSWORD_FILENAME));
