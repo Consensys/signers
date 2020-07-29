@@ -28,6 +28,7 @@ import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -73,9 +74,21 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
 
   @Override
   public Optional<Signer> getSigner(final PublicKey publicKey) {
-    return signingMetadataTomlConfigLoader
-        .loadMetadata(configFileSelector.getSpecificConfigFileFilter(publicKey))
-        .map(metadataFile -> metadataFile.createSigner(this));
+    final Optional<Signer> signer =
+        signingMetadataTomlConfigLoader
+            .loadMetadata(configFileSelector.getSpecificConfigFileFilter(publicKey))
+            .map(metadataFile -> metadataFile.createSigner(this));
+    if (signer.isPresent()) {
+      if (Arrays.equals(signer.get().getPublicKey().getValue(), publicKey.getValue())) {
+        return signer;
+      } else {
+        LOG.warn(
+            "Content of file matching {}, contains a different public key ({})",
+            publicKey,
+            signer.get().getPublicKey());
+      }
+    }
+    return Optional.empty();
   }
 
   @Override

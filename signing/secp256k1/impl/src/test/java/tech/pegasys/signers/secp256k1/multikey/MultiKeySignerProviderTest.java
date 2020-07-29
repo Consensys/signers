@@ -132,4 +132,22 @@ class MultiKeySignerProviderTest {
     assertThat(signer).isNotNull();
     assertThat(signer.getPublicKey().toString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
   }
+
+  @Test
+  void signerIsNotReturnedIfFileContainsPublicKeyDifferentToRequest() throws URISyntaxException {
+
+    final FileBasedSigningMetadataFile capitalisedMetadata =
+        new FileBasedSigningMetadataFile(
+            LOWERCASE_ADDRESS.toUpperCase() + ".toml",
+            Path.of(Resources.getResource("metadata-toml-configs").toURI()).resolve(KEY_FILENAME),
+            Path.of(Resources.getResource("metadata-toml-configs").toURI())
+                .resolve(PASSWORD_FILENAME));
+
+    when(loader.loadMetadata(any())).thenReturn(Optional.of(capitalisedMetadata));
+
+    final Optional<Signer> signer =
+        signerFactory.getSigner(new PublicKeyImpl(Bytes.fromHexString("A".repeat(128))));
+
+    assertThat(signer).isEmpty();
+  }
 }
