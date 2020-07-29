@@ -23,6 +23,9 @@ dependencyManagement {
 
     dependency 'com.microsoft.azure:azure-keyvault:1.2.2'
 
+    dependency 'com.azure:azure-security-keyvault-secrets:4.1.5'
+    dependency 'com.azure:azure-identity:1.0.9'
+
     dependency 'commons-cli:commons-cli:1.4'
 
     dependency 'io.rest-assured:rest-assured:4.2.0'
