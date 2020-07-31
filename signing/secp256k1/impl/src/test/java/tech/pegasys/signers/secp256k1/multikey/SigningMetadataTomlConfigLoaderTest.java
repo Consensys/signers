@@ -70,12 +70,12 @@ class SigningMetadataTomlConfigLoaderTest {
     final Optional<SigningMetadataFile> loadedMetadataFile = loader.loadMetadata(filter);
 
     assertThat(loadedMetadataFile).isNotEmpty();
-    final FileBasedSigningMetadataFile loadedMetaData =
+    final FileBasedSigningMetadataFile fileBasedSigningMetadata =
         (FileBasedSigningMetadataFile) loadedMetadataFile.get();
-    assertThat(loadedMetaData.getConfig().getKeystoreFile())
+    assertThat(fileBasedSigningMetadata.getConfig().getKeystoreFile())
         .isEqualTo(fileBasedSigningMetadataFile.getConfig().getKeystoreFile());
 
-    assertThat(loadedMetaData.getConfig().getKeystorePasswordFile())
+    assertThat(fileBasedSigningMetadata.getConfig().getKeystorePasswordFile())
         .isEqualTo(fileBasedSigningMetadataFile.getConfig().getKeystorePasswordFile());
   }
 

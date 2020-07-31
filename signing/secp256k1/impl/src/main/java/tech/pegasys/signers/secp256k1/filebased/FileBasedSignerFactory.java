@@ -52,7 +52,6 @@ public class FileBasedSignerFactory {
       LOG.error(message, e);
       throw new SignerInitializationException(message, e);
     }
-
     try {
       final Credentials credentials = WalletUtils.loadCredentials(password, keyFilePath.toFile());
       return new CredentialSigner(credentials);
