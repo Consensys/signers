@@ -72,10 +72,11 @@ class SigningMetadataTomlConfigLoaderTest {
     assertThat(loadedMetadataFile).isNotEmpty();
     final FileBasedSigningMetadataFile fileBasedSigningMetadata =
         (FileBasedSigningMetadataFile) loadedMetadataFile.get();
-    assertThat(fileBasedSigningMetadata.getKeyPath())
-        .isEqualTo(fileBasedSigningMetadataFile.getKeyPath());
-    assertThat(fileBasedSigningMetadata.getPasswordPath())
-        .isEqualTo(fileBasedSigningMetadataFile.getPasswordPath());
+    assertThat(fileBasedSigningMetadata.getConfig().getKeystoreFile())
+        .isEqualTo(fileBasedSigningMetadataFile.getConfig().getKeystoreFile());
+
+    assertThat(fileBasedSigningMetadata.getConfig().getKeystorePasswordFile())
+        .isEqualTo(fileBasedSigningMetadataFile.getConfig().getKeystorePasswordFile());
   }
 
   @Test
@@ -232,8 +233,9 @@ class SigningMetadataTomlConfigLoaderTest {
     final FileBasedSigningMetadataFile metadataFile =
         (FileBasedSigningMetadataFile) metadataFiles.toArray()[0];
 
-    assertThat(metadataFile.getKeyPath()).isEqualTo(configsDirectory.resolve("./path/to/k.key"));
-    assertThat(metadataFile.getPasswordPath())
+    assertThat(metadataFile.getConfig().getKeystoreFile())
+        .isEqualTo(configsDirectory.resolve("./path/to/k.key"));
+    assertThat(metadataFile.getConfig().getKeystorePasswordFile())
         .isEqualTo(configsDirectory.resolve("./path/to/p.password"));
   }
 }

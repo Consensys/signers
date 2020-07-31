@@ -14,6 +14,7 @@ package tech.pegasys.signers.secp256k1.multikey;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+import tech.pegasys.signers.secp256k1.filebased.FileSignerConfig;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 
 import java.io.File;
@@ -75,8 +76,8 @@ public class MetadataFileFixture {
 
       return new FileBasedSigningMetadataFile(
           metadataPath.getFileName().toString(),
-          new File(keyFilename).toPath(),
-          new File(passwordFilename).toPath());
+          new FileSignerConfig(
+              new File(keyFilename).toPath(), new File(passwordFilename).toPath()));
 
     } catch (URISyntaxException e) {
       fail("URI Syntax Exception" + metadataFilename);

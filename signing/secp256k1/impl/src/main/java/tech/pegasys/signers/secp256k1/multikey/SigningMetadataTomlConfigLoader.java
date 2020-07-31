@@ -17,6 +17,7 @@ import static java.util.Collections.emptyList;
 import tech.pegasys.signers.hashicorp.config.HashicorpKeyConfig;
 import tech.pegasys.signers.hashicorp.config.loader.toml.TomlConfigLoader;
 import tech.pegasys.signers.secp256k1.azure.AzureConfig.AzureConfigBuilder;
+import tech.pegasys.signers.secp256k1.filebased.FileSignerConfig;
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HashicorpSigningMetadataFile;
@@ -126,7 +127,8 @@ public class SigningMetadataTomlConfigLoader {
     final Path keyPath = makeRelativePathAbsolute(keyFilename);
     final String passwordFilename = table.getString("password-file");
     final Path passwordPath = makeRelativePathAbsolute(passwordFilename);
-    return Optional.of(new FileBasedSigningMetadataFile(filename, keyPath, passwordPath));
+    return Optional.of(
+        new FileBasedSigningMetadataFile(filename, new FileSignerConfig(keyPath, passwordPath)));
   }
 
   private Optional<SigningMetadataFile> getAzureBasedSigningMetadataFromToml(

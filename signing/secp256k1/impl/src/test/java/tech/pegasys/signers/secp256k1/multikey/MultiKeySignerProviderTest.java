@@ -29,6 +29,7 @@ import tech.pegasys.signers.secp256k1.api.PublicKey;
 import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory;
+import tech.pegasys.signers.secp256k1.filebased.FileSignerConfig;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
@@ -123,10 +124,12 @@ class MultiKeySignerProviderTest {
   void signerIsLoadedSuccessfullyWhenAddressHasCaseMismatchToFilename() throws URISyntaxException {
     final FileBasedSigningMetadataFile capitalisedMetadata =
         new FileBasedSigningMetadataFile(
-            LOWERCASE_ADDRESS.toUpperCase() + ".toml",
-            Path.of(Resources.getResource("metadata-toml-configs").toURI()).resolve(KEY_FILENAME),
-            Path.of(Resources.getResource("metadata-toml-configs").toURI())
-                .resolve(PASSWORD_FILENAME));
+            LOWERCASE_ADDRESS + ".toml",
+            new FileSignerConfig(
+                Path.of(Resources.getResource("metadata-toml-configs").toURI())
+                    .resolve(KEY_FILENAME),
+                Path.of(Resources.getResource("metadata-toml-configs").toURI())
+                    .resolve(PASSWORD_FILENAME)));
 
     final Signer signer = signerFactory.createSigner(capitalisedMetadata);
     assertThat(signer).isNotNull();
@@ -139,9 +142,11 @@ class MultiKeySignerProviderTest {
     final FileBasedSigningMetadataFile capitalisedMetadata =
         new FileBasedSigningMetadataFile(
             LOWERCASE_ADDRESS + ".toml",
-            Path.of(Resources.getResource("metadata-toml-configs").toURI()).resolve(KEY_FILENAME),
-            Path.of(Resources.getResource("metadata-toml-configs").toURI())
-                .resolve(PASSWORD_FILENAME));
+            new FileSignerConfig(
+                Path.of(Resources.getResource("metadata-toml-configs").toURI())
+                    .resolve(KEY_FILENAME),
+                Path.of(Resources.getResource("metadata-toml-configs").toURI())
+                    .resolve(PASSWORD_FILENAME)));
 
     when(loader.loadMetadata(any())).thenReturn(Optional.of(capitalisedMetadata));
 
