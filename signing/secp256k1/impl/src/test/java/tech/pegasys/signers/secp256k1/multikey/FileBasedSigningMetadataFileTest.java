@@ -33,8 +33,10 @@ class FileBasedSigningMetadataFileTest {
 
     assertThat(fileBasedSigningMetadataFile.getFilename())
         .matches(LOWERCASE_ADDRESS + CONFIG_FILE_EXTENSION);
-    assertThat(fileBasedSigningMetadataFile.getKeyPath().toFile().toString()).matches(KEY_FILE);
-    assertThat(fileBasedSigningMetadataFile.getPasswordPath().toFile().toString())
+    assertThat(fileBasedSigningMetadataFile.getConfig().getKeystoreFile().toFile().toString())
+        .matches(KEY_FILE);
+    assertThat(
+            fileBasedSigningMetadataFile.getConfig().getKeystorePasswordFile().toFile().toString())
         .matches(PASSWORD_FILE);
   }
 
@@ -46,8 +48,10 @@ class FileBasedSigningMetadataFileTest {
 
     assertThat(fileBasedSigningMetadataFile.getFilename())
         .matches(prefix + PREFIX_ADDRESS + CONFIG_FILE_EXTENSION);
-    assertThat(fileBasedSigningMetadataFile.getKeyPath().toFile().toString()).matches(KEY_FILE);
-    assertThat(fileBasedSigningMetadataFile.getPasswordPath().toFile().toString())
+    assertThat(fileBasedSigningMetadataFile.getConfig().getKeystoreFile().toFile().toString())
+        .matches(KEY_FILE);
+    assertThat(
+            fileBasedSigningMetadataFile.getConfig().getKeystorePasswordFile().toFile().toString())
         .matches(PASSWORD_FILE);
   }
 }

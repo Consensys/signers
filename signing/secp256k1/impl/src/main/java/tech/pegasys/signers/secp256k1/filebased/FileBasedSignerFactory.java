@@ -36,6 +36,10 @@ public class FileBasedSignerFactory {
   private static final String DECRYPTING_KEY_FILE_MESSAGE =
       "Error when decrypting key for the file based signer. ";
 
+  public static Signer createSigner(final FileSignerConfig signerConfig) {
+    return createSigner(signerConfig.getKeystoreFile(), signerConfig.getKeystorePasswordFile());
+  }
+
   public static Signer createSigner(final Path keyFilePath, final Path passwordFilePath) {
     final String password;
     try {
@@ -48,6 +52,7 @@ public class FileBasedSignerFactory {
       LOG.error(message, e);
       throw new SignerInitializationException(message, e);
     }
+
     try {
       final Credentials credentials = WalletUtils.loadCredentials(password, keyFilePath.toFile());
       return new CredentialSigner(credentials);

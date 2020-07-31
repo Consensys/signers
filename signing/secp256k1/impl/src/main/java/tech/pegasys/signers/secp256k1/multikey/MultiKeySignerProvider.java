@@ -141,11 +141,10 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   @Override
   public Signer createSigner(final FileBasedSigningMetadataFile metadataFile) {
     try {
-      return FileBasedSignerFactory.createSigner(
-          metadataFile.getKeyPath(), metadataFile.getPasswordPath());
+      return FileBasedSignerFactory.createSigner(metadataFile.getConfig());
 
     } catch (final SignerInitializationException e) {
-      LOG.error("Unable to load signer with key " + metadataFile.getKeyPath().getFileName(), e);
+      LOG.error("Unable to construct Filebased signer from " + metadataFile.getFilename());
       return null;
     }
   }
