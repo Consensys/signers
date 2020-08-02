@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 ConsenSys AG.
+ * Copyright 2020 ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -20,9 +20,9 @@ import tech.pegasys.signers.secp256k1.api.Signer;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import com.microsoft.azure.keyvault.KeyVaultClientCustom;
-import com.microsoft.azure.keyvault.models.KeyOperationResult;
-import com.microsoft.azure.keyvault.webkey.JsonWebKeySignatureAlgorithm;
+import com.azure.security.keyvault.keys.cryptography.CryptographyClient;
+import com.azure.security.keyvault.keys.cryptography.models.SignResult;
+import com.azure.security.keyvault.keys.cryptography.models.SignatureAlgorithm;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -34,24 +34,21 @@ public class AzureKeyVaultSigner implements Signer {
 
   private static final Logger LOG = LogManager.getLogger();
 
-  private final KeyVaultClientCustom client;
-  private final String keyId;
+  final CryptographyClient cryptoClient;
   private final PublicKeyImpl publicKey;
-  private final JsonWebKeySignatureAlgorithm signingAlgo =
-      new JsonWebKeySignatureAlgorithm("ECDSA256");
+  private final SignatureAlgorithm signingAlgo =
+      SignatureAlgorithm.fromString("ECDSA256");
 
-  public AzureKeyVaultSigner(
-      final KeyVaultClientCustom client, final String keyId, final Bytes publicKey) {
-    this.client = client;
-    this.keyId = keyId;
+  public AzureKeyVaultSigner(final CryptographyClient cryptoClient, final Bytes publicKey) {
+    this.cryptoClient = cryptoClient;
     this.publicKey = new PublicKeyImpl(publicKey);
   }
 
   @Override
-  public Signature sign(final byte[] data) {
+  public Signature sign(byte[] data) {
     final byte[] hash = Hash.sha3(data);
-    final KeyOperationResult result = client.sign(keyId, signingAlgo, hash);
-    final byte[] signature = result.result();
+    final SignResult result = cryptoClient.sign(signingAlgo, hash);
+    final byte[] signature = result.getSignature();
 
     if (signature.length != 64) {
       throw new RuntimeException(

@@ -12,11 +12,12 @@
  */
 package tech.pegasys.signers.secp256k1.multikey;
 
+import tech.pegasys.signers.azure.AzureKeyVault;
 import tech.pegasys.signers.secp256k1.api.FileSelector;
 import tech.pegasys.signers.secp256k1.api.PublicKey;
 import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.api.SignerProvider;
-import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
+import tech.pegasys.signers.secp256k1.azure.AzureConfig;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory;
 import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 import tech.pegasys.signers.secp256k1.filebased.FileBasedSignerFactory;
@@ -43,7 +44,6 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   private static final Logger LOG = LogManager.getLogger();
 
   private final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader;
-  private final AzureKeyVaultSignerFactory azureFactory;
   private final HashicorpSignerFactory hashicorpSignerFactory;
   private final FileSelector<PublicKey> configFileSelector;
 
@@ -52,22 +52,17 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
     final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader =
         new SigningMetadataTomlConfigLoader(rootDir);
 
-    final AzureKeyVaultSignerFactory azureFactory =
-        new AzureKeyVaultSignerFactory(new AzureKeyVaultAuthenticator());
-
     final HashicorpSignerFactory hashicorpSignerFactory = new HashicorpSignerFactory(Vertx.vertx());
 
     return new MultiKeySignerProvider(
-        signingMetadataTomlConfigLoader, azureFactory, hashicorpSignerFactory, configFileSelector);
+        signingMetadataTomlConfigLoader, hashicorpSignerFactory, configFileSelector);
   }
 
   public MultiKeySignerProvider(
       final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader,
-      final AzureKeyVaultSignerFactory azureFactory,
       final HashicorpSignerFactory hashicorpSignerFactory,
       final FileSelector<PublicKey> configFileSelector) {
     this.signingMetadataTomlConfigLoader = signingMetadataTomlConfigLoader;
-    this.azureFactory = azureFactory;
     this.hashicorpSignerFactory = hashicorpSignerFactory;
     this.configFileSelector = configFileSelector;
   }
@@ -121,7 +116,15 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   @Override
   public Signer createSigner(final AzureSigningMetadataFile metadataFile) {
     try {
-      return azureFactory.createSigner(metadataFile.getConfig());
+      final AzureConfig config = metadataFile.getConfig();
+      final AzureKeyVault vault =
+          new AzureKeyVault(
+              config.getClientId(),
+              config.getClientSecret(),
+              config.getTenantId(),
+              config.getKeyVaultName());
+      final AzureKeyVaultSignerFactory azureFactory = new AzureKeyVaultSignerFactory(vault);
+      return azureFactory.createSigner(config.getKeyName(), config.getKeyVersion());
     } catch (final SignerInitializationException e) {
       LOG.error("Failed to construct Azure signer from " + metadataFile.getFilename());
       return null;

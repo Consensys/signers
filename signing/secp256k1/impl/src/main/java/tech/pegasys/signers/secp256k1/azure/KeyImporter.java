@@ -12,30 +12,16 @@
  */
 package tech.pegasys.signers.secp256k1.azure;
 
-import java.math.BigInteger;
-import java.util.Arrays;
-
-import com.google.common.collect.Lists;
-import com.google.common.io.BaseEncoding;
-import com.microsoft.azure.keyvault.KeyVaultClientCustom;
-import com.microsoft.azure.keyvault.webkey.JsonWebKey;
-import com.microsoft.azure.keyvault.webkey.JsonWebKeyCurveName;
-import com.microsoft.azure.keyvault.webkey.JsonWebKeyOperation;
-import com.microsoft.azure.keyvault.webkey.JsonWebKeyType;
-import org.web3j.crypto.ECKeyPair;
-
 public class KeyImporter {
 
   // Creates a SECP256k1 key (usable for Ethereum signing) in Azure KeyVault.
   public static void importKeyToCloudVault() {
+    /*
     final String clientId = System.getenv("AZURE_CLIENT_ID");
     final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
     final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
     final String keyName = "TestKey";
 
-    final AzureKeyVaultAuthenticator authenticator = new AzureKeyVaultAuthenticator();
-    final KeyVaultClientCustom client =
-        authenticator.getAuthenticatedClient(clientId, clientSecret);
 
     final String privKeyStr =
         "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63".toUpperCase();
@@ -52,5 +38,7 @@ public class KeyImporter {
     webKey.withKeyOps(Lists.newArrayList(JsonWebKeyOperation.SIGN, JsonWebKeyOperation.VERIFY));
     client.importKey(
         AzureKeyVaultSignerFactory.constructAzureKeyVaultUrl(keyVaultName), keyName, webKey);
+
+     */
   }
 }

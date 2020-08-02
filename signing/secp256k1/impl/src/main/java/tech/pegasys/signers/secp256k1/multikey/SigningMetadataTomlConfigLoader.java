@@ -147,6 +147,7 @@ public class SigningMetadataTomlConfigLoader {
     builder.withKeyVersion(table.getString("key-version"));
     builder.withClientId(table.getString("client-id"));
     builder.withClientSecret(table.getString("client-secret"));
+    builder.withTenantId(table.getString("tenant-id"));
     return Optional.of(new AzureSigningMetadataFile(filename, builder.build()));
   }
 
