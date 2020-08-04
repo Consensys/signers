@@ -15,7 +15,6 @@ package tech.pegasys.signers.secp256k1.azure;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AzureConfig {
   private final String keyVaultName;
