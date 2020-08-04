@@ -27,12 +27,12 @@ public class AzureConfig {
 
   @JsonCreator
   public AzureConfig(
-      @JsonProperty(value = "key-vault-name", required = true) final String keyVaultName,
-      @JsonProperty(value = "key-name", required = true) final String keyName,
-      @JsonProperty(value = "key-version", required = true) final String keyVersion,
-      @JsonProperty(value = "client-id", required = true) final String clientId,
-      @JsonProperty(value = "client-secret", required = true) final String clientSecret,
-      @JsonProperty(value = "tenant-id", required = true) final String tenantId) {
+      final String keyVaultName,
+      final String keyName,
+      final String keyVersion,
+      final String clientId,
+      final String clientSecret,
+      final String tenantId) {
     this.keyVaultName = keyVaultName;
     this.keyName = keyName;
     this.keyVersion = keyVersion;
