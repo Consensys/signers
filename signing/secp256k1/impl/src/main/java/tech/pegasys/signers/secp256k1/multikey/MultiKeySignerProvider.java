@@ -12,7 +12,6 @@
  */
 package tech.pegasys.signers.secp256k1.multikey;
 
-import tech.pegasys.signers.azure.AzureKeyVault;
 import tech.pegasys.signers.secp256k1.api.FileSelector;
 import tech.pegasys.signers.secp256k1.api.PublicKey;
 import tech.pegasys.signers.secp256k1.api.Signer;
@@ -117,14 +116,8 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   public Signer createSigner(final AzureSigningMetadataFile metadataFile) {
     try {
       final AzureConfig config = metadataFile.getConfig();
-      final AzureKeyVault vault =
-          new AzureKeyVault(
-              config.getClientId(),
-              config.getClientSecret(),
-              config.getTenantId(),
-              config.getKeyVaultName());
-      final AzureKeyVaultSignerFactory azureFactory = new AzureKeyVaultSignerFactory(vault);
-      return azureFactory.createSigner(config.getKeyName(), config.getKeyVersion());
+      final AzureKeyVaultSignerFactory azureFactory = new AzureKeyVaultSignerFactory();
+      return azureFactory.createSigner(config);
     } catch (final SignerInitializationException e) {
       LOG.error("Failed to construct Azure signer from " + metadataFile.getFilename());
       return null;

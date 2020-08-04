@@ -34,49 +34,33 @@ public class AzureKeyVaultSignerFactory {
   public static final String UNKNOWN_VAULT_ACCESS_ERROR = "Failed to access the Azure key vault";
 
   private static final Logger LOG = LogManager.getLogger();
-  private final AzureKeyVault vault;
 
-  public AzureKeyVaultSignerFactory(final AzureKeyVault vault) {
-    this.vault = vault;
-  }
+  public Signer createSigner(final AzureConfig config) {
+    checkNotNull(config, "Config must be specified");
 
-  public Signer createSigner(final String keyName, final String keyVersion) {
-    checkNotNull(keyName, "Config must be specified");
+    final AzureKeyVault vault;
+    try {
+      vault =
+          new AzureKeyVault(
+              config.getClientId(),
+              config.getClientSecret(),
+              config.getTenantId(),
+              config.getKeyVaultName());
+    } catch (final Exception e) {
+      LOG.error("Failed to connect to vault", e);
+      throw new SignerInitializationException(INACCESSIBLE_KEY_ERROR, e);
+    }
 
     final CryptographyClient cryptoClient;
     try {
-      cryptoClient = vault.fetchKey(keyName, keyVersion);
+      cryptoClient = vault.fetchKey(config.getKeyName(), config.getKeyVersion());
     } catch (final Exception e) {
       LOG.error("Unable to load key");
-      throw new SignerInitializationException(INACCESSIBLE_KEY_ERROR, e);
+      throw new SignerInitializationException(INVALID_KEY_PARAMETERS_ERROR, e);
     }
     final JsonWebKey jsonWebKey = cryptoClient.getKey().getKey();
     final Bytes rawPublicKey =
         Bytes.concatenate(Bytes.wrap(jsonWebKey.getX()), Bytes.wrap(jsonWebKey.getY()));
     return new AzureKeyVaultSigner(cryptoClient, rawPublicKey);
-    //
-    //    try {
-    //    } catch (final KeyVaultErrorException ex) {
-    //      if (ex.response().raw().code() == 401) {
-    //        LOG.debug(INACCESSIBLE_KEY_ERROR);
-    //        LOG.trace(ex);
-    //        throw new SignerInitializationException(INACCESSIBLE_KEY_ERROR, ex);
-    //      } else {
-    //        LOG.debug(INVALID_KEY_PARAMETERS_ERROR);
-    //        LOG.trace(ex);
-    //        throw new SignerInitializationException(INVALID_KEY_PARAMETERS_ERROR, ex);
-    //      }
-    //    } catch (final RuntimeException ex) {
-    //      final String errorMsg;
-    //      if (ex.getCause() instanceof UnknownHostException) {
-    //        errorMsg = String.format(INVALID_VAULT_PARAMETERS_ERROR_PATTERN, vaultUrl);
-    //      } else {
-    //        errorMsg = UNKNOWN_VAULT_ACCESS_ERROR;
-    //      }
-    //      LOG.debug(errorMsg);
-    //      LOG.trace(ex);
-    //      throw new SignerInitializationException(errorMsg, ex);
-    //    }
-
   }
 }
