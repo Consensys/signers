@@ -55,7 +55,7 @@ public class AzureKeyVaultSignerFactory {
     try {
       cryptoClient = vault.fetchKey(config.getKeyName(), config.getKeyVersion());
     } catch (final Exception e) {
-      LOG.error("Unable to load key");
+      LOG.error("Unable to load key {}", e.getMessage());
       throw new SignerInitializationException(INVALID_KEY_PARAMETERS_ERROR, e);
     }
     final JsonWebKey jsonWebKey = cryptoClient.getKey().getKey();
