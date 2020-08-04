@@ -14,24 +14,30 @@ package tech.pegasys.signers.secp256k1.azure;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public class AzureConfig {
   private final String keyVaultName;
   private final String keyName;
   private final String keyVersion;
   private final String clientId;
   private final String clientSecret;
+  private final String tenantId;
 
+  @JsonCreator
   public AzureConfig(
       final String keyVaultName,
       final String keyName,
       final String keyVersion,
       final String clientId,
-      final String clientSecret) {
+      final String clientSecret,
+      final String tenantId) {
     this.keyVaultName = keyVaultName;
     this.keyName = keyName;
     this.keyVersion = keyVersion;
     this.clientId = clientId;
     this.clientSecret = clientSecret;
+    this.tenantId = tenantId;
   }
 
   public String getKeyVaultName() {
@@ -54,6 +60,10 @@ public class AzureConfig {
     return clientSecret;
   }
 
+  public String getTenantId() {
+    return tenantId;
+  }
+
   public static class AzureConfigBuilder {
 
     private String keyVaultName;
@@ -61,6 +71,7 @@ public class AzureConfig {
     private String keyVersion;
     private String clientId;
     private String clientSecret;
+    private String tenantId;
 
     public AzureConfigBuilder withKeyVaultName(final String keyVaultName) {
       this.keyVaultName = keyVaultName;
@@ -82,8 +93,13 @@ public class AzureConfig {
       return this;
     }
 
-    public AzureConfigBuilder withClientSecret(String clientSecret) {
+    public AzureConfigBuilder withClientSecret(final String clientSecret) {
       this.clientSecret = clientSecret;
+      return this;
+    }
+
+    public AzureConfigBuilder withTenantId(final String tenantId) {
+      this.tenantId = tenantId;
       return this;
     }
 
@@ -93,8 +109,9 @@ public class AzureConfig {
       checkNotNull(keyVersion, "Key Version was not set.");
       checkNotNull(clientId, "Client Id was not set.");
       checkNotNull(clientSecret, "Client Secret was not set.");
+      checkNotNull(tenantId, "Tenant Id was not set.");
 
-      return new AzureConfig(keyVaultName, keyName, keyVersion, clientId, clientSecret);
+      return new AzureConfig(keyVaultName, keyName, keyVersion, clientId, clientSecret, tenantId);
     }
   }
 }

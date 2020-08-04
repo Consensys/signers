@@ -200,6 +200,7 @@ class SigningMetadataTomlConfigLoaderTest {
     assertThat(metadataFile.getConfig().getKeyName()).isEqualTo("TestKey");
     assertThat(metadataFile.getConfig().getKeyVersion())
         .isEqualTo("7c01fe58d68148bba5824ce418241092");
+    assertThat(metadataFile.getConfig().getTenantId()).isEqualTo("theTenantId");
   }
 
   @Test

@@ -27,8 +27,6 @@ import tech.pegasys.signers.secp256k1.PublicKeyImpl;
 import tech.pegasys.signers.secp256k1.api.FileSelector;
 import tech.pegasys.signers.secp256k1.api.PublicKey;
 import tech.pegasys.signers.secp256k1.api.Signer;
-import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultAuthenticator;
-import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory;
 import tech.pegasys.signers.secp256k1.filebased.FileSignerConfig;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
@@ -56,8 +54,6 @@ class MultiKeySignerProviderTest {
 
   private final SigningMetadataTomlConfigLoader loader =
       mock(SigningMetadataTomlConfigLoader.class);
-  final AzureKeyVaultSignerFactory azureFactory =
-      new AzureKeyVaultSignerFactory(new AzureKeyVaultAuthenticator());
 
   @Mock private FileSelector<PublicKey> fileSelector;
   private MultiKeySignerProvider signerFactory;
@@ -89,7 +85,7 @@ class MultiKeySignerProviderTest {
     } catch (Exception e) {
       fail("Error copying metadata files", e);
     }
-    signerFactory = new MultiKeySignerProvider(loader, azureFactory, null, fileSelector);
+    signerFactory = new MultiKeySignerProvider(loader, null, fileSelector);
   }
 
   @Test

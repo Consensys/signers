@@ -34,9 +34,9 @@ dependencies {
 
   implementation project(':signing:secp256k1:api')
   implementation project(':keystorage:hashicorp')
+  implementation project(':keystorage:azure')
 
   implementation 'com.google.guava:guava'
-  implementation 'com.microsoft.aad:adal4j'
   implementation 'com.microsoft.azure:azure-keyvault'
   implementation 'io.vertx:vertx-core'
   implementation 'org.apache.logging.log4j:log4j-api'
@@ -44,6 +44,7 @@ dependencies {
   implementation 'org.apache.tuweni:tuweni-net'
   implementation 'org.apache.tuweni:tuweni-toml'
   implementation 'org.web3j:core'
+  implementation 'com.azure:azure-security-keyvault-keys'
 
   runtimeOnly 'com.squareup.okhttp3:okhttp'
   runtimeOnly 'org.apache.logging.log4j:log4j-core'

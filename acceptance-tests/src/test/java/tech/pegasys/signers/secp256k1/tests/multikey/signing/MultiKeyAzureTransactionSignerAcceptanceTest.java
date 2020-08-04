@@ -27,6 +27,7 @@ public class MultiKeyAzureTransactionSignerAcceptanceTest
   static final String clientId = System.getenv("AZURE_CLIENT_ID");
   static final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
   static final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
+  static final String tenantId = System.getenv("AZURE_TENANT_ID");
 
   @BeforeAll
   public static void checkAzureCredentials() {
@@ -41,7 +42,8 @@ public class MultiKeyAzureTransactionSignerAcceptanceTest
         tomlDirectory.resolve(PUBLIC_KEY_HEX_STRING + ".toml"),
         clientId,
         clientSecret,
-        keyVaultName);
+        keyVaultName,
+        tenantId);
     setup(tomlDirectory);
     verifySignature();
   }
