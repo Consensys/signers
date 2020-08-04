@@ -36,8 +36,7 @@ public class AzureKeyVaultSigner implements Signer {
 
   final CryptographyClient cryptoClient;
   private final PublicKeyImpl publicKey;
-  private final SignatureAlgorithm signingAlgo =
-      SignatureAlgorithm.fromString("ECDSA256");
+  private final SignatureAlgorithm signingAlgo = SignatureAlgorithm.fromString("ECDSA256");
 
   public AzureKeyVaultSigner(final CryptographyClient cryptoClient, final Bytes publicKey) {
     this.cryptoClient = cryptoClient;
