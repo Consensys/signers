@@ -61,6 +61,6 @@ public class AzureKeyVaultSignerFactory {
     final JsonWebKey jsonWebKey = cryptoClient.getKey().getKey();
     final Bytes rawPublicKey =
         Bytes.concatenate(Bytes.wrap(jsonWebKey.getX()), Bytes.wrap(jsonWebKey.getY()));
-    return new AzureKeyVaultSigner(cryptoClient, rawPublicKey);
+    return new AzureKeyVaultSigner(config, rawPublicKey);
   }
 }

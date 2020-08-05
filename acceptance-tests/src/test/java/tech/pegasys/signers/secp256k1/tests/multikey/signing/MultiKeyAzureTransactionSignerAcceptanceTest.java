@@ -30,10 +30,10 @@ public class MultiKeyAzureTransactionSignerAcceptanceTest
   static final String tenantId = System.getenv("AZURE_TENANT_ID");
 
   @BeforeAll
-  public static void checkAzureCredentials() {
+  static void preChecks() {
     Assumptions.assumeTrue(
-        clientId != null && clientSecret != null,
-        "Ensure Azure client id and client secret env variables are set");
+        clientId != null && clientSecret != null && keyVaultName != null && tenantId != null,
+        "Ensure Azure env variables are set");
   }
 
   @Test
