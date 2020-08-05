@@ -12,7 +12,13 @@
  */
 package tech.pegasys.signers.secp256k1.api;
 
+import java.security.spec.ECPoint;
+
 public interface PublicKey {
 
-  byte[] getValue();
+  ECPoint getValue();
+
+  byte[] toEthBytes();
+
+  String toEthHexString();
 }

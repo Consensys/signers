@@ -28,7 +28,6 @@ import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -73,7 +72,7 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
             .loadMetadata(configFileSelector.getSpecificConfigFileFilter(publicKey))
             .map(metadataFile -> metadataFile.createSigner(this));
     if (signer.isPresent()) {
-      if (Arrays.equals(signer.get().getPublicKey().getValue(), publicKey.getValue())) {
+      if (signer.get().getPublicKey().getValue().equals(publicKey.getValue())) {
         return signer;
       } else {
         LOG.warn(

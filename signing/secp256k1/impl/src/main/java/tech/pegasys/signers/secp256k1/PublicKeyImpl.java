@@ -15,45 +15,70 @@ package tech.pegasys.signers.secp256k1;
 import tech.pegasys.signers.secp256k1.api.PublicKey;
 
 import java.math.BigInteger;
+import java.security.spec.ECPoint;
 import java.util.Objects;
 
+import com.google.common.base.MoreObjects;
 import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.bytes.Bytes32;
+import org.bouncycastle.util.BigIntegers;
 import org.web3j.utils.Numeric;
 
 public class PublicKeyImpl implements PublicKey {
 
   private static final int PUBLIC_KEY_SIZE = 64;
 
-  private final Bytes value;
+  private final ECPoint value;
 
-  public PublicKeyImpl(final Bytes value) {
+  public static PublicKey fromEthBytes(final Bytes value) {
+    final Bytes x = value.slice(0, 32);
+    final Bytes y = value.slice(32, 32);
+    final ECPoint ecPoint =
+        new ECPoint(Numeric.toBigInt(x.toArrayUnsafe()), Numeric.toBigInt(y.toArrayUnsafe()));
+    return new PublicKeyImpl(ecPoint);
+  }
+
+  public static PublicKey fromEthBigInt(final BigInteger value) {
+    final Bytes ethBytes = Bytes.wrap(Numeric.toBytesPadded(value, PUBLIC_KEY_SIZE));
+    return fromEthBytes(ethBytes);
+  }
+
+  public PublicKeyImpl(final ECPoint value) {
     this.value = value;
   }
 
-  public PublicKeyImpl(final BigInteger value) {
-    this.value = Bytes.wrap(Numeric.toBytesPadded(value, PUBLIC_KEY_SIZE));
+  @Override
+  public ECPoint getValue() {
+    return value;
   }
 
   @Override
-  public byte[] getValue() {
-    return value.toArrayUnsafe();
+  public byte[] toEthBytes() {
+    final Bytes xBytes = Bytes32.wrap(BigIntegers.asUnsignedByteArray(32, value.getAffineX()));
+    final Bytes yBytes = Bytes32.wrap(BigIntegers.asUnsignedByteArray(32, value.getAffineY()));
+    return Bytes.concatenate(xBytes, yBytes).toArray();
+  }
+
+  @Override
+  public String toEthHexString() {
+    return Bytes.wrap(toEthBytes()).toHexString();
   }
 
   @Override
   public String toString() {
-    return value.toHexString();
+    return MoreObjects.toStringHelper(this).add("value", value).toString();
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(final Object o) {
     if (this == o) {
       return true;
     }
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    final PublicKeyImpl other = (PublicKeyImpl) o;
-    return other.value.compareTo(value) == 0;
+    final PublicKeyImpl publicKey = (PublicKeyImpl) o;
+    return Objects.equals(value, publicKey.value);
   }
 
   @Override

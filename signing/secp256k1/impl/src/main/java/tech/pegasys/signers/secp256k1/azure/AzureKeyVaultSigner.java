@@ -29,18 +29,19 @@ import org.apache.tuweni.bytes.Bytes;
 import org.web3j.crypto.ECDSASignature;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
+import org.web3j.utils.Numeric;
 
 public class AzureKeyVaultSigner implements Signer {
 
   private static final Logger LOG = LogManager.getLogger();
 
   final CryptographyClient cryptoClient;
-  private final PublicKeyImpl publicKey;
+  private final PublicKey publicKey;
   private final SignatureAlgorithm signingAlgo = SignatureAlgorithm.fromString("ECDSA256");
 
   public AzureKeyVaultSigner(final CryptographyClient cryptoClient, final Bytes publicKey) {
     this.cryptoClient = cryptoClient;
-    this.publicKey = new PublicKeyImpl(publicKey);
+    this.publicKey = PublicKeyImpl.fromEthBytes(publicKey);
   }
 
   @Override
@@ -84,7 +85,7 @@ public class AzureKeyVaultSigner implements Signer {
   }
 
   private int recoverKeyIndex(final ECDSASignature sig, final byte[] hash) {
-    final BigInteger publicKey = new BigInteger(1, this.publicKey.getValue());
+    final BigInteger publicKey = Numeric.toBigInt(this.publicKey.toEthBytes());
     for (int i = 0; i < 4; i++) {
       final BigInteger k = Sign.recoverFromSignature(i, sig, hash);
       LOG.trace("recovered key: {}", k);

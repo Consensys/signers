@@ -26,11 +26,11 @@ import org.web3j.crypto.Sign.SignatureData;
 public class CredentialSigner implements Signer {
 
   private final Credentials credentials;
-  private final PublicKeyImpl publicKey;
+  private final PublicKey publicKey;
 
   public CredentialSigner(final Credentials credentials) {
     this.credentials = credentials;
-    this.publicKey = new PublicKeyImpl(credentials.getEcKeyPair().getPublicKey());
+    this.publicKey = PublicKeyImpl.fromEthBigInt(credentials.getEcKeyPair().getPublicKey());
   }
 
   @Override

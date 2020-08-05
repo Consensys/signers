@@ -45,7 +45,7 @@ class HashicorpTlsBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
     setup(tempDir);
     assertThat(
             signerProvider.availablePublicKeys().stream()
-                .map(PublicKey::getValue)
+                .map(PublicKey::toEthBytes)
                 .collect(Collectors.toList()))
         .containsOnly(Numeric.hexStringToByteArray(PUBLIC_KEY_HEX_STRING));
   }

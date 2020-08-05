@@ -93,15 +93,16 @@ class MultiKeySignerProviderTest {
     when(loader.loadMetadata(any())).thenReturn(Optional.of(metadataFile));
 
     final Optional<Signer> signer =
-        signerFactory.getSigner(new PublicKeyImpl(Bytes.fromHexString(LOWER_CASE_PUBLIC_KEY)));
+        signerFactory.getSigner(
+            PublicKeyImpl.fromEthBytes(Bytes.fromHexString(LOWER_CASE_PUBLIC_KEY)));
     assertThat(signer).isNotEmpty();
-    assertThat(signer.get().getPublicKey().toString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
+    assertThat(signer.get().getPublicKey().toEthHexString())
+        .isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
 
     final ArgumentCaptor<PublicKey> publicKeyCaptor = ArgumentCaptor.forClass(PublicKey.class);
     verify(fileSelector).getSpecificConfigFileFilter(publicKeyCaptor.capture());
 
-    assertThat(Bytes.wrap(publicKeyCaptor.getValue().getValue()).toUnprefixedHexString())
-        .isEqualTo(LOWER_CASE_PUBLIC_KEY);
+    assertThat(publicKeyCaptor.getValue().toEthHexString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
   }
 
   @Test
@@ -110,10 +111,8 @@ class MultiKeySignerProviderTest {
     when(loader.loadAvailableSigningMetadataTomlConfigs(any())).thenReturn(files);
     when(fileSelector.getSpecificConfigFileFilter(any())).thenReturn(entry -> true);
     assertThat(signerFactory.availablePublicKeys().size()).isOne();
-    assertThat(
-            signerFactory.availablePublicKeys().stream()
-                .map(pk -> Bytes.wrap(pk.getValue()).toUnprefixedHexString()))
-        .containsExactly(LOWER_CASE_PUBLIC_KEY);
+    assertThat(signerFactory.availablePublicKeys().stream().map(PublicKey::toEthHexString))
+        .containsExactly("0x" + LOWER_CASE_PUBLIC_KEY);
   }
 
   @Test
@@ -129,7 +128,7 @@ class MultiKeySignerProviderTest {
 
     final Signer signer = signerFactory.createSigner(capitalisedMetadata);
     assertThat(signer).isNotNull();
-    assertThat(signer.getPublicKey().toString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
+    assertThat(signer.getPublicKey().toEthHexString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
   }
 
   @Test
@@ -147,7 +146,7 @@ class MultiKeySignerProviderTest {
     when(loader.loadMetadata(any())).thenReturn(Optional.of(capitalisedMetadata));
 
     final Optional<Signer> signer =
-        signerFactory.getSigner(new PublicKeyImpl(Bytes.fromHexString("A".repeat(128))));
+        signerFactory.getSigner(PublicKeyImpl.fromEthBytes(Bytes.fromHexString("A".repeat(128))));
 
     assertThat(signer).isEmpty();
   }
