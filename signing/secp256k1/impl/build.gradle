@@ -37,7 +37,6 @@ dependencies {
   implementation project(':keystorage:azure')
 
   implementation 'com.google.guava:guava'
-  implementation 'com.microsoft.azure:azure-keyvault'
   implementation 'io.vertx:vertx-core'
   implementation 'org.apache.logging.log4j:log4j-api'
   implementation 'org.apache.logging.log4j:log4j-core'

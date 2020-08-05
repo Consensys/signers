@@ -19,8 +19,6 @@ dependencyManagement {
 
     dependency 'com.google.guava:guava:28.2-jre'
 
-    dependency 'com.microsoft.azure:azure-keyvault:1.2.2'
-
     dependency 'com.azure:azure-security-keyvault-secrets:4.1.5'
     dependency 'com.azure:azure-security-keyvault-keys:4.1.5'
     dependency 'com.azure:azure-identity:1.0.9'
