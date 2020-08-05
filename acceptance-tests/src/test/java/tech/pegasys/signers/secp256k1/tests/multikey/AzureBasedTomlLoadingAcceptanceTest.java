@@ -35,8 +35,8 @@ public class AzureBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
   @BeforeAll
   static void preChecks() {
     Assumptions.assumeTrue(
-        clientId != null && clientSecret != null,
-        "Ensure Azure client id and client secret env variables are set");
+        clientId != null && clientSecret != null && keyVaultName != null && tenantId != null
+        "Ensure Azure env variables are set");
   }
 
   @Test
