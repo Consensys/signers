@@ -16,14 +16,23 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import tech.pegasys.signers.secp256k1.api.Signer;
 
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-public class AzureSignerTest {
+public class AzureKeyVaultSignerTest {
 
   private static final String clientId = System.getenv("AZURE_CLIENT_ID");
   private static final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
   private static final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
   private static final String tenantId = System.getenv("AZURE_TENANT_ID");
+
+  @BeforeAll
+  static void preChecks() {
+    Assumptions.assumeTrue(
+        clientId != null && clientSecret != null && keyVaultName != null && tenantId != null,
+        "Ensure Azure env variables are set");
+  }
 
   @Test
   public void azureSignerCanSignTwice() {
