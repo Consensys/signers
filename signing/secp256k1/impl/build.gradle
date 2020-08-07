@@ -57,6 +57,9 @@ dependencies {
   testImplementation 'org.mockito:mockito-junit-jupiter'
   testImplementation(testFixtures(project(":keystorage:hashicorp")))
 
+  testImplementation 'com.azure:azure-security-keyvault-keys'
+  testImplementation 'com.azure:azure-identity'
+
   testFixturesImplementation project(':signing:secp256k1:api')
   testFixturesImplementation 'org.apache.tuweni:tuweni-bytes'
 

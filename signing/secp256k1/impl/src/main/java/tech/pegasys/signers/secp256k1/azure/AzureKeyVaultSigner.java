@@ -13,8 +13,10 @@
 package tech.pegasys.signers.secp256k1.azure;
 
 import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
+import tech.pegasys.signers.azure.AzureKeyVault;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
 import java.math.BigInteger;
 import java.security.interfaces.ECPublicKey;
@@ -33,19 +35,36 @@ import org.web3j.utils.Numeric;
 
 public class AzureKeyVaultSigner implements Signer {
 
+  public static final String INACCESSIBLE_KEY_ERROR = "Failed to authenticate to vault.";
+
   private static final Logger LOG = LogManager.getLogger();
 
-  final CryptographyClient cryptoClient;
+  private final AzureConfig config;
   private final ECPublicKey publicKey;
   private final SignatureAlgorithm signingAlgo = SignatureAlgorithm.fromString("ECDSA256");
 
-  public AzureKeyVaultSigner(final CryptographyClient cryptoClient, final Bytes publicKey) {
-    this.cryptoClient = cryptoClient;
+  public AzureKeyVaultSigner(final AzureConfig config, final Bytes publicKey) {
+    this.config = config;
     this.publicKey = EthPublicKeyUtils.createPublicKey(publicKey);
   }
 
   @Override
   public Signature sign(byte[] data) {
+    final AzureKeyVault vault;
+    try {
+      vault =
+          new AzureKeyVault(
+              config.getClientId(),
+              config.getClientSecret(),
+              config.getTenantId(),
+              config.getKeyVaultName());
+    } catch (final Exception e) {
+      LOG.error("Failed to connect to vault", e);
+      throw new SignerInitializationException(INACCESSIBLE_KEY_ERROR, e);
+    }
+
+    final CryptographyClient cryptoClient =
+        vault.fetchKey(config.getKeyName(), config.getKeyVersion());
     final byte[] hash = Hash.sha3(data);
     final SignResult result = cryptoClient.sign(signingAlgo, hash);
     final byte[] signature = result.getSignature();
