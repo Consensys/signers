@@ -12,8 +12,8 @@
  */
 package tech.pegasys.signers.secp256k1.azure;
 
-import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.azure.AzureKeyVault;
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
