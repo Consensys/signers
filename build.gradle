@@ -389,6 +389,7 @@ configurations {
 dependencies {
   subprojects.each { subProject ->
     installedJars subProject
+    testCompile subProject
   }
 }
 
