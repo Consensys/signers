@@ -12,6 +12,7 @@
  */
 package tech.pegasys.signers.secp256k1.api;
 
+import java.security.interfaces.ECPublicKey;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
@@ -28,9 +29,8 @@ public class SingleSignerProvider implements SignerProvider {
   }
 
   @Override
-  public Optional<Signer> getSigner(final PublicKey publicKey) {
-    if ((signer.getPublicKey() != null)
-        && signer.getPublicKey().getValue().equals(publicKey.getValue())) {
+  public Optional<Signer> getSigner(final ECPublicKey publicKey) {
+    if ((signer.getPublicKey() != null) && signer.getPublicKey().getW().equals(publicKey.getW())) {
       return Optional.of(signer);
     } else {
       return Optional.empty();
@@ -38,7 +38,7 @@ public class SingleSignerProvider implements SignerProvider {
   }
 
   @Override
-  public Set<PublicKey> availablePublicKeys() {
+  public Set<ECPublicKey> availablePublicKeys() {
     return signer.getPublicKey() != null ? Set.of(signer.getPublicKey()) : Collections.emptySet();
   }
 }

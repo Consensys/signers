@@ -12,12 +12,12 @@
  */
 package tech.pegasys.signers.secp256k1.azure;
 
-import tech.pegasys.signers.secp256k1.PublicKeyImpl;
-import tech.pegasys.signers.secp256k1.api.PublicKey;
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
 
 import java.math.BigInteger;
+import java.security.interfaces.ECPublicKey;
 import java.util.Arrays;
 
 import com.azure.security.keyvault.keys.cryptography.CryptographyClient;
@@ -36,12 +36,12 @@ public class AzureKeyVaultSigner implements Signer {
   private static final Logger LOG = LogManager.getLogger();
 
   final CryptographyClient cryptoClient;
-  private final PublicKey publicKey;
+  private final ECPublicKey publicKey;
   private final SignatureAlgorithm signingAlgo = SignatureAlgorithm.fromString("ECDSA256");
 
   public AzureKeyVaultSigner(final CryptographyClient cryptoClient, final Bytes publicKey) {
     this.cryptoClient = cryptoClient;
-    this.publicKey = PublicKeyImpl.fromEthBytes(publicKey);
+    this.publicKey = EthPublicKeyUtils.createPublicKey(publicKey);
   }
 
   @Override
@@ -80,12 +80,12 @@ public class AzureKeyVaultSigner implements Signer {
   }
 
   @Override
-  public PublicKey getPublicKey() {
+  public ECPublicKey getPublicKey() {
     return publicKey;
   }
 
   private int recoverKeyIndex(final ECDSASignature sig, final byte[] hash) {
-    final BigInteger publicKey = Numeric.toBigInt(this.publicKey.toEthBytes());
+    final BigInteger publicKey = Numeric.toBigInt(EthPublicKeyUtils.toByteArray(this.publicKey));
     for (int i = 0; i < 4; i++) {
       final BigInteger k = Sign.recoverFromSignature(i, sig, hash);
       LOG.trace("recovered key: {}", k);

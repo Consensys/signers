@@ -15,7 +15,7 @@ package tech.pegasys.signers.secp256k1.tests.multikey;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.signers.secp256k1.MultiKeyTomlFileUtil.createAzureTomlFileAt;
 
-import tech.pegasys.signers.secp256k1.api.PublicKey;
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 
 import java.nio.file.Path;
 
@@ -51,7 +51,7 @@ public class AzureBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
 
     setup(tomlDirectory);
 
-    assertThat(signerProvider.availablePublicKeys().stream().map(PublicKey::toEthHexString))
+    assertThat(signerProvider.availablePublicKeys().stream().map(EthPublicKeyUtils::toHexString))
         .containsOnly("0x" + PUBLIC_KEY_HEX_STRING);
   }
 }

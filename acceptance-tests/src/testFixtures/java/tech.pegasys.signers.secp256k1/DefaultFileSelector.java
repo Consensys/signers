@@ -13,12 +13,12 @@
 package tech.pegasys.signers.secp256k1;
 
 import tech.pegasys.signers.secp256k1.api.FileSelector;
-import tech.pegasys.signers.secp256k1.api.PublicKey;
 
 import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.Path;
+import java.security.interfaces.ECPublicKey;
 
-public class DefaultFileSelector implements FileSelector<PublicKey> {
+public class DefaultFileSelector implements FileSelector<ECPublicKey> {
 
   @Override
   public Filter<Path> getAllConfigFilesFilter() {
@@ -26,9 +26,10 @@ public class DefaultFileSelector implements FileSelector<PublicKey> {
   }
 
   @Override
-  public Filter<Path> getSpecificConfigFileFilter(final PublicKey publicKey) {
+  public Filter<Path> getSpecificConfigFileFilter(final ECPublicKey publicKey) {
     return entry -> {
-      final String filename = publicKey.toEthHexString().substring(2); // remove 0x prefix
+      final String filename =
+          EthPublicKeyUtils.toHexString(publicKey).substring(2); // remove 0x prefix
       return entry.getFileName().toString().equals(filename + ".toml");
     };
   }
