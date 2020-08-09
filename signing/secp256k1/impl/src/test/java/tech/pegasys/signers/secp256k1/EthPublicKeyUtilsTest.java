@@ -37,9 +37,9 @@ class EthPublicKeyUtilsTest {
 
   private static final String EC_OID = "1.2.840.10045.2.1";
   private static final String SECP_OID = "1.3.132.0.10";
-  public static String PUBLIC_KEY =
+  private static final String PUBLIC_KEY =
       "0xaf80b90d25145da28c583359beb47b21796b2fe1a23c1511e443e7a64dfdb27d7434c380f0aa4c500e220aa1a9d068514b1ff4d5019e624e7ba1efe82b340a59";
-  public static final X9ECParameters CURVE_PARAMS = CustomNamedCurves.getByName("secp256k1");
+  private static final X9ECParameters CURVE_PARAMS = CustomNamedCurves.getByName("secp256k1");
 
   @Test
   public void createsPublicKeyFromECPoint() {
