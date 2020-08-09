@@ -12,6 +12,7 @@
  */
 package tech.pegasys.signers.secp256k1;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.bouncycastle.util.BigIntegers.asUnsignedByteArray;
 
 import java.math.BigInteger;
@@ -35,11 +36,11 @@ public class EthPublicKeyUtils {
 
   public static ECPublicKey createPublicKey(final ECPoint publicPoint) {
     try {
-      AlgorithmParameters parameters = AlgorithmParameters.getInstance("EC");
+      final AlgorithmParameters parameters = AlgorithmParameters.getInstance("EC");
       parameters.init(new ECGenParameterSpec("secp256k1"));
-      ECParameterSpec ecParameters = parameters.getParameterSpec(ECParameterSpec.class);
-      ECPublicKeySpec pubSpec = new ECPublicKeySpec(publicPoint, ecParameters);
-      KeyFactory kf = KeyFactory.getInstance("EC");
+      final ECParameterSpec ecParameters = parameters.getParameterSpec(ECParameterSpec.class);
+      final ECPublicKeySpec pubSpec = new ECPublicKeySpec(publicPoint, ecParameters);
+      final KeyFactory kf = KeyFactory.getInstance("EC");
       return (ECPublicKey) kf.generatePublic(pubSpec);
     } catch (NoSuchAlgorithmException | InvalidParameterSpecException | InvalidKeySpecException e) {
       throw new IllegalStateException("Unable to create Ethereum public key", e);
@@ -47,6 +48,7 @@ public class EthPublicKeyUtils {
   }
 
   public static ECPublicKey createPublicKey(final Bytes value) {
+    checkArgument(value.size() == PUBLIC_KEY_SIZE, "Invalid public key size must be 64 bytes");
     final Bytes x = value.slice(0, 32);
     final Bytes y = value.slice(32, 32);
     final ECPoint ecPoint =
