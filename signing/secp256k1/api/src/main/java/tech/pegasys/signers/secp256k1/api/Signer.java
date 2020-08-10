@@ -12,9 +12,11 @@
  */
 package tech.pegasys.signers.secp256k1.api;
 
+import java.security.interfaces.ECPublicKey;
+
 public interface Signer {
 
   Signature sign(final byte[] data);
 
-  PublicKey getPublicKey();
+  ECPublicKey getPublicKey();
 }

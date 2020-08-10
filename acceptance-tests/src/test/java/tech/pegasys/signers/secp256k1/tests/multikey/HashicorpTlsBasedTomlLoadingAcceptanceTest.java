@@ -15,8 +15,8 @@ package tech.pegasys.signers.secp256k1.tests.multikey;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.signers.secp256k1.MultiKeyTomlFileUtil.createHashicorpTomlFileAt;
 
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.HashicorpSigningParams;
-import tech.pegasys.signers.secp256k1.api.PublicKey;
 
 import java.nio.file.Path;
 import java.util.stream.Collectors;
@@ -45,7 +45,7 @@ class HashicorpTlsBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
     setup(tempDir);
     assertThat(
             signerProvider.availablePublicKeys().stream()
-                .map(PublicKey::getValue)
+                .map(EthPublicKeyUtils::toByteArray)
                 .collect(Collectors.toList()))
         .containsOnly(Numeric.hexStringToByteArray(PUBLIC_KEY_HEX_STRING));
   }

@@ -15,6 +15,8 @@ package tech.pegasys.signers.secp256k1.tests.multikey;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.signers.secp256k1.MultiKeyTomlFileUtil.createFileBasedTomlFileAt;
 
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -22,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import com.google.common.io.Resources;
-import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -49,10 +50,8 @@ class FileBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
 
     setup(tomlDirectory);
 
-    assertThat(
-            signerProvider.availablePublicKeys().stream()
-                .map(pk -> Bytes.wrap(pk.getValue()).toUnprefixedHexString()))
-        .containsOnly(PUBLIC_KEY_HEX_STRING);
+    assertThat(signerProvider.availablePublicKeys().stream().map(EthPublicKeyUtils::toHexString))
+        .containsOnly("0x" + PUBLIC_KEY_HEX_STRING);
   }
 
   @Test
@@ -72,9 +71,7 @@ class FileBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
 
     setup(tomlDirectory);
 
-    assertThat(
-            signerProvider.availablePublicKeys().stream()
-                .map(pk -> Bytes.wrap(pk.getValue()).toUnprefixedHexString()))
-        .containsOnly(PUBLIC_KEY_HEX_STRING);
+    assertThat(signerProvider.availablePublicKeys().stream().map(EthPublicKeyUtils::toHexString))
+        .containsOnly("0x" + PUBLIC_KEY_HEX_STRING);
   }
 }

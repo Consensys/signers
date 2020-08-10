@@ -23,9 +23,8 @@ import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.LOWERC
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.LOWER_CASE_PUBLIC_KEY;
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.copyMetadataFileToDirectory;
 
-import tech.pegasys.signers.secp256k1.PublicKeyImpl;
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.FileSelector;
-import tech.pegasys.signers.secp256k1.api.PublicKey;
 import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.filebased.FileSignerConfig;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
@@ -34,6 +33,7 @@ import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.interfaces.ECPublicKey;
 import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
@@ -55,7 +55,7 @@ class MultiKeySignerProviderTest {
   private final SigningMetadataTomlConfigLoader loader =
       mock(SigningMetadataTomlConfigLoader.class);
 
-  @Mock private FileSelector<PublicKey> fileSelector;
+  @Mock private FileSelector<ECPublicKey> fileSelector;
   private MultiKeySignerProvider signerFactory;
   private FileBasedSigningMetadataFile metadataFile;
   private final String KEY_FILENAME = "k.key";
@@ -93,15 +93,17 @@ class MultiKeySignerProviderTest {
     when(loader.loadMetadata(any())).thenReturn(Optional.of(metadataFile));
 
     final Optional<Signer> signer =
-        signerFactory.getSigner(new PublicKeyImpl(Bytes.fromHexString(LOWER_CASE_PUBLIC_KEY)));
+        signerFactory.getSigner(
+            EthPublicKeyUtils.createPublicKey(Bytes.fromHexString(LOWER_CASE_PUBLIC_KEY)));
     assertThat(signer).isNotEmpty();
-    assertThat(signer.get().getPublicKey().toString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
+    assertThat(EthPublicKeyUtils.toHexString(signer.get().getPublicKey()))
+        .isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
 
-    final ArgumentCaptor<PublicKey> publicKeyCaptor = ArgumentCaptor.forClass(PublicKey.class);
+    final ArgumentCaptor<ECPublicKey> publicKeyCaptor = ArgumentCaptor.forClass(ECPublicKey.class);
     verify(fileSelector).getSpecificConfigFileFilter(publicKeyCaptor.capture());
 
-    assertThat(Bytes.wrap(publicKeyCaptor.getValue().getValue()).toUnprefixedHexString())
-        .isEqualTo(LOWER_CASE_PUBLIC_KEY);
+    assertThat(EthPublicKeyUtils.toHexString(publicKeyCaptor.getValue()))
+        .isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
   }
 
   @Test
@@ -110,10 +112,8 @@ class MultiKeySignerProviderTest {
     when(loader.loadAvailableSigningMetadataTomlConfigs(any())).thenReturn(files);
     when(fileSelector.getSpecificConfigFileFilter(any())).thenReturn(entry -> true);
     assertThat(signerFactory.availablePublicKeys().size()).isOne();
-    assertThat(
-            signerFactory.availablePublicKeys().stream()
-                .map(pk -> Bytes.wrap(pk.getValue()).toUnprefixedHexString()))
-        .containsExactly(LOWER_CASE_PUBLIC_KEY);
+    assertThat(signerFactory.availablePublicKeys().stream().map(EthPublicKeyUtils::toHexString))
+        .containsExactly("0x" + LOWER_CASE_PUBLIC_KEY);
   }
 
   @Test
@@ -129,7 +129,8 @@ class MultiKeySignerProviderTest {
 
     final Signer signer = signerFactory.createSigner(capitalisedMetadata);
     assertThat(signer).isNotNull();
-    assertThat(signer.getPublicKey().toString()).isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
+    assertThat(EthPublicKeyUtils.toHexString(signer.getPublicKey()))
+        .isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
   }
 
   @Test
@@ -147,7 +148,8 @@ class MultiKeySignerProviderTest {
     when(loader.loadMetadata(any())).thenReturn(Optional.of(capitalisedMetadata));
 
     final Optional<Signer> signer =
-        signerFactory.getSigner(new PublicKeyImpl(Bytes.fromHexString("A".repeat(128))));
+        signerFactory.getSigner(
+            EthPublicKeyUtils.createPublicKey(Bytes.fromHexString("A".repeat(128))));
 
     assertThat(signer).isEmpty();
   }

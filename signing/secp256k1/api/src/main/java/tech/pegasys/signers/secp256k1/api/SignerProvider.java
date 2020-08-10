@@ -12,14 +12,15 @@
  */
 package tech.pegasys.signers.secp256k1.api;
 
+import java.security.interfaces.ECPublicKey;
 import java.util.Optional;
 import java.util.Set;
 
 public interface SignerProvider {
 
-  Optional<Signer> getSigner(PublicKey publicKey);
+  Optional<Signer> getSigner(ECPublicKey publicKey);
 
-  Set<PublicKey> availablePublicKeys();
+  Set<ECPublicKey> availablePublicKeys();
 
   default void shutdown() {}
 }

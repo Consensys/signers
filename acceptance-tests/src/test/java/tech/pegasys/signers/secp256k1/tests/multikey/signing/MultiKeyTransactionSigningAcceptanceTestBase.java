@@ -19,14 +19,14 @@ import static org.web3j.crypto.Sign.signedMessageToKey;
 import static org.web3j.utils.Numeric.toBigInt;
 import static org.web3j.utils.Numeric.toBytesPadded;
 
-import tech.pegasys.signers.secp256k1.PublicKeyImpl;
-import tech.pegasys.signers.secp256k1.api.PublicKey;
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.tests.multikey.MultiKeyAcceptanceTestBase;
 
 import java.math.BigInteger;
 import java.security.SignatureException;
+import java.security.interfaces.ECPublicKey;
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
@@ -41,8 +41,8 @@ public class MultiKeyTransactionSigningAcceptanceTestBase extends MultiKeyAccept
   public static final String PUBLIC_KEY_HEX_STRING =
       "09b02f8a5fddd222ade4ea4528faefc399623af3f736be3c44f03e2df22fb792f3931a4d9573d333ca74343305762a753388c3422a86d98b713fc91c1ea04842";
 
-  public static final PublicKey pubKey =
-      new PublicKeyImpl(Bytes.fromHexString(PUBLIC_KEY_HEX_STRING));
+  public static final ECPublicKey pubKey =
+      EthPublicKeyUtils.createPublicKey(Bytes.fromHexString(PUBLIC_KEY_HEX_STRING));
 
   void verifySignature() {
     final Optional<Signer> signer = signerProvider.getSigner(pubKey);

@@ -13,13 +13,13 @@
 package tech.pegasys.signers.secp256k1.azure;
 
 import tech.pegasys.signers.azure.AzureKeyVault;
-import tech.pegasys.signers.secp256k1.PublicKeyImpl;
-import tech.pegasys.signers.secp256k1.api.PublicKey;
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
 import java.math.BigInteger;
+import java.security.interfaces.ECPublicKey;
 import java.util.Arrays;
 
 import com.azure.security.keyvault.keys.cryptography.CryptographyClient;
@@ -31,6 +31,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.web3j.crypto.ECDSASignature;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
+import org.web3j.utils.Numeric;
 
 public class AzureKeyVaultSigner implements Signer {
 
@@ -39,12 +40,12 @@ public class AzureKeyVaultSigner implements Signer {
   private static final Logger LOG = LogManager.getLogger();
 
   private final AzureConfig config;
-  private final PublicKeyImpl publicKey;
+  private final ECPublicKey publicKey;
   private final SignatureAlgorithm signingAlgo = SignatureAlgorithm.fromString("ECDSA256");
 
   public AzureKeyVaultSigner(final AzureConfig config, final Bytes publicKey) {
     this.config = config;
-    this.publicKey = new PublicKeyImpl(publicKey);
+    this.publicKey = EthPublicKeyUtils.createPublicKey(publicKey);
   }
 
   @Override
@@ -98,12 +99,12 @@ public class AzureKeyVaultSigner implements Signer {
   }
 
   @Override
-  public PublicKey getPublicKey() {
+  public ECPublicKey getPublicKey() {
     return publicKey;
   }
 
   private int recoverKeyIndex(final ECDSASignature sig, final byte[] hash) {
-    final BigInteger publicKey = new BigInteger(1, this.publicKey.getValue());
+    final BigInteger publicKey = Numeric.toBigInt(EthPublicKeyUtils.toByteArray(this.publicKey));
     for (int i = 0; i < 4; i++) {
       final BigInteger k = Sign.recoverFromSignature(i, sig, hash);
       LOG.trace("recovered key: {}", k);
