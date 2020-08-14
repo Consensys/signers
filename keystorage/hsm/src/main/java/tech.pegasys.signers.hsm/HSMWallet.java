@@ -15,7 +15,13 @@ package tech.pegasys.signers.hsm;
 import java.math.BigInteger;
 import java.util.List;
 
+import org.apache.tuweni.bytes.Bytes;
+import org.web3j.crypto.Sign;
+import org.web3j.utils.Numeric;
+
 public class HSMWallet {
+
+  private static final int PUBLIC_KEY_SIZE = 64;
 
   private final HSMCrypto crypto;
   private final String slotLabel;
@@ -69,5 +75,10 @@ public class HSMWallet {
 
   public BigInteger[] sign(byte[] hash, String address) {
     return crypto.sign(slotIndex, hash, address);
+  }
+
+  public Bytes getPublicKey(String address) {
+    BigInteger bi = Sign.publicFromPoint(crypto.getPublicKey(slotIndex, address));
+    return Bytes.wrap(Numeric.toBytesPadded(bi, PUBLIC_KEY_SIZE));
   }
 }

@@ -13,7 +13,7 @@
 package tech.pegasys.signers.secp256k1.cavium;
 
 import tech.pegasys.signers.cavium.CaviumKeyStoreProvider;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 
 public class CaviumKeyStoreSignerFactory {
 
@@ -23,7 +23,7 @@ public class CaviumKeyStoreSignerFactory {
     this.provider = provider;
   }
 
-  public TransactionSigner createSigner(String address) {
+  public Signer createSigner(String address) {
     return new CaviumKeyStoreSigner(provider, address);
   }
 

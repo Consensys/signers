@@ -14,24 +14,27 @@ package tech.pegasys.signers.secp256k1.hsm;
 
 import tech.pegasys.signers.hsm.HSMCrypto;
 import tech.pegasys.signers.hsm.HSMWallet;
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 
 import java.math.BigInteger;
+import java.security.interfaces.ECPublicKey;
 
 import org.web3j.crypto.Hash;
 
-public class HSMTransactionSigner implements TransactionSigner {
+public class HSMSigner implements Signer {
 
   private final HSMCrypto crypto;
   private final HSMWallet wallet;
+  private final ECPublicKey publicKey;
   private final String address;
 
-  public HSMTransactionSigner(
-      final HSMCrypto crypto, final HSMWallet wallet, final String address) {
+  public HSMSigner(final HSMCrypto crypto, final HSMWallet wallet, final String address) {
     this.crypto = crypto;
     this.wallet = wallet;
     this.address = address;
+    this.publicKey = EthPublicKeyUtils.createPublicKey(wallet.getPublicKey(address));
   }
 
   @Override
@@ -42,8 +45,8 @@ public class HSMTransactionSigner implements TransactionSigner {
   }
 
   @Override
-  public String getAddress() {
-    return address;
+  public ECPublicKey getPublicKey() {
+    return publicKey;
   }
 
   @Override

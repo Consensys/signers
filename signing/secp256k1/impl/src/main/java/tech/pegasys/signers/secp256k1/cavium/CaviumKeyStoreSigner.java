@@ -12,11 +12,14 @@
  */
 package tech.pegasys.signers.secp256k1.cavium;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import tech.pegasys.signers.cavium.HSMKeyStoreProvider;
 
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
 
 public class CaviumKeyStoreSigner extends HSMKeyStoreSigner {
@@ -26,7 +29,8 @@ public class CaviumKeyStoreSigner extends HSMKeyStoreSigner {
   }
 
   @Override
-  protected PrivateKey getPrivateKey() {
+  protected PrivateKey getPrivateKeyHandle() {
+    checkArgument(provider.getKeyStore() != null, "Cavium Keystore provider is not initialized");
     PrivateKey privateKey = provider.getKey(address);
     if (privateKey == null) {
       try {
@@ -41,5 +45,23 @@ public class CaviumKeyStoreSigner extends HSMKeyStoreSigner {
       provider.addKey(address, privateKey);
     }
     return privateKey;
+  }
+
+  @Override
+  protected PublicKey getPublicKeyHandle() {
+    checkArgument(provider.getKeyStore() != null, "Cavium Keystore provider is not initialized");
+    PublicKey publicKey = null;
+    try {
+      publicKey =
+          (PublicKey)
+              provider.getKeyStore().getKey(address.replaceFirst("0x", "1x"), "".toCharArray());
+    } catch (NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException ex) {
+      LOG.trace(ex);
+      throw new RuntimeException("Failed to query key store");
+    }
+    if (publicKey == null) {
+      throw new RuntimeException("Failed to get public key from key store");
+    }
+    return publicKey;
   }
 }

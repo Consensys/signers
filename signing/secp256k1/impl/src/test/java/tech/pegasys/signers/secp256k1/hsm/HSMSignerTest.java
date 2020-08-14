@@ -15,8 +15,9 @@ package tech.pegasys.signers.secp256k1.hsm;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import tech.pegasys.signers.hsm.HSMConfig;
 import tech.pegasys.signers.secp256k1.api.Signature;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +29,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.ECDSASignature;
 
-public class HSMTransactionSignerTest {
+public class HSMSignerTest {
 
   private static String library;
   private static String slot;
@@ -36,7 +37,7 @@ public class HSMTransactionSignerTest {
   private static String address;
   private static byte[] data = {1, 2, 3};
 
-  private static TransactionSigner signer;
+  private static Signer signer;
 
   @BeforeAll
   public static void beforeAll() {
@@ -53,7 +54,7 @@ public class HSMTransactionSignerTest {
     }
 
     org.junit.jupiter.api.Assumptions.assumeTrue((new File(library)).exists());
-    HSMTransactionSignerFactory factory = new HSMTransactionSignerFactory(library, slot, pin);
+    HSMSignerFactory factory = new HSMSignerFactory(new HSMConfig(library, slot, pin));
     factory.initialize();
     address = factory.getWallet().generate();
     signer = factory.createSigner(address);

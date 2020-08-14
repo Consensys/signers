@@ -12,28 +12,20 @@
  */
 package tech.pegasys.signers.secp256k1.multikey.metadata;
 
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.multikey.MultiSignerFactory;
 
 public abstract class SigningMetadataFile {
 
-  protected String baseFilename;
+  protected String filename;
 
   public SigningMetadataFile(final String filename) {
-    this.baseFilename = getFilenameWithoutExtension(filename);
+    this.filename = filename;
   }
 
-  public String getBaseFilename() {
-    return baseFilename;
+  public String getFilename() {
+    return filename;
   }
 
-  private String getFilenameWithoutExtension(final String filename) {
-    if (filename.endsWith(".toml")) {
-      return filename.replaceAll("\\.toml", "");
-    } else {
-      throw new IllegalArgumentException("Invalid TOML config filename extension: " + filename);
-    }
-  }
-
-  public abstract TransactionSigner createSigner(final MultiSignerFactory factory);
+  public abstract Signer createSigner(final MultiSignerFactory factory);
 }

@@ -27,23 +27,24 @@ public class MultiKeyAzureTransactionSignerAcceptanceTest
   static final String clientId = System.getenv("AZURE_CLIENT_ID");
   static final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
   static final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
-  static final String FILENAME = "fe3b557e8fb62b89f4916b721be55ceb828dbd73";
+  static final String tenantId = System.getenv("AZURE_TENANT_ID");
 
   @BeforeAll
-  public static void checkAzureCredentials() {
+  static void preChecks() {
     Assumptions.assumeTrue(
-        clientId != null && clientSecret != null,
-        "Ensure Azure client id and client secret env variables are set");
+        clientId != null && clientSecret != null && keyVaultName != null && tenantId != null,
+        "Ensure Azure env variables are set");
   }
 
   @Test
   public void azureLoadedFromMultiKeyCanSign(@TempDir Path tomlDirectory) {
     createAzureTomlFileAt(
-        tomlDirectory.resolve("arbitrary_prefix" + FILENAME + ".toml"),
+        tomlDirectory.resolve(PUBLIC_KEY_HEX_STRING + ".toml"),
         clientId,
         clientSecret,
-        keyVaultName);
-    setup(tomlDirectory);
+        keyVaultName,
+        tenantId);
+    setup(tomlDirectory, Path.of(""));
     verifySignature();
   }
 }

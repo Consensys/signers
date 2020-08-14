@@ -12,22 +12,34 @@
  */
 package tech.pegasys.signers.secp256k1.hsm;
 
+import tech.pegasys.signers.hsm.HSMConfig;
 import tech.pegasys.signers.hsm.HSMCrypto;
 import tech.pegasys.signers.hsm.HSMWallet;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 
-public class HSMTransactionSignerFactory {
+public class HSMSignerFactory {
 
   private final HSMCrypto crypto;
   private final HSMWallet wallet;
 
-  private final String slotLabel;
-  private final String slotPin;
+  private String library;
+  private String slotLabel;
+  private String slotPin;
   private boolean initialized = false;
 
-  public HSMTransactionSignerFactory(String library, String slotLabel, String slotPin) {
-    this.slotLabel = slotLabel;
-    this.slotPin = slotPin;
+  public HSMSignerFactory(HSMConfig config) {
+    library = config.getLibrary();
+    if (library.isEmpty()) {
+      library = System.getenv("PKCS11_HSM_LIBRARY");
+    }
+    slotLabel = config.getSlot();
+    if (slotLabel.isEmpty()) {
+      slotLabel = System.getenv("PKCS11_HSM_SLOT");
+    }
+    slotPin = config.getPin();
+    if (slotPin.isEmpty()) {
+      slotPin = System.getenv("PKCS11_HSM_PIN");
+    }
     crypto = new HSMCrypto(library);
     wallet = new HSMWallet(this.crypto, this.slotLabel);
   }
@@ -52,8 +64,8 @@ public class HSMTransactionSignerFactory {
     return slotLabel;
   }
 
-  public TransactionSigner createSigner(String address) {
+  public Signer createSigner(String address) {
     if (!initialized) initialize();
-    return new HSMTransactionSigner(crypto, wallet, address);
+    return new HSMSigner(crypto, wallet, address);
   }
 }

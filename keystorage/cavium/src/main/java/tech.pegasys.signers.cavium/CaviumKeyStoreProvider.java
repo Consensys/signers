@@ -31,11 +31,17 @@ import com.google.common.base.Splitter;
 
 public class CaviumKeyStoreProvider extends HSMKeyStoreProvider {
 
-  public CaviumKeyStoreProvider(final String library, final String pin) {
-    lib = library;
-    slotPin = pin;
-    if (pin != null && pin.contains(":")) {
-      List<String> s = Splitter.on(':').splitToList(pin);
+  public CaviumKeyStoreProvider(final CaviumConfig config) {
+    library = config.getLibrary();
+    if (library.isEmpty()) {
+      library = System.getenv("AWS_HSM_LIBRARY");
+    }
+    slotPin = config.getPin();
+    if (slotPin.isEmpty()) {
+      slotPin = System.getenv("AWS_HSM_PIN");
+    }
+    if (slotPin != null && slotPin.contains(":")) {
+      List<String> s = Splitter.on(':').splitToList(slotPin);
       setEnv("HSM_PARTITION", "PARTITION_1");
       setEnv("HSM_USER", s.get(0));
       setEnv("HSM_PASSWORD", s.get(1));

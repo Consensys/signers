@@ -15,6 +15,7 @@ package tech.pegasys.signers.secp256k1.cavium;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import tech.pegasys.signers.cavium.CaviumConfig;
 import tech.pegasys.signers.cavium.CaviumKeyStoreProvider;
 import tech.pegasys.signers.secp256k1.api.Signature;
 
@@ -52,7 +53,7 @@ class CaviumKeyStoreSignerTest {
     }
 
     org.junit.jupiter.api.Assumptions.assumeTrue((new File(library).exists()));
-    ksp = new CaviumKeyStoreProvider(library, pin);
+    ksp = new CaviumKeyStoreProvider(new CaviumConfig(library, pin));
     kss = (CaviumKeyStoreSigner) (new CaviumKeyStoreSignerFactory(ksp)).createSigner(address);
   }
 

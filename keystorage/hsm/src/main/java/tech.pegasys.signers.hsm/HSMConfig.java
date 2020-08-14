@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 ConsenSys AG.
+ * Copyright 2020 ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -14,43 +14,64 @@ package tech.pegasys.signers.hsm;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public class HSMConfig {
-  private final String address;
+  private final String library;
   private final String slot;
+  private final String pin;
 
-  public HSMConfig(final String address, final String slot) {
-
-    this.address = address;
+  @JsonCreator
+  public HSMConfig(final String library, final String slot, final String pin) {
+    this.library = library;
     this.slot = slot;
+    this.pin = pin;
   }
 
-  public String getAddress() {
-    return address;
+  public HSMConfig() {
+    this.library = "";
+    this.slot = "";
+    this.pin = "";
+  }
+
+  public String getLibrary() {
+    return library;
   }
 
   public String getSlot() {
     return slot;
   }
 
-  public static class HSMConfigBuilder {
-    private String address;
-    private String slot;
+  public String getPin() {
+    return pin;
+  }
 
-    public HSMConfigBuilder withAddress(final String keyName) {
-      this.address = keyName;
+  public static class HSMConfigBuilder {
+
+    private String library;
+    private String slot;
+    private String pin;
+
+    public HSMConfigBuilder withLibrary(final String keyVaultName) {
+      this.library = keyVaultName;
       return this;
     }
 
-    public HSMConfigBuilder withSlot(final String keyVersion) {
-      this.slot = keyVersion;
+    public HSMConfigBuilder withSlot(final String keyName) {
+      this.slot = keyName;
+      return this;
+    }
+
+    public HSMConfigBuilder withPin(final String keyVersion) {
+      this.pin = keyVersion;
       return this;
     }
 
     public HSMConfig build() {
-      checkNotNull(address, "Address was not set.");
-      checkNotNull(slot, "Slot was not set.");
-
-      return new HSMConfig(address, slot);
+      checkNotNull(library, "PKCS11 library was not set.");
+      checkNotNull(slot, "PKCS11 slot was not set.");
+      checkNotNull(pin, "PKCS11 pin was not set.");
+      return new HSMConfig(library, slot, pin);
     }
   }
 }

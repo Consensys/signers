@@ -44,7 +44,7 @@ public class HSMKeyStoreProvider {
 
   protected Provider provider;
   protected KeyStore keyStore;
-  protected String lib;
+  protected String library;
   private String configName;
   protected String slotIndex;
   protected String slotPin;
@@ -73,7 +73,7 @@ public class HSMKeyStoreProvider {
       LOG.trace(ex);
       throw new HSMKeyStoreInitializationException(ERROR_CREATING_TMP_FILE_MESSAGE, ex);
     }
-    lib = library;
+    this.library = library;
     slotIndex = slot;
     slotPin = pin;
   }
@@ -99,9 +99,9 @@ public class HSMKeyStoreProvider {
   }
 
   public void shutdown() {
-    if (lib != null)
+    if (library != null)
       try {
-        Module pkcs11Module = Module.getInstance(lib);
+        Module pkcs11Module = Module.getInstance(library);
         pkcs11Module.initialize(null);
         pkcs11Module.finalize(null);
       } catch (TokenException | IOException ex) {

@@ -12,9 +12,11 @@
  */
 package tech.pegasys.signers.secp256k1.cavium;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import tech.pegasys.signers.cavium.HSMKeyStoreProvider;
 import tech.pegasys.signers.secp256k1.api.Signature;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
@@ -23,8 +25,11 @@ import java.security.KeyStore.PrivateKeyEntry;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
+import java.security.interfaces.ECPublicKey;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,23 +43,25 @@ import org.web3j.crypto.Hash;
 import org.web3j.crypto.Keys;
 import org.web3j.crypto.Sign;
 
-public class HSMKeyStoreSigner implements TransactionSigner {
+public class HSMKeyStoreSigner implements Signer {
 
   protected static final Logger LOG = LogManager.getLogger();
   protected static final String CURVE = "secp256k1";
   protected static final String ALGORITHM = "NONEwithECDSA";
 
   protected final HSMKeyStoreProvider provider;
+  private final ECPublicKey publicKey;
   protected final String address;
 
   public HSMKeyStoreSigner(final HSMKeyStoreProvider provider, String address) {
     this.provider = provider;
     this.address = address;
+    this.publicKey = (ECPublicKey) getPublicKeyHandle();
   }
 
   @Override
   public Signature sign(final byte[] data) {
-    PrivateKey privateKey = getPrivateKey();
+    PrivateKey privateKey = getPrivateKeyHandle();
 
     final byte[] hash = Hash.sha3(data);
     java.security.Signature sig;
@@ -128,7 +135,8 @@ public class HSMKeyStoreSigner implements TransactionSigner {
         BigInteger.valueOf(headerByte), canonicalSignature.r, canonicalSignature.s);
   }
 
-  protected PrivateKey getPrivateKey() {
+  protected PrivateKey getPrivateKeyHandle() {
+    checkArgument(provider.getKeyStore() != null, "SunPKCS11 Keystore provider is not initialized");
     PrivateKey privateKey = provider.getKey(address);
     if (privateKey == null) {
       PrivateKeyEntry privateKeyEntry;
@@ -147,9 +155,28 @@ public class HSMKeyStoreSigner implements TransactionSigner {
     return privateKey;
   }
 
+  protected PublicKey getPublicKeyHandle() {
+    checkArgument(provider.getKeyStore() != null, "SunPKCS11 Keystore provider is not initialized");
+    PrivateKeyEntry privateKeyEntry;
+    try {
+      privateKeyEntry = (PrivateKeyEntry) provider.getKeyStore().getEntry(address, null);
+    } catch (NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException ex) {
+      LOG.trace(ex);
+      throw new RuntimeException("Failed to query key store");
+    }
+    if (privateKeyEntry == null) {
+      throw new RuntimeException("Failed to get private key from key store");
+    }
+    Certificate certificate = privateKeyEntry.getCertificate();
+    if (certificate == null) {
+      throw new RuntimeException("Failed to get certificate from key store");
+    }
+    return certificate.getPublicKey();
+  }
+
   @Override
-  public String getAddress() {
-    return address;
+  public ECPublicKey getPublicKey() {
+    return publicKey;
   }
 
   // recoverKeyIndex works backwards to figure out the recId needed to recover the signature
