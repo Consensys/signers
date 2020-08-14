@@ -34,7 +34,7 @@ public class CaviumKeyStoreProvider extends HSMKeyStoreProvider {
   public CaviumKeyStoreProvider(final CaviumConfig config) {
     library = config.getLibrary();
     if (library.isEmpty()) {
-      library = System.getenv("AWS_HSM_LIBRARY");
+      library = System.getenv("AWS_HSM_LIB");
     }
     slotPin = config.getPin();
     if (slotPin.isEmpty()) {

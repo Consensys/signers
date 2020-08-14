@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import tech.pegasys.signers.hsm.HSMConfig;
+import tech.pegasys.signers.hsm.HSMWalletProvider;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
 
@@ -54,9 +55,9 @@ public class HSMSignerFactoryTest {
     }
 
     org.junit.jupiter.api.Assumptions.assumeTrue((new File(library)).exists());
-    factory = new HSMSignerFactory(new HSMConfig(library, slot, pin));
-    factory.initialize();
-    address = factory.getWallet().generate();
+    HSMWalletProvider provider = new HSMWalletProvider(new HSMConfig(library, slot, pin));
+    factory = new HSMSignerFactory(provider);
+    address = provider.getWallet().generate();
   }
 
   @AfterAll

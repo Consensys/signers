@@ -15,6 +15,7 @@ package tech.pegasys.signers.secp256k1.multikey;
 import tech.pegasys.signers.cavium.CaviumConfig;
 import tech.pegasys.signers.cavium.CaviumKeyStoreProvider;
 import tech.pegasys.signers.hsm.HSMConfig;
+import tech.pegasys.signers.hsm.HSMWalletProvider;
 import tech.pegasys.signers.secp256k1.api.FileSelector;
 import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.api.SignerProvider;
@@ -68,7 +69,8 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
     final HashicorpSignerFactory hashicorpSignerFactory = new HashicorpSignerFactory(Vertx.vertx());
     Optional<HSMConfig> hsmConfig =
         result.isPresent() ? getHSMConfigFrom(config, result.get()) : Optional.empty();
-    final HSMSignerFactory hsmFactory = new HSMSignerFactory(hsmConfig.orElseGet(HSMConfig::new));
+    final HSMSignerFactory hsmFactory =
+        new HSMSignerFactory(new HSMWalletProvider(hsmConfig.orElseGet(HSMConfig::new)));
     Optional<CaviumConfig> caviumConfig =
         result.isPresent() ? getCaviumConfigFrom(config, result.get()) : Optional.empty();
     final CaviumKeyStoreSignerFactory caviumFactory =

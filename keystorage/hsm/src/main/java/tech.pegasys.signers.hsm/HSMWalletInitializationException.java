@@ -10,28 +10,10 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.secp256k1.hsm;
+package tech.pegasys.signers.hsm;
 
-import tech.pegasys.signers.hsm.HSMWalletProvider;
-import tech.pegasys.signers.secp256k1.api.Signer;
-
-public class HSMSignerFactory {
-
-  private final HSMWalletProvider provider;
-
-  public HSMSignerFactory(final HSMWalletProvider provider) {
-    this.provider = provider;
-  }
-
-  public String getSlotLabel() {
-    return provider.getWallet().getLabel();
-  }
-
-  public void shutdown() {
-    provider.shutdown();
-  }
-
-  public Signer createSigner(String address) {
-    return new HSMSigner(provider, address);
+public class HSMWalletInitializationException extends RuntimeException {
+  public HSMWalletInitializationException(final String message, final Throwable e) {
+    super(message, e);
   }
 }

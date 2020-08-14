@@ -12,8 +12,8 @@
  */
 package tech.pegasys.signers.secp256k1.hsm;
 
-import tech.pegasys.signers.hsm.HSMCrypto;
 import tech.pegasys.signers.hsm.HSMWallet;
+import tech.pegasys.signers.hsm.HSMWalletProvider;
 import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
@@ -25,15 +25,15 @@ import org.web3j.crypto.Hash;
 
 public class HSMSigner implements Signer {
 
-  private final HSMCrypto crypto;
+  private final HSMWalletProvider provider;
   private final HSMWallet wallet;
   private final ECPublicKey publicKey;
   private final String address;
 
-  public HSMSigner(final HSMCrypto crypto, final HSMWallet wallet, final String address) {
-    this.crypto = crypto;
-    this.wallet = wallet;
+  public HSMSigner(final HSMWalletProvider provider, final String address) {
+    this.provider = provider;
     this.address = address;
+    this.wallet = provider.getWallet();
     this.publicKey = EthPublicKeyUtils.createPublicKey(wallet.getPublicKey(address));
   }
 
@@ -51,7 +51,6 @@ public class HSMSigner implements Signer {
 
   @Override
   public void shutdown() {
-    wallet.close();
-    crypto.shutdown();
+    provider.shutdown();
   }
 }
