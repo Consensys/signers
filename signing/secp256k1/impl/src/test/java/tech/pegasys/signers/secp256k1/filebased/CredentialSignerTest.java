@@ -9,8 +9,6 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
- *
- * SPDX-License-Identifier: Apache-2.0
  */
 package tech.pegasys.signers.secp256k1.filebased;
 
@@ -18,6 +16,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigInteger;
+
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
@@ -34,9 +33,9 @@ class CredentialSignerTest {
 
     final byte[] data = "Hello World".getBytes(UTF_8);
 
-    assertThat(hashingSigner.getPublicKey().getEncoded()).isEqualTo(nonHashingSigner.getPublicKey().getEncoded());
-    assertThat(hashingSigner.sign(data)).isEqualToComparingFieldByField(nonHashingSigner.sign(Hash.sha3(data)));
+    assertThat(hashingSigner.getPublicKey().getEncoded())
+        .isEqualTo(nonHashingSigner.getPublicKey().getEncoded());
+    assertThat(hashingSigner.sign(data))
+        .isEqualToComparingFieldByField(nonHashingSigner.sign(Hash.sha3(data)));
   }
-
-
 }
