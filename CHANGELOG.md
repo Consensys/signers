@@ -1,5 +1,11 @@
 #Changelog
 
+## 1.0.4-ADHARA
+
+### Features Added
+- Added AWS CloudHSM signer
+- Added Generic PKCS11 signer
+
 ## 1.0.3
 
 ## Features Added
