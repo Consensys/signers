@@ -64,18 +64,19 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
       final FileSelector<ECPublicKey> configFileSelector) {
     final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader =
         new SigningMetadataTomlConfigLoader(rootDir);
-    final String config = configFile.getFileName().toString();
-    Optional<TomlParseResult> result = loadFactoryConfig(configFile);
+
     final HashicorpSignerFactory hashicorpSignerFactory = new HashicorpSignerFactory(Vertx.vertx());
-    Optional<HSMConfig> hsmConfig =
-        result.isPresent() ? getHSMConfigFrom(config, result.get()) : Optional.empty();
-    final HSMSignerFactory hsmFactory =
-        new HSMSignerFactory(new HSMWalletProvider(hsmConfig.orElseGet(HSMConfig::new)));
-    Optional<CaviumConfig> caviumConfig =
-        result.isPresent() ? getCaviumConfigFrom(config, result.get()) : Optional.empty();
+
+    Optional<TomlParseResult> result = loadConfig(configFile);
+
+    final HSMConfig hsmConfig =
+        result.isPresent() ? getHSMConfigFrom(result.get()) : new HSMConfig();
+    final HSMSignerFactory hsmFactory = new HSMSignerFactory(new HSMWalletProvider(hsmConfig));
+
+    final CaviumConfig caviumConfig =
+        result.isPresent() ? getCaviumConfigFrom(result.get()) : new CaviumConfig();
     final CaviumKeyStoreSignerFactory caviumFactory =
-        new CaviumKeyStoreSignerFactory(
-            new CaviumKeyStoreProvider(caviumConfig.orElseGet(CaviumConfig::new)));
+        new CaviumKeyStoreSignerFactory(new CaviumKeyStoreProvider(caviumConfig));
 
     return new MultiKeySignerProvider(
         signingMetadataTomlConfigLoader,
@@ -98,7 +99,8 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
     this.configFileSelector = configFileSelector;
   }
 
-  private static Optional<TomlParseResult> loadFactoryConfig(final Path file) {
+  private static Optional<TomlParseResult> loadConfig(final Path file) {
+    if (file == null) return Optional.empty();
     final String filename = file.getFileName().toString();
     try {
       return Optional.of(
@@ -114,34 +116,33 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
     }
   }
 
-  private static Optional<HSMConfig> getHSMConfigFrom(
-      final String filename, final TomlParseResult result) {
+  private static HSMConfig getHSMConfigFrom(final TomlParseResult result) {
     final TomlTable hsmSignerTable = result.getTable("hsm-signer");
     if (hsmSignerTable == null) {
-      LOG.error(filename + " is a badly formed config file - \"hsm-signer\" heading is missing.");
-      return Optional.empty();
+      // LOG.error(filename + " is a badly formed config file - \"hsm-signer\" heading is
+      // missing.");
+      return new HSMConfig();
     }
     final TomlTableAdapter table = new TomlTableAdapter(hsmSignerTable);
     final HSMConfig.HSMConfigBuilder builder = new HSMConfig.HSMConfigBuilder();
     builder.withLibrary(table.getString("library"));
     builder.withSlot(table.getString("slot"));
     builder.withPin(table.getString("pin"));
-    return Optional.of(builder.build());
+    return builder.build();
   }
 
-  private static Optional<CaviumConfig> getCaviumConfigFrom(
-      final String filename, final TomlParseResult result) {
+  private static CaviumConfig getCaviumConfigFrom(final TomlParseResult result) {
     final TomlTable caviumSignerTable = result.getTable("cavium-signer");
     if (caviumSignerTable == null) {
-      LOG.error(
-          filename + " is a badly formed config file - \"cavium-signer\" heading is missing.");
-      return Optional.empty();
+      // LOG.error(filename + " is a badly formed config file - \"cavium-signer\" heading is
+      // missing.");
+      return new CaviumConfig();
     }
     final TomlTableAdapter table = new TomlTableAdapter(caviumSignerTable);
     final CaviumConfig.CaviumConfigBuilder builder = new CaviumConfig.CaviumConfigBuilder();
     builder.withLibrary(table.getString("library"));
     builder.withPin(table.getString("pin"));
-    return Optional.of(builder.build());
+    return builder.build();
   }
 
   @Override
