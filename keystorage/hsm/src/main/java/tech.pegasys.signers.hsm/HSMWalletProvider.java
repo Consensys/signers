@@ -12,37 +12,30 @@
  */
 package tech.pegasys.signers.hsm;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class HSMWalletProvider {
+
+  protected static final Logger LOG = LogManager.getLogger();
 
   private final HSMCrypto crypto;
   private final HSMWallet wallet;
 
-  private String library;
-  private String slotLabel;
-  private String slotPin;
+  private final String pin;
   private boolean initialized = false;
 
   public HSMWalletProvider(final HSMConfig config) {
-    library = config.getLibrary();
-    if (library.isEmpty()) {
-      library = System.getenv("PKCS11_HSM_LIB");
-    }
-    slotLabel = config.getSlot();
-    if (slotLabel.isEmpty()) {
-      slotLabel = System.getenv("PKCS11_HSM_SLOT");
-    }
-    slotPin = config.getPin();
-    if (slotPin.isEmpty()) {
-      slotPin = System.getenv("PKCS11_HSM_PIN");
-    }
-    crypto = new HSMCrypto(library);
-    wallet = new HSMWallet(this.crypto, this.slotLabel);
+    pin = config.getPin();
+    crypto = new HSMCrypto(config.getLibrary());
+    wallet = new HSMWallet(this.crypto, config.getSlot());
   }
 
   public void initialize() {
     crypto.initialize();
-    wallet.open(slotPin);
+    wallet.open(pin);
     initialized = true;
+    LOG.debug("Successfully initialized hsm slot");
   }
 
   public void shutdown() {

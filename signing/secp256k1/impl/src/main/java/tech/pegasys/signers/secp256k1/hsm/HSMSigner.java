@@ -17,14 +17,18 @@ import tech.pegasys.signers.hsm.HSMWalletProvider;
 import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
 import java.math.BigInteger;
 import java.security.interfaces.ECPublicKey;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.web3j.crypto.Hash;
 
 public class HSMSigner implements Signer {
 
+  protected static final Logger LOG = LogManager.getLogger();
   private final HSMWalletProvider provider;
   private final HSMWallet wallet;
   private final ECPublicKey publicKey;
@@ -34,7 +38,12 @@ public class HSMSigner implements Signer {
     this.provider = provider;
     this.address = address;
     this.wallet = provider.getWallet();
-    this.publicKey = EthPublicKeyUtils.createPublicKey(wallet.getPublicKey(address));
+    try {
+      this.publicKey = EthPublicKeyUtils.createPublicKey(wallet.getPublicKey(address));
+    } catch (RuntimeException ex) {
+      LOG.trace(ex);
+      throw new SignerInitializationException("Failed to initialize hsm signer", ex);
+    }
   }
 
   @Override

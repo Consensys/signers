@@ -67,16 +67,27 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
 
     final HashicorpSignerFactory hashicorpSignerFactory = new HashicorpSignerFactory(Vertx.vertx());
 
+    HSMSignerFactory hsmFactory = null;
+    CaviumKeyStoreSignerFactory caviumFactory = null;
     Optional<TomlParseResult> result = loadConfig(configFile);
-
-    final HSMConfig hsmConfig =
-        result.isPresent() ? getHSMConfigFrom(result.get()) : new HSMConfig();
-    final HSMSignerFactory hsmFactory = new HSMSignerFactory(new HSMWalletProvider(hsmConfig));
-
-    final CaviumConfig caviumConfig =
-        result.isPresent() ? getCaviumConfigFrom(result.get()) : new CaviumConfig();
-    final CaviumKeyStoreSignerFactory caviumFactory =
-        new CaviumKeyStoreSignerFactory(new CaviumKeyStoreProvider(caviumConfig));
+    if (result.isPresent()) {
+      try {
+        final HSMConfig hsmConfig = getHSMConfigFrom(result.get());
+        final HSMWalletProvider provider = new HSMWalletProvider(hsmConfig);
+        provider.initialize();
+        hsmFactory = new HSMSignerFactory(provider);
+      } catch (final Exception e) {
+        LOG.error("Unable to initialize HSM signer factory from config in " + configFile);
+      }
+      try {
+        final CaviumConfig caviumConfig = getCaviumConfigFrom(result.get());
+        CaviumKeyStoreProvider provider = new CaviumKeyStoreProvider(caviumConfig);
+        provider.initialize();
+        caviumFactory = new CaviumKeyStoreSignerFactory(provider);
+      } catch (final Exception e) {
+        LOG.error("Unable to initialize Cavium signer factory from config in " + configFile);
+      }
+    }
 
     return new MultiKeySignerProvider(
         signingMetadataTomlConfigLoader,
@@ -117,14 +128,12 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   }
 
   private static HSMConfig getHSMConfigFrom(final TomlParseResult result) {
+    final HSMConfig.HSMConfigBuilder builder = new HSMConfig.HSMConfigBuilder();
     final TomlTable hsmSignerTable = result.getTable("hsm-signer");
-    if (hsmSignerTable == null) {
-      // LOG.error(filename + " is a badly formed config file - \"hsm-signer\" heading is
-      // missing.");
-      return new HSMConfig();
+    if (hsmSignerTable == null || hsmSignerTable.isEmpty()) {
+      return builder.fromEnvironmentVariables().build();
     }
     final TomlTableAdapter table = new TomlTableAdapter(hsmSignerTable);
-    final HSMConfig.HSMConfigBuilder builder = new HSMConfig.HSMConfigBuilder();
     builder.withLibrary(table.getString("library"));
     builder.withSlot(table.getString("slot"));
     builder.withPin(table.getString("pin"));
@@ -132,14 +141,12 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   }
 
   private static CaviumConfig getCaviumConfigFrom(final TomlParseResult result) {
+    final CaviumConfig.CaviumConfigBuilder builder = new CaviumConfig.CaviumConfigBuilder();
     final TomlTable caviumSignerTable = result.getTable("cavium-signer");
-    if (caviumSignerTable == null) {
-      // LOG.error(filename + " is a badly formed config file - \"cavium-signer\" heading is
-      // missing.");
-      return new CaviumConfig();
+    if (caviumSignerTable == null || caviumSignerTable.isEmpty()) {
+      return builder.fromEnvironmentVariables().build();
     }
     final TomlTableAdapter table = new TomlTableAdapter(caviumSignerTable);
-    final CaviumConfig.CaviumConfigBuilder builder = new CaviumConfig.CaviumConfigBuilder();
     builder.withLibrary(table.getString("library"));
     builder.withPin(table.getString("pin"));
     return builder.build();
@@ -225,12 +232,16 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
 
   @Override
   public Signer createSigner(HSMSigningMetadataFile metadataFile) {
-    if (!metadataFile.getConfig().getSlot().equals(this.hsmFactory.getSlotLabel())) {
+    if (hsmFactory == null) {
+      LOG.warn("HSM signer factory is not initialized to load " + metadataFile.getFilename());
+      return null;
+    }
+    if (!metadataFile.getConfig().getSlot().equals(hsmFactory.getSlotLabel())) {
       LOG.warn("Failed to construct HSM signer for slot " + metadataFile.getConfig().getSlot());
       return null;
     } else {
       try {
-        return this.hsmFactory.createSigner(metadataFile.getConfig().getAddress());
+        return hsmFactory.createSigner(metadataFile.getConfig().getAddress());
       } catch (SignerInitializationException e) {
         LOG.error("Failed to construct HSM signer from " + metadataFile.getFilename());
         return null;
@@ -240,8 +251,12 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
 
   @Override
   public Signer createSigner(CaviumSigningMetadataFile metadataFile) {
+    if (caviumFactory == null) {
+      LOG.warn("Cavium signer factory is not initialized to load " + metadataFile.getFilename());
+      return null;
+    }
     try {
-      return this.caviumFactory.createSigner(metadataFile.getConfig().getAddress());
+      return caviumFactory.createSigner(metadataFile.getConfig().getAddress());
     } catch (SignerInitializationException e) {
       LOG.error("Failed to construct Cavium signer from " + metadataFile.getFilename());
       return null;
@@ -251,7 +266,7 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   @Override
   public void shutdown() {
     hashicorpSignerFactory.shutdown(); // required to clean up its Vertx instance.
-    hsmFactory.shutdown();
-    caviumFactory.shutdown();
+    if (hsmFactory != null) hsmFactory.shutdown();
+    if (caviumFactory != null) caviumFactory.shutdown();
   }
 }

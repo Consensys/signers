@@ -30,7 +30,7 @@ public class CaviumKeyStoreSigner extends HSMKeyStoreSigner {
 
   @Override
   protected PrivateKey getPrivateKeyHandle() {
-    checkArgument(provider.getKeyStore() != null, "Cavium Keystore provider is not initialized");
+    checkArgument(provider.getKeyStore() != null, "Cavium key store provider is not initialized");
     PrivateKey privateKey = provider.getKey(address);
     if (privateKey == null) {
       try {
@@ -49,12 +49,11 @@ public class CaviumKeyStoreSigner extends HSMKeyStoreSigner {
 
   @Override
   protected PublicKey getPublicKeyHandle() {
-    checkArgument(provider.getKeyStore() != null, "Cavium Keystore provider is not initialized");
+    checkArgument(provider.getKeyStore() != null, "Cavium key store provider is not initialized");
     PublicKey publicKey = null;
     try {
-      publicKey =
-          (PublicKey)
-              provider.getKeyStore().getKey(address.replaceFirst("0x", "1x"), "".toCharArray());
+      String alias = address.replaceFirst("0x", "1x");
+      publicKey = (PublicKey) provider.getKeyStore().getKey(alias, "".toCharArray());
     } catch (NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException ex) {
       LOG.trace(ex);
       throw new RuntimeException("Failed to query key store");

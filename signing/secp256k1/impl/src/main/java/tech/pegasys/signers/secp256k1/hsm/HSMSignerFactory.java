@@ -15,8 +15,12 @@ package tech.pegasys.signers.secp256k1.hsm;
 import tech.pegasys.signers.hsm.HSMWalletProvider;
 import tech.pegasys.signers.secp256k1.api.Signer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class HSMSignerFactory {
 
+  protected static final Logger LOG = LogManager.getLogger();
   private final HSMWalletProvider provider;
 
   public HSMSignerFactory(final HSMWalletProvider provider) {

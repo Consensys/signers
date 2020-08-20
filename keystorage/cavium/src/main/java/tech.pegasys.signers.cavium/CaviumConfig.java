@@ -54,6 +54,12 @@ public class CaviumConfig {
       return this;
     }
 
+    public CaviumConfigBuilder fromEnvironmentVariables() {
+      library = System.getenv("AWS_HSM_LIB");
+      pin = System.getenv("AWS_HSM_PIN");
+      return this;
+    }
+
     public CaviumConfig build() {
       checkNotNull(library, "AWS Cloud HSM library was not set.");
       checkNotNull(pin, "AWS Cloud HSM pin was not set.");

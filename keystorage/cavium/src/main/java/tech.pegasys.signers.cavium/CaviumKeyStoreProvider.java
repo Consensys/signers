@@ -25,13 +25,7 @@ public class CaviumKeyStoreProvider extends HSMKeyStoreProvider {
 
   public CaviumKeyStoreProvider(final CaviumConfig config) {
     library = config.getLibrary();
-    if (library.isEmpty()) {
-      library = System.getenv("AWS_HSM_LIB");
-    }
     slotPin = config.getPin();
-    if (slotPin.isEmpty()) {
-      slotPin = System.getenv("AWS_HSM_PIN");
-    }
     if (slotPin != null && slotPin.contains(":")) {
       List<String> s = Splitter.on(':').splitToList(slotPin);
       System.setProperty("HSM_PARTITION", "PARTITION_1");
@@ -41,7 +35,7 @@ public class CaviumKeyStoreProvider extends HSMKeyStoreProvider {
   }
 
   @Override
-  protected void initialize() throws HSMKeyStoreInitializationException {
+  public void initialize() throws HSMKeyStoreInitializationException {
     try {
       provider = new com.cavium.provider.CaviumProvider();
       Security.addProvider(provider);
@@ -58,6 +52,6 @@ public class CaviumKeyStoreProvider extends HSMKeyStoreProvider {
       LOG.trace(ex);
       throw new HSMKeyStoreInitializationException(ERROR_ACCESSING_PKCS11_KEYSTORE_MESSAGE, ex);
     }
-    LOG.debug("Successfully initialized hsm slot");
+    LOG.debug("Successfully initialized cavium key store");
   }
 }

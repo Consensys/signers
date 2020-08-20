@@ -52,18 +52,25 @@ public class HSMConfig {
     private String slot;
     private String pin;
 
-    public HSMConfigBuilder withLibrary(final String keyVaultName) {
-      this.library = keyVaultName;
+    public HSMConfigBuilder withLibrary(final String library) {
+      this.library = library;
       return this;
     }
 
-    public HSMConfigBuilder withSlot(final String keyName) {
-      this.slot = keyName;
+    public HSMConfigBuilder withSlot(final String slot) {
+      this.slot = slot;
       return this;
     }
 
-    public HSMConfigBuilder withPin(final String keyVersion) {
-      this.pin = keyVersion;
+    public HSMConfigBuilder withPin(final String pin) {
+      this.pin = pin;
+      return this;
+    }
+
+    public HSMConfigBuilder fromEnvironmentVariables() {
+      library = System.getenv("PKCS11_HSM_LIB");
+      slot = System.getenv("PKCS11_HSM_SLOT");
+      pin = System.getenv("PKCS11_HSM_PIN");
       return this;
     }
 

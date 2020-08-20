@@ -17,6 +17,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import tech.pegasys.signers.cavium.HSMKeyStoreProvider;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
@@ -56,7 +57,12 @@ public class HSMKeyStoreSigner implements Signer {
   public HSMKeyStoreSigner(final HSMKeyStoreProvider provider, String address) {
     this.provider = provider;
     this.address = address;
-    this.publicKey = (ECPublicKey) getPublicKeyHandle();
+    try {
+      this.publicKey = (ECPublicKey) getPublicKeyHandle();
+    } catch (RuntimeException ex) {
+      LOG.trace(ex);
+      throw new SignerInitializationException("Failed to initialize key store signer", ex);
+    }
   }
 
   @Override
@@ -136,7 +142,8 @@ public class HSMKeyStoreSigner implements Signer {
   }
 
   protected PrivateKey getPrivateKeyHandle() {
-    checkArgument(provider.getKeyStore() != null, "SunPKCS11 Keystore provider is not initialized");
+    checkArgument(
+        provider.getKeyStore() != null, "SunPKCS11 key store provider is not initialized");
     PrivateKey privateKey = provider.getKey(address);
     if (privateKey == null) {
       PrivateKeyEntry privateKeyEntry;
@@ -156,7 +163,8 @@ public class HSMKeyStoreSigner implements Signer {
   }
 
   protected PublicKey getPublicKeyHandle() {
-    checkArgument(provider.getKeyStore() != null, "SunPKCS11 Keystore provider is not initialized");
+    checkArgument(
+        provider.getKeyStore() != null, "SunPKCS11 key store provider is not initialized");
     PrivateKeyEntry privateKeyEntry;
     try {
       privateKeyEntry = (PrivateKeyEntry) provider.getKeyStore().getEntry(address, null);

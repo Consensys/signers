@@ -78,7 +78,7 @@ public class HSMKeyStoreProvider {
     slotPin = pin;
   }
 
-  protected void initialize() throws HSMKeyStoreInitializationException {
+  public void initialize() throws HSMKeyStoreInitializationException {
     Provider prototype = Security.getProvider("SunPKCS11");
     try {
       provider = prototype.configure(configName);
@@ -95,7 +95,7 @@ public class HSMKeyStoreProvider {
       LOG.trace(ex);
       throw new HSMKeyStoreInitializationException(ERROR_ACCESSING_PKCS11_KEYSTORE_MESSAGE, ex);
     }
-    LOG.debug("Successfully initialized hsm slot");
+    LOG.debug("Successfully initialized hsm key store");
   }
 
   public void shutdown() {
