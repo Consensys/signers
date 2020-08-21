@@ -15,7 +15,6 @@ package tech.pegasys.signers.secp256k1.azure;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.web3j.utils.Numeric;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
 
@@ -29,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
 import org.web3j.crypto.Sign.SignatureData;
+import org.web3j.utils.Numeric;
 
 public class AzureKeyVaultSignerTest {
 
