@@ -29,11 +29,17 @@ public class AzureKeyVaultSignerFactory {
   public static final String INACCESSIBLE_KEY_ERROR = "Failed to authenticate to vault.";
   public static final String INVALID_KEY_PARAMETERS_ERROR =
       "Keyvault does not contain key with specified parameters";
-  public static final String INVALID_VAULT_PARAMETERS_ERROR_PATTERN =
-      "Specified key vault (%s) does not exist.";
-  public static final String UNKNOWN_VAULT_ACCESS_ERROR = "Failed to access the Azure key vault";
-
   private static final Logger LOG = LogManager.getLogger();
+
+  private final boolean needsToHash;
+
+  public AzureKeyVaultSignerFactory() {
+    this(true);
+  }
+
+  public AzureKeyVaultSignerFactory(final boolean needsToHash) {
+    this.needsToHash = needsToHash;
+  }
 
   public Signer createSigner(final AzureConfig config) {
     checkNotNull(config, "Config must be specified");
@@ -61,6 +67,6 @@ public class AzureKeyVaultSignerFactory {
     final JsonWebKey jsonWebKey = cryptoClient.getKey().getKey();
     final Bytes rawPublicKey =
         Bytes.concatenate(Bytes.wrap(jsonWebKey.getX()), Bytes.wrap(jsonWebKey.getY()));
-    return new AzureKeyVaultSigner(config, rawPublicKey);
+    return new AzureKeyVaultSigner(config, rawPublicKey, needsToHash);
   }
 }
