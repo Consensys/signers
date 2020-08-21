@@ -37,7 +37,7 @@ public class AzureKeyVaultSignerFactory {
     this(true);
   }
 
-  public AzureKeyVaultSignerFactory(boolean needsToHash) {
+  public AzureKeyVaultSignerFactory(final boolean needsToHash) {
     this.needsToHash = needsToHash;
   }
 

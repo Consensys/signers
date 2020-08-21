@@ -39,7 +39,7 @@ public class AzureKeyVaultSignerTest {
 
   public static final String PUBLIC_KEY_HEX_STRING =
       "09b02f8a5fddd222ade4ea4528faefc399623af3f736be3c44f03e2df22fb792f3931a4d9573d333ca74343305762a753388c3422a86d98b713fc91c1ea04842";
-  final Bytes publicKeyBytes = Bytes.fromHexString(PUBLIC_KEY_HEX_STRING);
+  private final Bytes publicKeyBytes = Bytes.fromHexString(PUBLIC_KEY_HEX_STRING);
 
   @BeforeAll
   static void preChecks() {
@@ -62,7 +62,7 @@ public class AzureKeyVaultSignerTest {
   }
 
   @Test
-  void azureWithOutHashingProducesDifferentAnswerToThatWithHashing() throws SignatureException {
+  void azureWithoutHashingDoesntHashData() throws SignatureException {
     final AzureConfig config =
         new AzureConfig(keyVaultName, "TestKey", "", clientId, clientSecret, tenantId);
 
