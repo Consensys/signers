@@ -99,6 +99,11 @@ public class AzureKeyVaultSigner implements Signer {
   }
 
   @Override
+  public boolean verify(final byte[] data, final Signature signature) {
+    return false;
+  }
+
+  @Override
   public ECPublicKey getPublicKey() {
     return publicKey;
   }

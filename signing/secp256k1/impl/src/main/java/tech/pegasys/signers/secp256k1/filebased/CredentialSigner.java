@@ -17,17 +17,36 @@ import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
 
 import java.math.BigInteger;
+import java.security.Security;
 import java.security.interfaces.ECPublicKey;
 
+import org.apache.tuweni.bytes.Bytes;
+import org.bouncycastle.asn1.sec.SECNamedCurves;
+import org.bouncycastle.asn1.x9.X9ECParameters;
+import org.bouncycastle.crypto.params.ECDomainParameters;
+import org.bouncycastle.crypto.params.ECPublicKeyParameters;
+import org.bouncycastle.crypto.signers.ECDSASigner;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
 import org.web3j.crypto.Sign.SignatureData;
 
 public class CredentialSigner implements Signer {
 
+  public static final String CURVE_NAME = "secp256k1";
+  public static final ECDomainParameters CURVE;
+
   private final Credentials credentials;
   private final ECPublicKey publicKey;
   private final boolean needToHash;
+
+  static {
+    Security.addProvider(new BouncyCastleProvider());
+
+    final X9ECParameters params = SECNamedCurves.getByName(CURVE_NAME);
+    CURVE = new ECDomainParameters(params.getCurve(), params.getG(), params.getN(), params.getH());
+  }
 
   public CredentialSigner(final Credentials credentials, final boolean needToHash) {
     this.credentials = credentials;
@@ -46,6 +65,25 @@ public class CredentialSigner implements Signer {
         new BigInteger(signature.getV()),
         new BigInteger(1, signature.getR()),
         new BigInteger(1, signature.getS()));
+  }
+
+  @Override
+  public boolean verify(final byte[] data, final Signature signature) {
+    final byte[] dataToVerify = Hash.sha3(data);
+    final ECDSASigner signer = new ECDSASigner();
+    final Bytes toDecode =
+        Bytes.wrap(Bytes.of((byte) 4), Bytes.wrap(EthPublicKeyUtils.toByteArray(publicKey)));
+    final ECPublicKeyParameters params =
+        new ECPublicKeyParameters(CURVE.getCurve().decodePoint(toDecode.toArrayUnsafe()), CURVE);
+    signer.init(false, params);
+    try {
+      return signer.verifySignature(dataToVerify, signature.getR(), signature.getS());
+    } catch (final NullPointerException e) {
+      // Bouncy Castle contains a bug that can cause NPEs given specially crafted signatures.
+      // Those signatures are inherently invalid/attack sigs so we just fail them here rather
+      // than crash the thread.
+      return false;
+    }
   }
 
   @Override

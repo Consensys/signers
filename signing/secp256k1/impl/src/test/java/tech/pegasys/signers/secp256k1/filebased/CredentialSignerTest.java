@@ -15,14 +15,19 @@ package tech.pegasys.signers.secp256k1.filebased;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import tech.pegasys.signers.secp256k1.api.Signature;
+
 import java.math.BigInteger;
 
+import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Hash;
 
 class CredentialSignerTest {
+  private static final String SECP_PRIVATE_KEY =
+      "c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4";
 
   @Test
   void needToHashFlagAffectsProducedSignature() {
@@ -37,5 +42,17 @@ class CredentialSignerTest {
         .isEqualTo(nonHashingSigner.getPublicKey().getEncoded());
     assertThat(hashingSigner.sign(data))
         .isEqualToComparingFieldByField(nonHashingSigner.sign(Hash.sha3(data)));
+  }
+
+  @Test
+  void verifiesDataWasSignedBySignersPublicKey() {
+    final ECKeyPair ecKeyPair =
+        ECKeyPair.create(Bytes.fromHexString(SECP_PRIVATE_KEY).toArrayUnsafe());
+    final Credentials credentials = Credentials.create(ecKeyPair);
+    final CredentialSigner signer = new CredentialSigner(credentials);
+
+    final Bytes data = Bytes.wrap("This is an example of a signed message.".getBytes(UTF_8));
+    final Signature signature = signer.sign(data.toArray());
+    assertThat(signer.verify(data.toArray(), signature)).isTrue();
   }
 }
