@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 ConsenSys AG.
+ * Copyright 2020 ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,14 +12,13 @@
  */
 package tech.pegasys.signers.secp256k1.api;
 
-import java.util.Optional;
-import java.util.Set;
+import java.security.interfaces.ECPublicKey;
 
-public interface TransactionSignerProvider {
+public interface Signer {
 
-  Optional<TransactionSigner> getSigner(String address);
+  Signature sign(final byte[] data);
 
-  Set<String> availableAddresses();
+  ECPublicKey getPublicKey();
 
   default void shutdown() {}
 }

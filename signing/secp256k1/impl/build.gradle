@@ -34,18 +34,18 @@ dependencies {
 
   implementation project(':signing:secp256k1:api')
   implementation project(':keystorage:hashicorp')
+  implementation project(':keystorage:azure')
   implementation project(':keystorage:hsm')
   implementation project(':keystorage:cavium')
 
   implementation 'com.google.guava:guava'
-  implementation 'com.microsoft.aad:adal4j'
-  implementation 'com.microsoft.azure:azure-keyvault'
   implementation 'io.vertx:vertx-core'
   implementation 'org.apache.logging.log4j:log4j-api'
   implementation 'org.apache.logging.log4j:log4j-core'
   implementation 'org.apache.tuweni:tuweni-net'
   implementation 'org.apache.tuweni:tuweni-toml'
   implementation 'org.web3j:core'
+  implementation 'com.azure:azure-security-keyvault-keys'
   implementation 'org.bouncycastle:bcprov-jdk15on'
   implementation 'org.bouncycastle:bcpkix-jdk15on'
   implementation 'org.xipki.iaik:sunpkcs11-wrapper'
@@ -61,7 +61,12 @@ dependencies {
   testImplementation 'org.mockito:mockito-core'
   testImplementation 'org.mockito:mockito-junit-jupiter'
   testImplementation(testFixtures(project(":keystorage:hashicorp")))
-  testImplementation(testFixtures(project(":keystorage:hsm")))
-  testImplementation(testFixtures(project(":keystorage:cavium")))
+
+  testImplementation 'com.azure:azure-security-keyvault-keys'
+  testImplementation 'com.azure:azure-identity'
+
+  testFixturesImplementation project(':signing:secp256k1:api')
+  testFixturesImplementation 'org.apache.tuweni:tuweni-bytes'
+
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }

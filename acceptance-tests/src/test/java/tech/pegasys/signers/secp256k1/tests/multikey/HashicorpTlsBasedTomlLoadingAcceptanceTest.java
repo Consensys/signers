@@ -15,19 +15,22 @@ package tech.pegasys.signers.secp256k1.tests.multikey;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.signers.secp256k1.MultiKeyTomlFileUtil.createHashicorpTomlFileAt;
 
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.HashicorpSigningParams;
 
 import java.nio.file.Path;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.web3j.utils.Numeric;
 
 class HashicorpTlsBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
 
-  static final String FILENAME = "fe3b557e8fb62b89f4916b721be55ceb828dbd73";
-  static final String HASHICORP_ETHEREUM_ADDRESS = "0x" + FILENAME;
+  public static final String PUBLIC_KEY_HEX_STRING =
+      "09b02f8a5fddd222ade4ea4528faefc399623af3f736be3c44f03e2df22fb792f3931a4d9573d333ca74343305762a753388c3422a86d98b713fc91c1ea04842";
 
   private static HashicorpSigningParams hashicorpNode;
 
@@ -38,9 +41,13 @@ class HashicorpTlsBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
 
   @Test
   void hashicorpSignerIsCreatedAndExpectedAddressIsReported(@TempDir final Path tempDir) {
-    createHashicorpTomlFileAt(tempDir.resolve(FILENAME + ".toml"), hashicorpNode);
-    setup(tempDir);
-    assertThat(signerProvider.availableAddresses()).containsOnly(HASHICORP_ETHEREUM_ADDRESS);
+    createHashicorpTomlFileAt(tempDir.resolve(PUBLIC_KEY_HEX_STRING + ".toml"), hashicorpNode);
+    setup(tempDir, Path.of(""));
+    assertThat(
+            signerProvider.availablePublicKeys().stream()
+                .map(EthPublicKeyUtils::toByteArray)
+                .collect(Collectors.toList()))
+        .containsOnly(Numeric.hexStringToByteArray(PUBLIC_KEY_HEX_STRING));
   }
 
   @AfterAll

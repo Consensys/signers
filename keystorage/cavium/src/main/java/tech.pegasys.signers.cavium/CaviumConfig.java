@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 ConsenSys AG.
+ * Copyright 2020 ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -14,28 +14,56 @@ package tech.pegasys.signers.cavium;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class CaviumConfig {
-  private final String address;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
-  public CaviumConfig(final String address) {
-    this.address = address;
+public class CaviumConfig {
+  private final String library;
+  private final String pin;
+
+  @JsonCreator
+  public CaviumConfig(final String library, final String pin) {
+    this.library = library;
+    this.pin = pin;
   }
 
-  public String getAddress() {
-    return address;
+  public CaviumConfig() {
+    this.library = "";
+    this.pin = "";
+  }
+
+  public String getLibrary() {
+    return library;
+  }
+
+  public String getPin() {
+    return pin;
   }
 
   public static class CaviumConfigBuilder {
-    private String address;
 
-    public CaviumConfigBuilder withAddress(final String keyName) {
-      this.address = keyName;
+    private String library;
+    private String pin;
+
+    public CaviumConfigBuilder withLibrary(final String library) {
+      this.library = library;
+      return this;
+    }
+
+    public CaviumConfigBuilder withPin(final String pin) {
+      this.pin = pin;
+      return this;
+    }
+
+    public CaviumConfigBuilder fromEnvironmentVariables() {
+      library = System.getenv("AWS_HSM_LIB");
+      pin = System.getenv("AWS_HSM_PIN");
       return this;
     }
 
     public CaviumConfig build() {
-      checkNotNull(address, "Address was not set.");
-      return new CaviumConfig(address);
+      checkNotNull(library, "AWS Cloud HSM library was not set.");
+      checkNotNull(pin, "AWS Cloud HSM pin was not set.");
+      return new CaviumConfig(library, pin);
     }
   }
 }

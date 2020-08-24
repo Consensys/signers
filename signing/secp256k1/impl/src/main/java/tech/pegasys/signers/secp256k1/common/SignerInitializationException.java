@@ -12,20 +12,20 @@
  */
 package tech.pegasys.signers.secp256k1.common;
 
-public class TransactionSignerInitializationException extends RuntimeException {
-  public TransactionSignerInitializationException() {
+public class SignerInitializationException extends RuntimeException {
+  public SignerInitializationException() {
     super();
   }
 
-  public TransactionSignerInitializationException(final String message) {
+  public SignerInitializationException(final String message) {
     super(message);
   }
 
-  public TransactionSignerInitializationException(final String message, final Throwable e) {
+  public SignerInitializationException(final String message, final Throwable e) {
     super(message, e);
   }
 
-  public TransactionSignerInitializationException(final Throwable e) {
+  public SignerInitializationException(final Throwable e) {
     super(e);
   }
 }

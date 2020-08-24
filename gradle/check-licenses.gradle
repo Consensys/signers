@@ -30,11 +30,14 @@
 ext.acceptedLicenses = [
         'BSD License',
         'BSD 3-Clause',
+        'The BSD 3-Clause license',
         'COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0',
         'Eclipse Public License - v 1.0',
         'Eclipse Public License - v 2.0',
         'Eclipse Public License 2.0',
         'Eclipse Public License 1.0',
+        'Eclipse Distribution License - v 1.0',
+        'EDL 1.0',
         'MIT License',
         'The MIT License (MIT)',
         'Apache License, Version 2.0',
@@ -45,6 +48,7 @@ ext.acceptedLicenses = [
         'Mozilla Public License Version 2.0',
         'CC0 1.0 Universal License',
         'Common Development and Distribution License 1.0',
+        'CDDL',
         'Unicode/ICU License',
         'CC0',
         'IAIK of Graz University of Technology License'
@@ -70,7 +74,6 @@ downloadLicenses {
   ext.cddl = license('Common Development and Distribution License 1.0', 'http://opensource.org/licenses/CDDL-1.0')
   ext.cddl1_1 = license('Common Development and Distribution License 1.0', 'http://oss.oracle.com/licenses/CDDL-1.1')
   ext.epl_2 = license('Eclipse Public License 2.0', 'https://www.eclipse.org/legal/epl-2.0/')
-
   aliases = [
           (apache)    : [
                   'The Apache Software License, Version 2.0',
@@ -134,8 +137,6 @@ downloadLicenses {
   ]
 
   licenses = [
-          (group('signers')) : apache,
-
           // https://checkerframework.org/manual/#license
           // The more permissive MIT License applies to code that you might want
           // to include in your own program, such as the annotations and run-time utility classes.
@@ -153,8 +154,15 @@ downloadLicenses {
           (group('com.github.jnr')): epl_2,
           (group('javax.mail')): cddl,
           (group('net.jcip')): apache,
+          (group('net.java.dev.jna')): apache,
+          (group('com.sun.mail')): cddl,
+          (group('signers')): apache,
+          (group('signers.keystorage')): apache,
+          (group('signers.signing')): apache,
+          (group('signers.signing.secp256k1')): apache,
           ('cloudhsm-3.0.1.jar'): apache
   ]
+
 }
 
 

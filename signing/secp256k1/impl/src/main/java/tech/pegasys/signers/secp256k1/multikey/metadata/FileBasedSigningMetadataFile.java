@@ -12,31 +12,23 @@
  */
 package tech.pegasys.signers.secp256k1.multikey.metadata;
 
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.filebased.FileSignerConfig;
 import tech.pegasys.signers.secp256k1.multikey.MultiSignerFactory;
-
-import java.nio.file.Path;
 
 import com.google.common.base.Objects;
 
 public class FileBasedSigningMetadataFile extends SigningMetadataFile {
 
-  private final Path keyPath;
-  private final Path passwordPath;
+  private final FileSignerConfig config;
 
-  public FileBasedSigningMetadataFile(
-      final String filename, final Path keyPath, final Path passwordPath) {
+  public FileBasedSigningMetadataFile(final String filename, final FileSignerConfig config) {
     super(filename);
-    this.keyPath = keyPath;
-    this.passwordPath = passwordPath;
+    this.config = config;
   }
 
-  public Path getKeyPath() {
-    return keyPath;
-  }
-
-  public Path getPasswordPath() {
-    return passwordPath;
+  public FileSignerConfig getConfig() {
+    return config;
   }
 
   @Override
@@ -48,18 +40,16 @@ public class FileBasedSigningMetadataFile extends SigningMetadataFile {
       return false;
     }
     final FileBasedSigningMetadataFile that = (FileBasedSigningMetadataFile) o;
-    return Objects.equal(baseFilename, that.baseFilename)
-        && Objects.equal(keyPath, that.keyPath)
-        && Objects.equal(passwordPath, that.passwordPath);
+    return Objects.equal(filename, that.filename) && Objects.equal(config, that.config);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(baseFilename, keyPath, passwordPath);
+    return Objects.hashCode(filename, config);
   }
 
   @Override
-  public TransactionSigner createSigner(final MultiSignerFactory factory) {
+  public Signer createSigner(final MultiSignerFactory factory) {
     return factory.createSigner(this);
   }
 }

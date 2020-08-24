@@ -56,7 +56,7 @@ public class HashicorpSigningMetadataTomlConfigLoaderTest {
     createTomlFile(toml);
 
     final Collection<SigningMetadataFile> metadataFiles =
-        loader.loadAvailableSigningMetadataTomlConfigs();
+        loader.loadAvailableSigningMetadataTomlConfigs(entry -> true);
 
     assertThat(metadataFiles.size()).isOne();
     assertThat(metadataFiles.toArray()[0]).isInstanceOf(HashicorpSigningMetadataFile.class);

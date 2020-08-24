@@ -12,26 +12,38 @@
  */
 package tech.pegasys.signers.secp256k1.hsm;
 
-import tech.pegasys.signers.hsm.HSMCrypto;
 import tech.pegasys.signers.hsm.HSMWallet;
+import tech.pegasys.signers.hsm.HSMWalletProvider;
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
 import java.math.BigInteger;
+import java.security.interfaces.ECPublicKey;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.web3j.crypto.Hash;
 
-public class HSMTransactionSigner implements TransactionSigner {
+public class HSMSigner implements Signer {
 
-  private final HSMCrypto crypto;
+  protected static final Logger LOG = LogManager.getLogger();
+  private final HSMWalletProvider provider;
   private final HSMWallet wallet;
+  private final ECPublicKey publicKey;
   private final String address;
 
-  public HSMTransactionSigner(
-      final HSMCrypto crypto, final HSMWallet wallet, final String address) {
-    this.crypto = crypto;
-    this.wallet = wallet;
+  public HSMSigner(final HSMWalletProvider provider, final String address) {
+    this.provider = provider;
     this.address = address;
+    this.wallet = provider.getWallet();
+    try {
+      this.publicKey = EthPublicKeyUtils.createPublicKey(wallet.getPublicKey(address));
+    } catch (RuntimeException ex) {
+      LOG.trace(ex);
+      throw new SignerInitializationException("Failed to initialize hsm signer", ex);
+    }
   }
 
   @Override
@@ -42,13 +54,12 @@ public class HSMTransactionSigner implements TransactionSigner {
   }
 
   @Override
-  public String getAddress() {
-    return address;
+  public ECPublicKey getPublicKey() {
+    return publicKey;
   }
 
   @Override
   public void shutdown() {
-    wallet.close();
-    crypto.shutdown();
+    provider.shutdown();
   }
 }

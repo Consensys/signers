@@ -13,11 +13,12 @@
 package tech.pegasys.signers.secp256k1.hsm;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import tech.pegasys.signers.hsm.HSMConfig;
+import tech.pegasys.signers.hsm.HSMWalletProvider;
 import tech.pegasys.signers.secp256k1.api.Signature;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,22 +28,23 @@ import java.util.Properties;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.web3j.crypto.ECDSASignature;
 
-public class HSMTransactionSignerFactoryTest {
+public class HSMSignerTest {
 
   private static String library;
   private static String slot;
   private static String pin;
   private static String address;
-
-  private static HSMTransactionSignerFactory factory;
   private static byte[] data = {1, 2, 3};
+  private static HSMSignerFactory factory;
+  private static Signer signer;
 
   @BeforeAll
   public static void beforeAll() {
     Properties p = new Properties();
     InputStream is =
-        ClassLoader.getSystemResourceAsStream("hsm-configs/softhsm-wallet-002.properties");
+        ClassLoader.getSystemResourceAsStream("hsm-configs/softhsm-wallet-003.properties");
     try {
       p.load(is);
       library = p.getProperty("library");
@@ -53,35 +55,25 @@ public class HSMTransactionSignerFactoryTest {
     }
 
     org.junit.jupiter.api.Assumptions.assumeTrue((new File(library)).exists());
-    factory = new HSMTransactionSignerFactory(library, slot, pin);
-    factory.initialize();
-    address = factory.getWallet().generate();
+    HSMWalletProvider provider = new HSMWalletProvider(new HSMConfig(library, slot, pin));
+    factory = new HSMSignerFactory(provider);
+    address = provider.getWallet().generate();
+    signer = factory.createSigner(address);
   }
 
   @AfterAll
   public static void afterAll() {
-    if (factory != null) {
-      factory.shutdown();
+    if (signer != null) {
+      signer.shutdown();
     }
   }
 
   @Test
-  public void success() {
-    final TransactionSigner signer = factory.createSigner(address);
-    assertThat(signer).isNotNull();
-    assertThat(signer.getAddress()).isNotEmpty();
-    assertThat(signer.getAddress()).isEqualTo(address);
+  public void signTest() {
     Signature sig = signer.sign(data);
     assertThat(sig).isNotNull();
-  }
 
-  @Test
-  public void failure() {
-    assertThrows(
-        RuntimeException.class,
-        () -> {
-          final TransactionSigner signer = factory.createSigner("0x");
-          signer.sign(data);
-        });
+    final ECDSASignature ecdsaSignature = new ECDSASignature(sig.getR(), sig.getS());
+    assertThat(ecdsaSignature.isCanonical()).isTrue();
   }
 }

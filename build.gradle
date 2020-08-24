@@ -17,7 +17,7 @@ import java.text.SimpleDateFormat
 
 plugins {
   id 'java-test-fixtures'
-  id 'com.diffplug.gradle.spotless' version '3.27.1'
+  id 'com.diffplug.spotless' version '5.1.1'
   id 'com.jfrog.bintray' version '1.8.4'
   id 'com.github.ben-manes.versions' version '0.27.0'
   id 'com.github.hierynomus.license' version '0.15.0'
@@ -126,7 +126,7 @@ allprojects {
     errorprone("com.google.errorprone:error_prone_core")
   }
 
-  apply plugin: 'com.diffplug.gradle.spotless'
+  apply plugin: 'com.diffplug.spotless'
   spotless {
     java {
       // This path needs to be relative to each project
@@ -404,6 +404,7 @@ configurations {
 dependencies {
   subprojects.each { subProject ->
     installedJars subProject
+    testCompile subProject
   }
 }
 

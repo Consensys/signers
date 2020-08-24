@@ -255,6 +255,24 @@ public class HSMCrypto {
     };
   }
 
+  // sign returns the transposed signature of the given hash
+  public byte[] getPublicKey(long slotIndex, String address) throws HSMCryptoException {
+    Session session = openSession(slotIndex);
+    byte[] publicKey;
+    try {
+      ECPublicKey publicKeyHandle = getPublicKeyHandle(session, address);
+      if (publicKeyHandle == null)
+        throw new RuntimeException("Failed to retrieve public key handle.");
+      publicKey = getPublicKey(publicKeyHandle);
+    } catch (Exception ex) {
+      LOG.error(ex);
+      throw new HSMCryptoException("Failed to get public key.", ex);
+    } finally {
+      closeSession(session);
+    }
+    return publicKey;
+  }
+
   // getAddresses returns all the addresses on the wallet
   public List<String> getAddresses(long slotIndex) {
     Session session = openSession(slotIndex);
@@ -419,5 +437,12 @@ public class HSMCrypto {
     PrivateKey key = new PrivateKey();
     key.getLabel().setCharArrayValue(address.toCharArray());
     return (ECPrivateKey) findObject(session, key);
+  }
+
+  // getPublicKeyHandle returns the public key handle for the given address
+  private ECPublicKey getPublicKeyHandle(Session session, String address) throws TokenException {
+    PublicKey key = new PublicKey();
+    key.getLabel().setCharArrayValue(address.toCharArray());
+    return (ECPublicKey) findObject(session, key);
   }
 }

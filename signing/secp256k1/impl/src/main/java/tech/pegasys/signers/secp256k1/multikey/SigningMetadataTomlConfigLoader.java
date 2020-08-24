@@ -12,11 +12,14 @@
  */
 package tech.pegasys.signers.secp256k1.multikey;
 
-import tech.pegasys.signers.cavium.CaviumConfig;
+import static java.util.Collections.emptyList;
+
 import tech.pegasys.signers.hashicorp.config.HashicorpKeyConfig;
 import tech.pegasys.signers.hashicorp.config.loader.toml.TomlConfigLoader;
-import tech.pegasys.signers.hsm.HSMConfig;
 import tech.pegasys.signers.secp256k1.azure.AzureConfig.AzureConfigBuilder;
+import tech.pegasys.signers.secp256k1.cavium.CaviumConfig;
+import tech.pegasys.signers.secp256k1.filebased.FileSignerConfig;
+import tech.pegasys.signers.secp256k1.hsm.HSMConfig;
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.CaviumSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
@@ -28,13 +31,11 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.toml.TomlInvalidTypeException;
@@ -45,24 +46,21 @@ public class SigningMetadataTomlConfigLoader {
 
   private static final Logger LOG = LogManager.getLogger();
 
-  private static final String CONFIG_FILE_EXTENSION = ".toml";
-  private static final String GLOB_CONFIG_MATCHER = "**" + CONFIG_FILE_EXTENSION;
-
   private final Path tomlConfigsDirectory;
 
   public SigningMetadataTomlConfigLoader(final Path rootDirectory) {
     this.tomlConfigsDirectory = rootDirectory;
   }
 
-  Optional<SigningMetadataFile> loadMetadataForAddress(final String address) {
+  public Optional<SigningMetadataFile> loadMetadata(
+      final DirectoryStream.Filter<Path> configFileSelector) {
     final List<SigningMetadataFile> matchingMetadata =
-        loadAvailableSigningMetadataTomlConfigs().stream()
-            .filter(
-                toml -> toml.getBaseFilename().toLowerCase().endsWith(normalizeAddress(address)))
-            .collect(Collectors.toList());
+        loadAvailableSigningMetadataTomlConfigs(configFileSelector);
 
     if (matchingMetadata.size() > 1) {
-      LOG.error("Found multiple signing metadata TOML file matches for address " + address);
+      LOG.error(
+          "Found multiple signing metadata TOML file matches for filter "
+              + configFileSelector.toString());
       return Optional.empty();
     } else if (matchingMetadata.isEmpty()) {
       return Optional.empty();
@@ -71,18 +69,19 @@ public class SigningMetadataTomlConfigLoader {
     }
   }
 
-  Collection<SigningMetadataFile> loadAvailableSigningMetadataTomlConfigs() {
-    final Collection<SigningMetadataFile> metadataConfigs = new HashSet<>();
+  List<SigningMetadataFile> loadAvailableSigningMetadataTomlConfigs(
+      final DirectoryStream.Filter<Path> configFileSelector) {
+    final List<SigningMetadataFile> metadataConfigs = Lists.newArrayList();
 
     try (final DirectoryStream<Path> directoryStream =
-        Files.newDirectoryStream(tomlConfigsDirectory, GLOB_CONFIG_MATCHER)) {
+        Files.newDirectoryStream(tomlConfigsDirectory, configFileSelector)) {
       for (final Path file : directoryStream) {
         getMetadataInfo(file).ifPresent(metadataConfigs::add);
       }
-      return metadataConfigs;
+      return ImmutableList.copyOf(metadataConfigs);
     } catch (final IOException e) {
       LOG.warn("Error searching for signing metadata TOML files", e);
-      return Collections.emptySet();
+      return emptyList();
     }
   }
 
@@ -136,7 +135,8 @@ public class SigningMetadataTomlConfigLoader {
     final Path keyPath = makeRelativePathAbsolute(keyFilename);
     final String passwordFilename = table.getString("password-file");
     final Path passwordPath = makeRelativePathAbsolute(passwordFilename);
-    return Optional.of(new FileBasedSigningMetadataFile(filename, keyPath, passwordPath));
+    return Optional.of(
+        new FileBasedSigningMetadataFile(filename, new FileSignerConfig(keyPath, passwordPath)));
   }
 
   private Optional<SigningMetadataFile> getAzureBasedSigningMetadataFromToml(
@@ -155,6 +155,7 @@ public class SigningMetadataTomlConfigLoader {
     builder.withKeyVersion(table.getString("key-version"));
     builder.withClientId(table.getString("client-id"));
     builder.withClientSecret(table.getString("client-secret"));
+    builder.withTenantId(table.getString("tenant-id"));
     return Optional.of(new AzureSigningMetadataFile(filename, builder.build()));
   }
 
@@ -212,14 +213,6 @@ public class SigningMetadataTomlConfigLoader {
       return Optional.empty();
     }
     return Optional.of(new TomlTableAdapter(signingTable));
-  }
-
-  private String normalizeAddress(final String address) {
-    if (address.startsWith("0x")) {
-      return address.replace("0x", "").toLowerCase();
-    } else {
-      return address.toLowerCase();
-    }
   }
 
   private Path makeRelativePathAbsolute(final String input) {

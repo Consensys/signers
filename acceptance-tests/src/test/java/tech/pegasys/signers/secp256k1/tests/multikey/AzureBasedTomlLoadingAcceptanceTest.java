@@ -15,6 +15,8 @@ package tech.pegasys.signers.secp256k1.tests.multikey;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.signers.secp256k1.MultiKeyTomlFileUtil.createAzureTomlFileAt;
 
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
+
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Assumptions;
@@ -27,26 +29,29 @@ public class AzureBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
   static final String clientId = System.getenv("AZURE_CLIENT_ID");
   static final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
   static final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
-  static final String FILENAME = "fe3b557e8fb62b89f4916b721be55ceb828dbd73";
-  static final String AZURE_ETHEREUM_ADDRESS = "0x" + FILENAME;
+  static final String tenantId = System.getenv("AZURE_TENANT_ID");
+  public static final String PUBLIC_KEY_HEX_STRING =
+      "09b02f8a5fddd222ade4ea4528faefc399623af3f736be3c44f03e2df22fb792f3931a4d9573d333ca74343305762a753388c3422a86d98b713fc91c1ea04842";
 
   @BeforeAll
   static void preChecks() {
     Assumptions.assumeTrue(
-        clientId != null && clientSecret != null,
-        "Ensure Azure client id and client secret env variables are set");
+        clientId != null && clientSecret != null && keyVaultName != null && tenantId != null,
+        "Ensure Azure env variables are set");
   }
 
   @Test
   void azureSignersAreCreatedAndExpectedAddressIsReported(@TempDir Path tomlDirectory) {
     createAzureTomlFileAt(
-        tomlDirectory.resolve("arbitrary_prefix" + FILENAME + ".toml"),
+        tomlDirectory.resolve(PUBLIC_KEY_HEX_STRING + ".toml"),
         clientId,
         clientSecret,
-        keyVaultName);
+        keyVaultName,
+        tenantId);
 
-    setup(tomlDirectory);
+    setup(tomlDirectory, Path.of(""));
 
-    assertThat(signerProvider.availableAddresses()).containsOnly(AZURE_ETHEREUM_ADDRESS);
+    assertThat(signerProvider.availablePublicKeys().stream().map(EthPublicKeyUtils::toHexString))
+        .containsOnly("0x" + PUBLIC_KEY_HEX_STRING);
   }
 }

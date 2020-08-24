@@ -30,7 +30,8 @@ public class MultiKeyTomlFileUtil {
       final Path tomlPath,
       final String clientId,
       final String clientSecret,
-      final String keyVaultName) {
+      final String keyVaultName,
+      final String tenantId) {
     final String toml =
         new TomlStringBuilder("signing")
             .withQuotedString("type", "azure-signer")
@@ -39,6 +40,7 @@ public class MultiKeyTomlFileUtil {
             .withQuotedString("key-version", "7c01fe58d68148bba5824ce418241092")
             .withQuotedString("client-id", clientId)
             .withQuotedString("client-secret", clientSecret)
+            .withQuotedString("tenant-id", tenantId)
             .build();
     createTomlFile(tomlPath, toml);
   }

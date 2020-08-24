@@ -1,0 +1,44 @@
+/*
+ * Copyright (C) 2020 ConsenSys AG.
+ *
+ * The source code is provided to licensees of PegaSys Plus for their convenience and internal
+ * business use. These files may not be copied, translated, and/or distributed without the express
+ * written permission of an authorized signatory for ConsenSys AG.
+ */
+
+apply plugin: 'java-library'
+apply plugin: 'java-test-fixtures'
+
+jar {
+  archiveBaseName = calculateJarName(project)
+  manifest {
+    attributes(
+      'Specification-Title': archiveBaseName.get(),
+      'Specification-Version': rootProject.version,
+      'Implementation-Title': archiveBaseName.get(),
+      'Implementation-Version': calculateVersion()
+      )
+  }
+}
+
+testFixturesJar {
+  archiveBaseName = calculateJarName(project)
+}
+
+dependencies {
+  implementation 'org.apache.logging.log4j:log4j-api'
+  implementation 'com.azure:azure-security-keyvault-secrets'
+  implementation 'com.azure:azure-security-keyvault-keys'
+  implementation 'com.azure:azure-identity'
+
+  runtimeOnly 'org.apache.logging.log4j:log4j-core'
+  runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
+
+  testImplementation 'org.assertj:assertj-core'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params'
+  testImplementation 'org.mockito:mockito-core'
+
+  errorprone("com.google.errorprone:error_prone_core")
+}

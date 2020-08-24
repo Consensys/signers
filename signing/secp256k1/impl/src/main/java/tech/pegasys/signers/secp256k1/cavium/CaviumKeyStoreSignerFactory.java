@@ -13,17 +13,21 @@
 package tech.pegasys.signers.secp256k1.cavium;
 
 import tech.pegasys.signers.cavium.CaviumKeyStoreProvider;
-import tech.pegasys.signers.secp256k1.api.TransactionSigner;
+import tech.pegasys.signers.secp256k1.api.Signer;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CaviumKeyStoreSignerFactory {
 
+  protected static final Logger LOG = LogManager.getLogger();
   private final CaviumKeyStoreProvider provider;
 
   public CaviumKeyStoreSignerFactory(final CaviumKeyStoreProvider provider) {
     this.provider = provider;
   }
 
-  public TransactionSigner createSigner(String address) {
+  public Signer createSigner(String address) {
     return new CaviumKeyStoreSigner(provider, address);
   }
 

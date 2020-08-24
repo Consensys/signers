@@ -54,6 +54,7 @@ dependencies {
   testFixturesImplementation(testFixtures(project(":keystorage:hsm")))
   testFixturesImplementation(testFixtures(project(":keystorage:cavium")))
   testFixturesImplementation(testFixtures(project(":signing:secp256k1:impl")))
+  testFixturesImplementation project(':signing:secp256k1:api')
 }
 
 test.enabled = false
