@@ -45,6 +45,18 @@ public class MultiKeyAzureTransactionSignerAcceptanceTest
         keyVaultName,
         tenantId);
     setup(tomlDirectory);
-    verifySignature();
+    validateSignature();
+  }
+
+  @Test
+  public void azureLoadedFromMultiKeyCanVerify(@TempDir Path tomlDirectory) {
+    createAzureTomlFileAt(
+        tomlDirectory.resolve(PUBLIC_KEY_HEX_STRING + ".toml"),
+        clientId,
+        clientSecret,
+        keyVaultName,
+        tenantId);
+    setup(tomlDirectory);
+    validateVerify();
   }
 }

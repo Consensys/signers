@@ -43,7 +43,16 @@ public class MultiKeyHashicorpTransactionSignerAcceptanceTest
     createHashicorpTomlFileAt(tomlDirectory.resolve(FILENAME + ".toml"), hashicorpNode);
 
     setup(tomlDirectory);
-    verifySignature();
+    validateSignature();
+  }
+
+  @Test
+  void hashicorpLoadedFromMultiKeyCanVerify(@TempDir Path tomlDirectory) {
+
+    createHashicorpTomlFileAt(tomlDirectory.resolve(FILENAME + ".toml"), hashicorpNode);
+
+    setup(tomlDirectory);
+    validateVerify();
   }
 
   @AfterAll

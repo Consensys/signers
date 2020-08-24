@@ -45,6 +45,23 @@ public class MultiKeyFileBasedTransactionSignerAcceptanceTest
         tomlDirectory.resolve(FILENAME + ".toml"), keyPath, passwordPath.toString());
 
     setup(tomlDirectory);
-    verifySignature();
+    validateSignature();
+  }
+
+  @Test
+  public void fileBasedMultiKeyCanVerify(@TempDir Path tomlDirectory)
+      throws URISyntaxException, IOException {
+    final String keyPath =
+        new File(Resources.getResource("secp256k1/rich_benefactor_one.json").toURI())
+            .getAbsolutePath();
+
+    final Path passwordPath = tomlDirectory.resolve("password");
+    Files.write(passwordPath, "pass".getBytes(UTF_8));
+
+    createFileBasedTomlFileAt(
+        tomlDirectory.resolve(FILENAME + ".toml"), keyPath, passwordPath.toString());
+
+    setup(tomlDirectory);
+    validateVerify();
   }
 }

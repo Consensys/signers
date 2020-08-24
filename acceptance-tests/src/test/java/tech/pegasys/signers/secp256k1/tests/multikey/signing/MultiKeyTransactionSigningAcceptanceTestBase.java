@@ -44,7 +44,7 @@ public class MultiKeyTransactionSigningAcceptanceTestBase extends MultiKeyAccept
   public static final ECPublicKey pubKey =
       EthPublicKeyUtils.createPublicKey(Bytes.fromHexString(PUBLIC_KEY_HEX_STRING));
 
-  void verifySignature() {
+  void validateSignature() {
     final Optional<Signer> signer = signerProvider.getSigner(pubKey);
     assertThat(signer).isNotEmpty();
 
@@ -58,6 +58,15 @@ public class MultiKeyTransactionSigningAcceptanceTestBase extends MultiKeyAccept
 
     final ECDSASignature ecdsaSignature = new ECDSASignature(signature.getR(), signature.getS());
     assertThat(ecdsaSignature.isCanonical()).isTrue();
+  }
+
+  void validateVerify() {
+    final Optional<Signer> signer = signerProvider.getSigner(pubKey);
+    assertThat(signer).isNotEmpty();
+
+    final Signature signature = signer.get().sign(DATA_TO_SIGN);
+
+    assertThat(signer.get().verify(DATA_TO_SIGN, signature)).isTrue();
   }
 
   private BigInteger recoverPublicKey(final Signature signature) {

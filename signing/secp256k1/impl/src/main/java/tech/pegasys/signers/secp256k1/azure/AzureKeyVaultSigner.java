@@ -25,6 +25,7 @@ import java.util.Arrays;
 import com.azure.security.keyvault.keys.cryptography.CryptographyClient;
 import com.azure.security.keyvault.keys.cryptography.models.SignResult;
 import com.azure.security.keyvault.keys.cryptography.models.SignatureAlgorithm;
+import com.azure.security.keyvault.keys.cryptography.models.VerifyResult;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -50,23 +51,9 @@ public class AzureKeyVaultSigner implements Signer {
 
   @Override
   public Signature sign(byte[] data) {
-    final AzureKeyVault vault;
-    try {
-      vault =
-          new AzureKeyVault(
-              config.getClientId(),
-              config.getClientSecret(),
-              config.getTenantId(),
-              config.getKeyVaultName());
-    } catch (final Exception e) {
-      LOG.error("Failed to connect to vault", e);
-      throw new SignerInitializationException(INACCESSIBLE_KEY_ERROR, e);
-    }
-
-    final CryptographyClient cryptoClient =
-        vault.fetchKey(config.getKeyName(), config.getKeyVersion());
-    final byte[] hash = Hash.sha3(data);
-    final SignResult result = cryptoClient.sign(signingAlgo, hash);
+    final CryptographyClient cryptoClient = createCryptoClient();
+    final byte[] digest = Hash.sha3(data);
+    final SignResult result = cryptoClient.sign(signingAlgo, digest);
     final byte[] signature = result.getSignature();
 
     if (signature.length != 64) {
@@ -87,7 +74,7 @@ public class AzureKeyVaultSigner implements Signer {
     final ECDSASignature canonicalSignature = initialSignature.toCanonicalised();
 
     // Now we have to work backwards to figure out the recId needed to recover the signature.
-    final int recId = recoverKeyIndex(canonicalSignature, hash);
+    final int recId = recoverKeyIndex(canonicalSignature, digest);
     if (recId == -1) {
       throw new RuntimeException(
           "Could not construct a recoverable key. Are your credentials valid?");
@@ -100,7 +87,32 @@ public class AzureKeyVaultSigner implements Signer {
 
   @Override
   public boolean verify(final byte[] data, final Signature signature) {
-    return false;
+    final CryptographyClient cryptoClient = createCryptoClient();
+    final byte[] digest = Hash.sha3(data);
+
+    final byte[] rBytes = Numeric.toBytesPadded(signature.getR(), 32);
+    final byte[] sBytes = Numeric.toBytesPadded(signature.getS(), 32);
+    final byte[] signatureBytes =
+        Bytes.concatenate(Bytes.wrap(rBytes), Bytes.wrap(sBytes)).toArrayUnsafe();
+    final VerifyResult verifyResult = cryptoClient.verify(signingAlgo, digest, signatureBytes);
+    return verifyResult.isValid();
+  }
+
+  private CryptographyClient createCryptoClient() {
+    final AzureKeyVault vault;
+    try {
+      vault =
+          new AzureKeyVault(
+              config.getClientId(),
+              config.getClientSecret(),
+              config.getTenantId(),
+              config.getKeyVaultName());
+    } catch (final Exception e) {
+      LOG.error("Failed to connect to vault", e);
+      throw new SignerInitializationException(INACCESSIBLE_KEY_ERROR, e);
+    }
+
+    return vault.fetchKey(config.getKeyName(), config.getKeyVersion());
   }
 
   @Override
