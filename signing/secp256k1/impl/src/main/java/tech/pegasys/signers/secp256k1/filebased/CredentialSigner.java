@@ -69,7 +69,7 @@ public class CredentialSigner implements Signer {
 
   @Override
   public boolean verify(final byte[] data, final Signature signature) {
-    final byte[] dataToVerify = Hash.sha3(data);
+    final byte[] dataToVerify = needToHash ? Hash.sha3(data) : data;
     final ECDSASigner signer = new ECDSASigner();
     final Bytes toDecode =
         Bytes.wrap(Bytes.of((byte) 4), Bytes.wrap(EthPublicKeyUtils.toByteArray(publicKey)));

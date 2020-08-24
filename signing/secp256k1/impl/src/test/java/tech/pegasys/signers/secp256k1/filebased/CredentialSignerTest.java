@@ -55,4 +55,6 @@ class CredentialSignerTest {
     final Signature signature = signer.sign(data.toArray());
     assertThat(signer.verify(data.toArray(), signature)).isTrue();
   }
+
+  // TODO verify without hashing
 }
