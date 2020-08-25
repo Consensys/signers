@@ -56,5 +56,17 @@ class CredentialSignerTest {
     assertThat(signer.verify(data.toArray(), signature)).isTrue();
   }
 
-  // TODO verify without hashing
+  @Test
+  void verifiesDataWithoutHashingWasSignedBySignersPublicKey() {
+    final ECKeyPair ecKeyPair =
+        ECKeyPair.create(Bytes.fromHexString(SECP_PRIVATE_KEY).toArrayUnsafe());
+    final Credentials credentials = Credentials.create(ecKeyPair);
+    final CredentialSigner signer = new CredentialSigner(credentials, false);
+
+    final Bytes data = Bytes.wrap("This is an example of a signed message.".getBytes(UTF_8));
+    final Bytes hashedData = Bytes.wrap(Hash.sha3(data.toArrayUnsafe()));
+
+    final Signature signature = signer.sign(hashedData.toArray());
+    assertThat(signer.verify(hashedData.toArray(), signature)).isTrue();
+  }
 }
