@@ -14,13 +14,14 @@ package tech.pegasys.signers.bls.keystore.model;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import tech.pegasys.signers.bls.keystore.KeyStoreValidationException;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.crypto.generators.SCrypt;
-import tech.pegasys.signers.bls.keystore.KeyStoreValidationException;
 
 public class SCryptParam extends KdfParam {
   private final int n;

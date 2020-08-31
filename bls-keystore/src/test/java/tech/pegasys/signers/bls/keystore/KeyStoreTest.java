@@ -16,6 +16,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import tech.pegasys.signers.bls.keystore.model.Cipher;
+import tech.pegasys.signers.bls.keystore.model.KdfParam;
+import tech.pegasys.signers.bls.keystore.model.KeyStoreData;
+import tech.pegasys.signers.bls.keystore.model.Pbkdf2Param;
+import tech.pegasys.signers.bls.keystore.model.Pbkdf2PseudoRandomFunction;
+import tech.pegasys.signers.bls.keystore.model.SCryptParam;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,12 +36,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import tech.pegasys.signers.bls.keystore.model.Cipher;
-import tech.pegasys.signers.bls.keystore.model.KdfParam;
-import tech.pegasys.signers.bls.keystore.model.KeyStoreData;
-import tech.pegasys.signers.bls.keystore.model.Pbkdf2Param;
-import tech.pegasys.signers.bls.keystore.model.Pbkdf2PseudoRandomFunction;
-import tech.pegasys.signers.bls.keystore.model.SCryptParam;
 
 class KeyStoreTest {
   private static final int DKLEN = 32;
