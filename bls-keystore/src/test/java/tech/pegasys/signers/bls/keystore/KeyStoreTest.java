@@ -16,13 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import tech.pegasys.signers.bls.keystore.model.Cipher;
-import tech.pegasys.signers.bls.keystore.model.KdfParam;
-import tech.pegasys.signers.bls.keystore.model.KeyStoreData;
-import tech.pegasys.signers.bls.keystore.model.Pbkdf2Param;
-import tech.pegasys.signers.bls.keystore.model.Pbkdf2PseudoRandomFunction;
-import tech.pegasys.signers.bls.keystore.model.SCryptParam;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,6 +29,12 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import tech.pegasys.signers.bls.keystore.model.Cipher;
+import tech.pegasys.signers.bls.keystore.model.KdfParam;
+import tech.pegasys.signers.bls.keystore.model.KeyStoreData;
+import tech.pegasys.signers.bls.keystore.model.Pbkdf2Param;
+import tech.pegasys.signers.bls.keystore.model.Pbkdf2PseudoRandomFunction;
+import tech.pegasys.signers.bls.keystore.model.SCryptParam;
 
 class KeyStoreTest {
   private static final int DKLEN = 32;
@@ -44,7 +43,8 @@ class KeyStoreTest {
   private static final int PARALLELIZATION = 1;
   private static final int BLOCKSIZE = 8;
 
-  private static final String PASSWORD = "testpassword";
+  private static final String PASSWORD =
+      "\uD835\uDD31\uD835\uDD22\uD835\uDD30\uD835\uDD31\uD835\uDD2D\uD835\uDD1E\uD835\uDD30\uD835\uDD30\uD835\uDD34\uD835\uDD2C\uD835\uDD2F\uD835\uDD21\uD83D\uDD11";
   private static final Bytes BLS_PRIVATE_KEY =
       Bytes.fromHexString("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
   private static final Bytes BLS_PUB_KEY =
@@ -75,14 +75,14 @@ class KeyStoreTest {
     return Stream.of(
         Arguments.of(
             new SCryptParam(DKLEN, MEMORY_CPU_COST, PARALLELIZATION, BLOCKSIZE, SALT),
-            Bytes.fromHexString("149aafa27b041f3523c53d7acba1905fa6b1c90f9fef137568101f44b531a3cb"),
+            Bytes.fromHexString("d2217fe5f3e9a1e34581ef8a78f7c9928e436d36dacc5e846690a5581e8ea484"),
             Bytes.fromHexString(
-                "54ecc8863c0550351eee5720f3be6a5d4a016025aa91cd6436cfec938d6a8d30")),
+                "06ae90d55fe0a6e9c5c3bc5b170827b2e5cce3929ed3f116c2811e6366dfe20f")),
         Arguments.of(
             new Pbkdf2Param(DKLEN, ITERATIVE_COUNT, Pbkdf2PseudoRandomFunction.HMAC_SHA256, SALT),
-            Bytes.fromHexString("18b148af8e52920318084560fd766f9d09587b4915258dec0676cba5b0da09d8"),
+            Bytes.fromHexString("8a9f5d9912ed7e75ea794bc5a89bca5f193721d30868ade6f73043c6ea6febf1"),
             Bytes.fromHexString(
-                "a9249e0ca7315836356e4c7440361ff22b9fe71e2e2ed34fc1eb03976924ed48")));
+                "cee03fde2af33149775b7223e7845e4fb2c8ae1792e5f99fe9ecf474cc8c16ad")));
   }
 
   @Test

@@ -13,9 +13,6 @@
 package tech.pegasys.signers.bls.keystore.model;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import tech.pegasys.signers.bls.keystore.KeyStoreValidationException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -23,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import org.apache.tuweni.bytes.Bytes;
 import org.bouncycastle.crypto.generators.SCrypt;
+import tech.pegasys.signers.bls.keystore.KeyStoreValidationException;
 
 public class SCryptParam extends KdfParam {
   private final int n;
@@ -107,11 +105,11 @@ public class SCryptParam extends KdfParam {
   }
 
   @Override
-  public Bytes generateDecryptionKey(final String password) {
+  protected Bytes generateDecryptionKey(final Bytes password) {
     checkNotNull(password, "Password cannot be null");
     return Bytes.wrap(
         SCrypt.generate(
-            password.getBytes(UTF_8),
+            password.toArrayUnsafe(),
             getSalt().toArrayUnsafe(),
             getN(),
             getR(),
