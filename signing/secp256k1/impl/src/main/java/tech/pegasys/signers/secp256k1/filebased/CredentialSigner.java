@@ -27,15 +27,21 @@ public class CredentialSigner implements Signer {
 
   private final Credentials credentials;
   private final ECPublicKey publicKey;
+  private final boolean needToHash;
 
-  public CredentialSigner(final Credentials credentials) {
+  public CredentialSigner(final Credentials credentials, final boolean needToHash) {
     this.credentials = credentials;
     this.publicKey = EthPublicKeyUtils.createPublicKey(credentials.getEcKeyPair().getPublicKey());
+    this.needToHash = needToHash;
+  }
+
+  public CredentialSigner(final Credentials credentials) {
+    this(credentials, true);
   }
 
   @Override
   public Signature sign(final byte[] data) {
-    final SignatureData signature = Sign.signMessage(data, credentials.getEcKeyPair());
+    final SignatureData signature = Sign.signMessage(data, credentials.getEcKeyPair(), needToHash);
     return new Signature(
         new BigInteger(signature.getV()),
         new BigInteger(1, signature.getR()),

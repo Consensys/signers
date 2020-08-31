@@ -42,10 +42,13 @@ public class AzureKeyVaultSigner implements Signer {
   private final AzureConfig config;
   private final ECPublicKey publicKey;
   private final SignatureAlgorithm signingAlgo = SignatureAlgorithm.fromString("ECDSA256");
+  private final boolean needsToHash;
 
-  public AzureKeyVaultSigner(final AzureConfig config, final Bytes publicKey) {
+  public AzureKeyVaultSigner(
+      final AzureConfig config, final Bytes publicKey, final boolean needsToHash) {
     this.config = config;
     this.publicKey = EthPublicKeyUtils.createPublicKey(publicKey);
+    this.needsToHash = needsToHash;
   }
 
   @Override
@@ -65,8 +68,10 @@ public class AzureKeyVaultSigner implements Signer {
 
     final CryptographyClient cryptoClient =
         vault.fetchKey(config.getKeyName(), config.getKeyVersion());
-    final byte[] hash = Hash.sha3(data);
-    final SignResult result = cryptoClient.sign(signingAlgo, hash);
+
+    final byte[] dataToSign = needsToHash ? Hash.sha3(data) : data;
+    final SignResult result = cryptoClient.sign(signingAlgo, dataToSign);
+
     final byte[] signature = result.getSignature();
 
     if (signature.length != 64) {
@@ -87,7 +92,7 @@ public class AzureKeyVaultSigner implements Signer {
     final ECDSASignature canonicalSignature = initialSignature.toCanonicalised();
 
     // Now we have to work backwards to figure out the recId needed to recover the signature.
-    final int recId = recoverKeyIndex(canonicalSignature, hash);
+    final int recId = recoverKeyIndex(canonicalSignature, dataToSign);
     if (recId == -1) {
       throw new RuntimeException(
           "Could not construct a recoverable key. Are your credentials valid?");
