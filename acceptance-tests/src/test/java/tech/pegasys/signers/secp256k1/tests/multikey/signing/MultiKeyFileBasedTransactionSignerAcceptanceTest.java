@@ -44,7 +44,7 @@ public class MultiKeyFileBasedTransactionSignerAcceptanceTest
     createFileBasedTomlFileAt(
         tomlDirectory.resolve(FILENAME + ".toml"), keyPath, passwordPath.toString());
 
-    setup(tomlDirectory);
+    setup(tomlDirectory, Path.of(""));
     verifySignature();
   }
 }

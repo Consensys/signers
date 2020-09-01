@@ -40,7 +40,7 @@ class HashicorpBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase
   @Test
   void hashicorpSignerIsCreatedAndExpectedAddressIsReported(@TempDir final Path tempDir) {
     createHashicorpTomlFileAt(tempDir.resolve(PUBLIC_KEY_HEX_STRING + ".toml"), hashicorpNode);
-    setup(tempDir);
+    setup(tempDir, Path.of(""));
 
     assertThat(signerProvider.availablePublicKeys().stream().map(EthPublicKeyUtils::toHexString))
         .containsOnly("0x" + PUBLIC_KEY_HEX_STRING);

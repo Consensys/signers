@@ -1,0 +1,7 @@
+[metadata]
+createdAt = 2020-03-25T08:23:02.439983Z
+description = "Example of Cavium based configuration"
+
+[signing]
+type = "cavium-signer"
+address = "0x34a93e9b0AE1B808a83bAEe179264EFc6774C315"

@@ -48,7 +48,7 @@ class FileBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
                     .toURI())
             .getAbsolutePath());
 
-    setup(tomlDirectory);
+    setup(tomlDirectory, Path.of(""));
 
     assertThat(signerProvider.availablePublicKeys().stream().map(EthPublicKeyUtils::toHexString))
         .containsOnly("0x" + PUBLIC_KEY_HEX_STRING);
@@ -69,7 +69,7 @@ class FileBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestBase {
             .getAbsolutePath(),
         passwordFile.toString());
 
-    setup(tomlDirectory);
+    setup(tomlDirectory, Path.of(""));
 
     assertThat(signerProvider.availablePublicKeys().stream().map(EthPublicKeyUtils::toHexString))
         .containsOnly("0x" + PUBLIC_KEY_HEX_STRING);

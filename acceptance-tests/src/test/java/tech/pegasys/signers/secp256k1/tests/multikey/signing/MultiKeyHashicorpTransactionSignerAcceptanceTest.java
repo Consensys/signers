@@ -42,7 +42,7 @@ public class MultiKeyHashicorpTransactionSignerAcceptanceTest
 
     createHashicorpTomlFileAt(tomlDirectory.resolve(FILENAME + ".toml"), hashicorpNode);
 
-    setup(tomlDirectory);
+    setup(tomlDirectory, Path.of(""));
     verifySignature();
   }
 

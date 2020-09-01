@@ -44,7 +44,7 @@ public class MultiKeyAzureTransactionSignerAcceptanceTest
         clientSecret,
         keyVaultName,
         tenantId);
-    setup(tomlDirectory);
+    setup(tomlDirectory, Path.of(""));
     verifySignature();
   }
 }

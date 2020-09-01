@@ -1,8 +1,15 @@
 #Changelog
 
-## 1.0.4
+## Unreleased
+
 ### Features Added
-- Allowed CredentialSigner to hash (or not) the supplied data prior to siging
+- Added AWS CloudHSM signer
+- Added Generic PKCS11 signer
+
+## 1.0.4
+
+### Features Added
+- Allowed CredentialSigner to hash (or not) the supplied data prior to signing
 
 ### Bugs Fixed
 - N/A

@@ -31,6 +31,8 @@ dependencies {
   testImplementation 'org.bouncycastle:bcpkix-jdk15on'
 
   testImplementation project(':keystorage:hashicorp')
+  testImplementation project(':keystorage:hsm')
+  testImplementation project(':keystorage:cavium')
 
   testImplementation 'org.junit.jupiter:junit-jupiter-api'
   testImplementation 'io.vertx:vertx-core'
@@ -42,11 +44,15 @@ dependencies {
   testImplementation 'org.web3j:core'
   testImplementation project(':signing:secp256k1:api')
   testImplementation(testFixtures(project(":keystorage:hashicorp")))
+  testImplementation(testFixtures(project(":keystorage:hsm")))
+  testImplementation(testFixtures(project(":keystorage:cavium")))
   testImplementation(testFixtures(project(":signing:secp256k1:impl")))
 
   testFixturesImplementation 'org.apache.logging.log4j:log4j-api'
   testFixturesImplementation 'org.assertj:assertj-core'
   testFixturesImplementation(testFixtures(project(":keystorage:hashicorp")))
+  testFixturesImplementation(testFixtures(project(":keystorage:hsm")))
+  testFixturesImplementation(testFixtures(project(":keystorage:cavium")))
   testFixturesImplementation(testFixtures(project(":signing:secp256k1:impl")))
   testFixturesImplementation project(':signing:secp256k1:api')
 }

@@ -77,7 +77,7 @@ commands:
       - slack/status:
           fail_only: true
           only_for_branches: 'master'
-          
+
 jobs:
   build:
     executor: executor_large
@@ -102,7 +102,7 @@ jobs:
           no_output_timeout: 20m
           command: |
             ./gradlew --no-daemon --parallel acceptanceTest
-      - notify      
+      - notify
       - capture_test_results
       - capture_test_reports
       - save_cache:

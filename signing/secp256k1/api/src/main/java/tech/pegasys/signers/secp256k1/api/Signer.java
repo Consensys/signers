@@ -19,4 +19,6 @@ public interface Signer {
   Signature sign(final byte[] data);
 
   ECPublicKey getPublicKey();
+
+  default void shutdown() {}
 }

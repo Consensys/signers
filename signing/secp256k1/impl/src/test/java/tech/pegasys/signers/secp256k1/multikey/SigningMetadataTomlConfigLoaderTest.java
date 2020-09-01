@@ -34,7 +34,9 @@ import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.UNKNOW
 import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.copyMetadataFileToDirectory;
 
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.CaviumSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.HSMSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
 import java.nio.file.DirectoryStream.Filter;
@@ -238,5 +240,67 @@ class SigningMetadataTomlConfigLoaderTest {
         .isEqualTo(configsDirectory.resolve("./path/to/k.key"));
     assertThat(metadataFile.getConfig().getKeystorePasswordFile())
         .isEqualTo(configsDirectory.resolve("./path/to/p.password"));
+  }
+
+  @Test
+  void hsmConfigIsLoadedIfHSMMetadataFileInDirectory() {
+    copyFileIntoConfigDirectory("hsmconfig.toml");
+
+    final Collection<SigningMetadataFile> metadataFiles =
+        loader.loadAvailableSigningMetadataTomlConfigs(entry -> true);
+
+    assertThat(metadataFiles.size()).isOne();
+    assertThat(metadataFiles.toArray()[0]).isInstanceOf(HSMSigningMetadataFile.class);
+    final HSMSigningMetadataFile metadataFile = (HSMSigningMetadataFile) metadataFiles.toArray()[0];
+
+    assertThat(metadataFile.getConfig().getAddress())
+        .isEqualTo("0x34a93e9b0AE1B808a83bAEe179264EFc6774C315");
+    assertThat(metadataFile.getConfig().getSlot()).isEqualTo("992881475");
+  }
+
+  @Test
+  void hsmConfigWithMissingAddressFailsToLoad() {
+    copyFileIntoConfigDirectory("hsmconfig_missingAddress.toml");
+
+    final Collection<SigningMetadataFile> metadataFiles =
+        loader.loadAvailableSigningMetadataTomlConfigs(entry -> true);
+
+    assertThat(metadataFiles.size()).isZero();
+  }
+
+  @Test
+  void hsmConfigWithMissingSlotFailsToLoad() {
+    copyFileIntoConfigDirectory("hsmconfig_missingSlot.toml");
+
+    final Collection<SigningMetadataFile> metadataFiles =
+        loader.loadAvailableSigningMetadataTomlConfigs(entry -> true);
+
+    assertThat(metadataFiles.size()).isZero();
+  }
+
+  @Test
+  void caviumConfigIsLoadedIfHSMMetadataFileInDirectory() {
+    copyFileIntoConfigDirectory("caviumconfig.toml");
+
+    final Collection<SigningMetadataFile> metadataFiles =
+        loader.loadAvailableSigningMetadataTomlConfigs(entry -> true);
+
+    assertThat(metadataFiles.size()).isOne();
+    assertThat(metadataFiles.toArray()[0]).isInstanceOf(CaviumSigningMetadataFile.class);
+    final CaviumSigningMetadataFile metadataFile =
+        (CaviumSigningMetadataFile) metadataFiles.toArray()[0];
+
+    assertThat(metadataFile.getConfig().getAddress())
+        .isEqualTo("0x34a93e9b0AE1B808a83bAEe179264EFc6774C315");
+  }
+
+  @Test
+  void caviumConfigWithMissingAddressFailsToLoad() {
+    copyFileIntoConfigDirectory("caviumconfig_missingAddress.toml");
+
+    final Collection<SigningMetadataFile> metadataFiles =
+        loader.loadAvailableSigningMetadataTomlConfigs(entry -> true);
+
+    assertThat(metadataFiles.size()).isZero();
   }
 }
