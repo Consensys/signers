@@ -3,6 +3,7 @@
 ## 1.0.5
 ### Features Added
 - Applied new unicode normalization rules for EIP2335 keystore passwords. 
+- AzureKeyVaultSigner can be configured to not hash data prior to signing
 
 ## 1.0.4
 ### Features Added
