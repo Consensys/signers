@@ -31,6 +31,14 @@ public class PasswordUtils {
   }
 
   private static boolean isControlCode(final int c) {
-    return (0x00 <= c && c <= 0x1F) || (0x80 <= c && c <= 0x9F) || c == 0x7F;
+    return isC0(c) || isC1(c) || c == 0x7F;
+  }
+
+  private static boolean isC1(final int c) {
+    return 0x80 <= c && c <= 0x9F;
+  }
+
+  private static boolean isC0(final int c) {
+    return 0x00 <= c && c <= 0x1F;
   }
 }
