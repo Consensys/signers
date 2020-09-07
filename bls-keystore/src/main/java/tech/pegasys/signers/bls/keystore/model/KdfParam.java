@@ -15,6 +15,7 @@ package tech.pegasys.signers.bls.keystore.model;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import tech.pegasys.signers.bls.keystore.KeyStoreValidationException;
+import tech.pegasys.signers.bls.keystore.PasswordUtils;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
@@ -36,7 +37,11 @@ public abstract class KdfParam {
 
   public abstract KdfFunction getKdfFunction();
 
-  public abstract Bytes generateDecryptionKey(final String password);
+  public Bytes generateDecryptionKey(final String password) {
+    return generateDecryptionKey(PasswordUtils.normalizePassword(password));
+  }
+
+  protected abstract Bytes generateDecryptionKey(final Bytes password);
 
   public void validate() {
     checkNotNull(getSalt(), "salt cannot be null");
