@@ -27,14 +27,13 @@ and feel free to propose changes to this document in a pull request.
 ## Code of Conduct
 
 This project and everyone participating in it is governed by the [Signers Code of Conduct](CODE-OF-CONDUCT.md).
-By participating, you are expected to uphold this code. Please report unacceptable behavior to [private@pegasys.tech].
+By participating, you are expected to uphold this code. Please report unacceptable behavior to [private-quorum@consensys.net].
 
 ## I just have a quick question
 
 > **Note:** Please don't file an issue to ask a question.  You'll get faster results by using the resources below.
 
-* [Signers documentation]
-* [Gitter]
+* [Discord]
 
 ## How To Contribute
 ### Reporting Bugs
@@ -51,13 +50,12 @@ open a new issue and include a link to the original issue in the body of your ne
 
 #### Before Submitting A Bug Report
 * **Confirm the problem** is reproducible in the latest version of the software.
-* **Check [Signers documentation]**. You might be able to find the cause of the problem and fix things yourself. 
-* **Perform a cursory search of project issues in [Jira]** 
+* **Perform a cursory search of project issues in [Github]** 
 to see if the problem has already been reported. If it has **and the issue is still open**, add a comment 
 to the existing issue instead of opening a new one.
 
 #### How Do I Submit A (Good) Bug Report?
-Bugs are tracked as issues in [Jira].  
+Bugs are tracked as issues in [Github].  
 
 Explain the problem and include additional details to help maintainers reproduce the problem:
 
@@ -109,14 +107,13 @@ When you are creating an enhancement suggestion, please
 
 #### Before Submitting An Enhancement Suggestion
 
-* **Check the [Signers documentation].** You might be able to find the cause of the problem and fix things yourself. 
-* **Perform a cursory search of project issues in [Jira]** 
+* **Perform a cursory search of project issues in [Github]** 
 to see if the problem has already been reported. If it has **and the issue is still open**, add a comment 
 to the existing issue instead of opening a new one.
 
 #### How Do I Submit A (Good) Enhancement Suggestion?
 
-Enhancement suggestions are tracked as issues in [Jira].
+Enhancement suggestions are tracked as issues in [Github].
 Provide the following information:
 
 * **Use a clear and descriptive title** for the issue to identify the suggestion.
@@ -130,12 +127,12 @@ Provide the following information:
 * **Specify the name and version of the OS you're using.**
 
 ## Your First Contribution
-Start by looking through the 'good first issue' and 'help wanted' labeled issues on the [Jira] dashboard:
+Start by looking through the 'good first issue' and 'help wanted' labeled issues on the [Github] dashboard:
 * [Good First Issue][search-label-good-first-issue] - issues which should only require a few lines of code or documentation, 
 and a test or two.
 * [Help wanted issues][search-label-help-wanted] - issues which are a bit more involved than `good first issue` issues.
 
-When you've identified an issue you'd like to work on, ping us on [Gitter] and we'll assign it to you. 
+When you've identified an issue you'd like to work on, ping us on [Discord] and we'll assign it to you. 
 
 ### Contribution Workflow
 The codebase and documentation are maintained using the same "*contributor workflow*" where everyone 
@@ -158,11 +155,11 @@ For this reason do not mix any formatting fixes or code moves with actual code c
 another part of the software. Running the `./gradlew clean check test` command locally will help you
 to be confident that your changes will pass CI tests once pushed as a Pull Request.
 1. **Push your changes** to your remote fork (usually labeled as `origin`).
-1. **Create a pull-request** (PR) on the Signers repository. If the PR addresses an existing Jira issue, 
+1. **Create a pull-request** (PR) on the Signers repository. If the PR addresses an existing Github issue, 
 include the issue number in the PR title in square brackets (for example, `[ES-2374]`). 
 1. **Add labels** to identify the type of your PR. _For example, if your PR is not ready to validate,
 add the "work-in-progress" label. If it fixes a bug, add the "bug" label._
-1. If the PR address an existing Jira issue, comment in the Jira issue with the PR number. 
+1. If the PR address an existing Github issue, comment in the Github issue with the PR number. 
 1. **Ensure your changes are reviewed**.
 _Select the reviewers you would like to review your PR.
 If you don't know who to choose, simply select the reviewers proposed by GitHub or leave blank._
@@ -239,10 +236,9 @@ These are not strictly enforced during the build, but should be adhered to and c
 | [`requires-changes`][search-label-requires-changes]                     | Pull requests which need to be updated based on review comments and then reviewed again.   |
 | [`needs engineering approval`][search-label-needs-engineering-approval] | Pull requests which need to be approved from a technical person, mainly documentation PRs. |
 
-[private@pegasys.tech]: mailto:private@pegasys.tech
-[Gitter]: https://gitter.im/PegaSysEng/Signers
-[Jira]: https://pegasys1.atlassian.net/secure/Dashboard.jspa?selectPageId=10121
-[Signers documentation]: https://docs.signers.pegasys.tech/
+[private-quorum@consensys.net]: mailto:private-quorum@consensys.net
+[Discord]: https://discord.gg/ayPGzSG
+[Github]: https://github.com/PegaSysEng/signers/issues
 [CLA.md]: /CLA.md
 [Code Reviews]: /community/code-reviews.md
 [MkDocs]: https://www.mkdocs.org/
