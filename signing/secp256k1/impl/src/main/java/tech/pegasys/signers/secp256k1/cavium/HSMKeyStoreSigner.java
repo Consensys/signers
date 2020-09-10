@@ -22,6 +22,7 @@ import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyStore.PrivateKeyEntry;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -144,7 +145,7 @@ public class HSMKeyStoreSigner implements Signer {
   protected PrivateKey getPrivateKeyHandle() {
     checkArgument(
         provider.getKeyStore() != null, "SunPKCS11 key store provider is not initialized");
-    PrivateKey privateKey = provider.getKey(address);
+    Key privateKey = provider.getKey(address);
     if (privateKey == null) {
       PrivateKeyEntry privateKeyEntry;
       try {
@@ -159,7 +160,7 @@ public class HSMKeyStoreSigner implements Signer {
       privateKey = privateKeyEntry.getPrivateKey();
       provider.addKey(address, privateKey);
     }
-    return privateKey;
+    return (PrivateKey) privateKey;
   }
 
   protected PublicKey getPublicKeyHandle() {
