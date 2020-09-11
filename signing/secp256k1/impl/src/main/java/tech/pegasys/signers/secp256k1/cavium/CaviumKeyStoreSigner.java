@@ -16,6 +16,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import tech.pegasys.signers.cavium.HSMKeyStoreProvider;
 
+import java.security.Key;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -31,7 +32,7 @@ public class CaviumKeyStoreSigner extends HSMKeyStoreSigner {
   @Override
   protected PrivateKey getPrivateKeyHandle() {
     checkArgument(provider.getKeyStore() != null, "Cavium key store provider is not initialized");
-    PrivateKey privateKey = provider.getKey(address);
+    Key privateKey = provider.getKey(address);
     if (privateKey == null) {
       try {
         privateKey = (PrivateKey) provider.getKeyStore().getKey(address, "".toCharArray());
@@ -44,23 +45,26 @@ public class CaviumKeyStoreSigner extends HSMKeyStoreSigner {
       }
       provider.addKey(address, privateKey);
     }
-    return privateKey;
+    return (PrivateKey) privateKey;
   }
 
   @Override
   protected PublicKey getPublicKeyHandle() {
     checkArgument(provider.getKeyStore() != null, "Cavium key store provider is not initialized");
-    PublicKey publicKey = null;
-    try {
-      String alias = address.replaceFirst("0x", "1x");
-      publicKey = (PublicKey) provider.getKeyStore().getKey(alias, "".toCharArray());
-    } catch (NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException ex) {
-      LOG.trace(ex);
-      throw new RuntimeException("Failed to query key store");
-    }
+    String alias = address.replaceFirst("0x", "1x");
+    Key publicKey = provider.getKey(alias);
     if (publicKey == null) {
-      throw new RuntimeException("Failed to get public key from key store");
+      try {
+        publicKey = (PublicKey) provider.getKeyStore().getKey(alias, "".toCharArray());
+      } catch (NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException ex) {
+        LOG.trace(ex);
+        throw new RuntimeException("Failed to query key store");
+      }
+      if (publicKey == null) {
+        throw new RuntimeException("Failed to get public key from key store");
+      }
+      provider.addKey(alias, publicKey);
     }
-    return publicKey;
+    return (PublicKey) publicKey;
   }
 }

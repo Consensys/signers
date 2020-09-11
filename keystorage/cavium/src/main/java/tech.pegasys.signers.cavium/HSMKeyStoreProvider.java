@@ -17,9 +17,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.Key;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.Security;
 import java.security.cert.CertificateException;
@@ -48,7 +48,7 @@ public class HSMKeyStoreProvider {
   private String configName;
   protected String slotIndex;
   protected String slotPin;
-  private Cache<String, PrivateKey> cache =
+  private Cache<String, Key> cache =
       CacheBuilder.newBuilder().maximumSize(10).expireAfterWrite(10, TimeUnit.MINUTES).build();
 
   public HSMKeyStoreProvider() {}
@@ -123,11 +123,11 @@ public class HSMKeyStoreProvider {
     return slotIndex;
   }
 
-  public PrivateKey getKey(String address) {
-    return cache.getIfPresent(address);
+  public Key getKey(String alias) {
+    return cache.getIfPresent(alias);
   }
 
-  public void addKey(String address, PrivateKey privateKey) {
-    cache.put(address, privateKey);
+  public void addKey(String alias, Key privateKey) {
+    cache.put(alias, privateKey);
   }
 }
