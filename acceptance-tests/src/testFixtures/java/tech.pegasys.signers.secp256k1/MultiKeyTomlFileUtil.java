@@ -93,6 +93,15 @@ public class MultiKeyTomlFileUtil {
     }
   }
 
+  public static void createRawSignerTomlFileAt(final Path tomlPath, final String privKeyHexString) {
+    final String toml =
+        new TomlStringBuilder("signing")
+            .withQuotedString("type", "raw-signer")
+            .withQuotedString("priv-key", privKeyHexString)
+            .build();
+    createTomlFile(tomlPath, toml);
+  }
+
   private static void createTomlFile(final Path tomlPath, final String toml) {
     try {
       Files.writeString(tomlPath, toml);

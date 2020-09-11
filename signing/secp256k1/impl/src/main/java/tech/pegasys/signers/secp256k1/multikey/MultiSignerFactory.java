@@ -24,4 +24,6 @@ public interface MultiSignerFactory {
   Signer createSigner(FileBasedSigningMetadataFile metadataFile);
 
   Signer createSigner(HashicorpSigningMetadataFile metadataFile);
+
+  Signer createSigner(String privateKey);
 }

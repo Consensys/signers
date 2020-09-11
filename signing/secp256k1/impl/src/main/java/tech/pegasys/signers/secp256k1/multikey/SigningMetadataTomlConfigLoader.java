@@ -21,6 +21,7 @@ import tech.pegasys.signers.secp256k1.filebased.FileSignerConfig;
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HashicorpSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.RawSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
 import java.io.IOException;
@@ -72,6 +73,7 @@ public class SigningMetadataTomlConfigLoader {
     try (final DirectoryStream<Path> directoryStream =
         Files.newDirectoryStream(tomlConfigsDirectory, configFileSelector)) {
       for (final Path file : directoryStream) {
+        LOG.debug("Loading {}", file.toString());
         getMetadataInfo(file).ifPresent(metadataConfigs::add);
       }
       return ImmutableList.copyOf(metadataConfigs);
@@ -101,6 +103,8 @@ public class SigningMetadataTomlConfigLoader {
         return getAzureBasedSigningMetadataFromToml(file.getFileName().toString(), result);
       } else if (SignerType.fromString(type).equals(SignerType.HASHICORP_SIGNER)) {
         return getHashicorpMetadataFromToml(file, result);
+      } else if (SignerType.fromString(type).equals(SignerType.RAW_SIGNER)) {
+        return getRawMetadataFromToml(filename, result);
       } else {
         LOG.error("Unknown signing type in metadata: " + type);
         return Optional.empty();
@@ -113,6 +117,17 @@ public class SigningMetadataTomlConfigLoader {
       LOG.error("Could not load TOML file " + file, e);
       return Optional.empty();
     }
+  }
+
+  private Optional<SigningMetadataFile> getRawMetadataFromToml(
+      final String filename, final TomlParseResult result) {
+    final Optional<TomlTableAdapter> signingTable = getSigningTableFrom(filename, result);
+    if (signingTable.isEmpty()) {
+      return Optional.empty();
+    }
+    final TomlTableAdapter table = signingTable.get();
+    final String privateKeyHexString = table.getString("priv-key");
+    return Optional.of(new RawSigningMetadataFile(filename, privateKeyHexString));
   }
 
   private Optional<SigningMetadataFile> getFileBasedSigningMetadataFromToml(
