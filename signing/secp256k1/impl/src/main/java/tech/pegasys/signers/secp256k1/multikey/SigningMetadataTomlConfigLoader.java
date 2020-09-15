@@ -73,7 +73,6 @@ public class SigningMetadataTomlConfigLoader {
     try (final DirectoryStream<Path> directoryStream =
         Files.newDirectoryStream(tomlConfigsDirectory, configFileSelector)) {
       for (final Path file : directoryStream) {
-        LOG.debug("Loading {}", file.toString());
         getMetadataInfo(file).ifPresent(metadataConfigs::add);
       }
       return ImmutableList.copyOf(metadataConfigs);

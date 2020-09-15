@@ -98,7 +98,6 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   }
 
   private Signer createSigner(final SigningMetadataFile metadataFile) {
-    LOG.debug("Creating Signer from {}", metadataFile.getFilename());
     final Signer signer = metadataFile.createSigner(this);
     try {
       if ((signer != null)
