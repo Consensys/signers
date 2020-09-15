@@ -15,21 +15,12 @@ package tech.pegasys.signers.secp256k1.filebased;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.math.BigInteger;
 
-import java.nio.file.Path;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Hash;
-import org.web3j.crypto.Keys;
-import org.web3j.crypto.WalletUtils;
 
 class CredentialSignerTest {
 
@@ -46,21 +37,5 @@ class CredentialSignerTest {
         .isEqualTo(nonHashingSigner.getPublicKey().getEncoded());
     assertThat(hashingSigner.sign(data))
         .isEqualToComparingFieldByField(nonHashingSigner.sign(Hash.sha3(data)));
-  }
-
-  @Test
-  void timeRequiredToLoadSignerAndSignData(@TempDir Path testDir)
-      throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, CipherException, IOException {
-    final ECKeyPair keyPair = Keys.createEcKeyPair();
-    final String keyFilename =
-        WalletUtils.generateWalletFile("password", keyPair, testDir.toFile(), false);
-
-    final long startTime = System.currentTimeMillis();
-    final Credentials credentials =
-        WalletUtils.loadCredentials("password", testDir.resolve(keyFilename).toString());
-    System.out.printf("Time to load credentials = %dms%n", System.currentTimeMillis() - startTime);
-    final CredentialSigner signer = new CredentialSigner(credentials);
-    signer.sign("Hello World".getBytes(UTF_8));
-    System.out.printf("Total Time = %dms%n", System.currentTimeMillis() - startTime);
   }
 }
