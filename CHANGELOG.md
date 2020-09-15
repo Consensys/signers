@@ -1,5 +1,9 @@
 #Changelog
 
+## Unreleased
+### Features Added
+- "Raw" toml files can now be created (toml file contains a single private key hex string)
+
 ## 1.0.5
 ### Features Added
 - Applied new unicode normalization rules for EIP2335 keystore passwords. 
