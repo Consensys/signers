@@ -80,4 +80,12 @@ public class AzureKeyVaultTest {
         new AzureKeyVault(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
     assertThat(azureKeyVault.fetchSecret("X-" + SECRET_NAME)).isEmpty();
   }
+
+  @Test
+  void listSecretsProducesExpectedResult() {
+    final AzureKeyVault azureKeyVault =
+        new AzureKeyVault(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
+
+    assertThat(azureKeyVault.getAvailableSecrets()).contains(SECRET_NAME);
+  }
 }
