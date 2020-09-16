@@ -18,6 +18,7 @@ import tech.pegasys.signers.secp256k1.multikey.metadata.CaviumSigningMetadataFil
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HSMSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HashicorpSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.RawSigningMetadataFile;
 
 public interface MultiSignerFactory {
 
@@ -26,6 +27,8 @@ public interface MultiSignerFactory {
   Signer createSigner(FileBasedSigningMetadataFile metadataFile);
 
   Signer createSigner(HashicorpSigningMetadataFile metadataFile);
+
+  Signer createSigner(RawSigningMetadataFile metadataFile);
 
   Signer createSigner(HSMSigningMetadataFile metadataFile);
 
