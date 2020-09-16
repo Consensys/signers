@@ -16,6 +16,7 @@ import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HashicorpSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.RawSigningMetadataFile;
 
 public interface MultiSignerFactory {
 
@@ -24,4 +25,6 @@ public interface MultiSignerFactory {
   Signer createSigner(FileBasedSigningMetadataFile metadataFile);
 
   Signer createSigner(HashicorpSigningMetadataFile metadataFile);
+
+  Signer createSigner(RawSigningMetadataFile metadataFile);
 }

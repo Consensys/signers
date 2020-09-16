@@ -18,11 +18,13 @@ import tech.pegasys.signers.secp256k1.api.SignerProvider;
 import tech.pegasys.signers.secp256k1.azure.AzureConfig;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory;
 import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
+import tech.pegasys.signers.secp256k1.filebased.CredentialSigner;
 import tech.pegasys.signers.secp256k1.filebased.FileBasedSignerFactory;
 import tech.pegasys.signers.secp256k1.hashicorp.HashicorpSignerFactory;
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HashicorpSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.RawSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
 import java.io.IOException;
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.web3j.crypto.Credentials;
 
 public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactory {
 
@@ -140,6 +143,17 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
 
     } catch (final SignerInitializationException e) {
       LOG.error("Unable to construct Filebased signer from " + metadataFile.getFilename());
+      return null;
+    }
+  }
+
+  @Override
+  public Signer createSigner(final RawSigningMetadataFile metadataFile) {
+    try {
+      final Credentials credentials = Credentials.create(metadataFile.getPrivKey());
+      return new CredentialSigner(credentials);
+    } catch (final Exception e) {
+      LOG.error("Unable to construct raw signer from " + metadataFile.getFilename());
       return null;
     }
   }
