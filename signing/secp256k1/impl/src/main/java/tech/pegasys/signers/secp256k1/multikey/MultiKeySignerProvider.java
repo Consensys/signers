@@ -153,7 +153,7 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
       final Credentials credentials = Credentials.create(metadataFile.getPrivKey());
       return new CredentialSigner(credentials);
     } catch (final Exception e) {
-      LOG.error("Unable to construct Raw signer from " + metadataFile.getFilename());
+      LOG.error("Unable to construct raw signer from " + metadataFile.getFilename());
       return null;
     }
   }
