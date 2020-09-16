@@ -10,12 +10,15 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.signers.yubihsm2;
 
-rootProject.name='signers'
-include 'bls-keystore'
-include 'keystorage:hashicorp'
-include 'keystorage:azure'
-include 'keystorage:yubihsm2'
-include 'acceptance-tests'
-include 'signing:secp256k1:api'
-include 'signing:secp256k1:impl'
+import org.assertj.core.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
+
+class YubiHsm2Test {
+
+  @BeforeEach
+  void setup() {
+    Assumptions.assumeThat(true).isTrue();
+  }
+}

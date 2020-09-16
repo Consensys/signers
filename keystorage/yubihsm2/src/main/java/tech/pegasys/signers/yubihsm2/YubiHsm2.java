@@ -10,12 +10,11 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.signers.yubihsm2;
 
-rootProject.name='signers'
-include 'bls-keystore'
-include 'keystorage:hashicorp'
-include 'keystorage:azure'
-include 'keystorage:yubihsm2'
-include 'acceptance-tests'
-include 'signing:secp256k1:api'
-include 'signing:secp256k1:impl'
+/**
+ * Access secrets (BLS Keys) from Yubi HSM 2. https://developers.yubico.com/YubiHSM2/ This class
+ * uses yubihsm-shell which is a thin wrapper over libyubihsm. It is assumed that yubi hsm sdk is
+ * installed on the system.
+ */
+public class YubiHsm2 {}
