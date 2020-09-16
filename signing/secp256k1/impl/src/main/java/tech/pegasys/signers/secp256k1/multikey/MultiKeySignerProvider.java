@@ -24,6 +24,7 @@ import tech.pegasys.signers.secp256k1.hashicorp.HashicorpSignerFactory;
 import tech.pegasys.signers.secp256k1.multikey.metadata.AzureSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.HashicorpSigningMetadataFile;
+import tech.pegasys.signers.secp256k1.multikey.metadata.RawSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 
 import java.io.IOException;
@@ -147,12 +148,12 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   }
 
   @Override
-  public Signer createSigner(final String privateKey) {
+  public Signer createSigner(final RawSigningMetadataFile metadataFile) {
     try {
-      final Credentials credentials = Credentials.create(privateKey);
+      final Credentials credentials = Credentials.create(metadataFile.getPrivKey());
       return new CredentialSigner(credentials);
     } catch (final Exception e) {
-      LOG.error("Unable to construct Raw signer from {}", privateKey);
+      LOG.error("Unable to construct Raw signer from " +  metadataFile.getFilename());
       return null;
     }
   }

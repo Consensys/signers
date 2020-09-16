@@ -26,6 +26,10 @@ public class RawSigningMetadataFile extends SigningMetadataFile {
 
   @Override
   public Signer createSigner(final MultiSignerFactory factory) {
-    return factory.createSigner(privKey);
+    return factory.createSigner(this);
+  }
+
+  public String getPrivKey() {
+    return privKey;
   }
 }
