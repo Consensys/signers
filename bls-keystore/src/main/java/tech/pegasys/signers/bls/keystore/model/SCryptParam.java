@@ -13,7 +13,6 @@
 package tech.pegasys.signers.bls.keystore.model;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 import tech.pegasys.signers.bls.keystore.KeyStoreValidationException;
 
@@ -107,11 +106,11 @@ public class SCryptParam extends KdfParam {
   }
 
   @Override
-  public Bytes generateDecryptionKey(final String password) {
+  protected Bytes generateDecryptionKey(final Bytes password) {
     checkNotNull(password, "Password cannot be null");
     return Bytes.wrap(
         SCrypt.generate(
-            password.getBytes(UTF_8),
+            password.toArrayUnsafe(),
             getSalt().toArrayUnsafe(),
             getN(),
             getR(),

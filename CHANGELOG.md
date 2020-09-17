@@ -1,21 +1,27 @@
 #Changelog
 
-## 1.0.4-ADHARA
+## Unreleased
+### Features Added
+- "Raw" toml files can now be created (toml file contains a single private key hex string)
 
+## 1.0.5
+### Features Added
+- Applied new unicode normalization rules for EIP2335 keystore passwords. 
+- AzureKeyVaultSigner can be configured to not hash data prior to signing
+
+## 1.0.4-ADHARA
 ### Features Added
 - Added AWS CloudHSM signer
 - Added Generic PKCS11 signer
 
 ## 1.0.4
-
 ### Features Added
-- Allowed CredentialSigner to hash (or not) the supplied data prior to signing
+- Allowed CredentialSigner to hash (or not) the supplied data prior to siging
 
 ### Bugs Fixed
 - N/A
 
 ## 1.0.3
-
 ### Features Added
 - Changed signer's language from 'Address' to 'PublicKey'
 - Uses java security ECPublicKey to index signers

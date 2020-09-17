@@ -12,7 +12,9 @@
  */
 package tech.pegasys.signers.azure;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.azure.core.exception.ResourceNotFoundException;
 import com.azure.identity.ClientSecretCredential;
@@ -24,6 +26,7 @@ import com.azure.security.keyvault.keys.cryptography.CryptographyClientBuilder;
 import com.azure.security.keyvault.keys.models.KeyVaultKey;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
+import com.azure.security.keyvault.secrets.models.SecretProperties;
 
 public class AzureKeyVault {
 
@@ -77,5 +80,11 @@ public class AzureKeyVault {
 
   public static String constructAzureKeyVaultUrl(final String keyVaultName) {
     return String.format(AZURE_URL_PATTERN, keyVaultName);
+  }
+
+  public List<String> getAvailableSecrets() {
+    return secretClient.listPropertiesOfSecrets().stream()
+        .map(SecretProperties::getName)
+        .collect(Collectors.toList());
   }
 }

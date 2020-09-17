@@ -16,8 +16,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import tech.pegasys.signers.bls.keystore.KeyStoreValidationException;
 
-import java.nio.charset.StandardCharsets;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -76,11 +74,11 @@ public class Pbkdf2Param extends KdfParam {
   }
 
   @Override
-  public Bytes generateDecryptionKey(final String password) {
+  protected Bytes generateDecryptionKey(final Bytes password) {
     checkNotNull(password, "Password cannot be null");
     final PKCS5S2ParametersGenerator gen =
         new PKCS5S2ParametersGenerator(DigestFactory.createSHA256());
-    gen.init(password.getBytes(StandardCharsets.UTF_8), getSalt().toArrayUnsafe(), c);
+    gen.init(password.toArrayUnsafe(), getSalt().toArrayUnsafe(), c);
     final int keySizeInBits = getDkLen() * 8;
     final byte[] key = ((KeyParameter) gen.generateDerivedParameters(keySizeInBits)).getKey();
     return Bytes.wrap(key);
