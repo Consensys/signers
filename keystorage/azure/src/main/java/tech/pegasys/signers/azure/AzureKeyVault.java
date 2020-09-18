@@ -12,11 +12,16 @@
  */
 package tech.pegasys.signers.azure;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.azure.core.exception.ResourceNotFoundException;
+import com.azure.core.http.rest.PagedIterable;
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.security.keyvault.keys.KeyClient;
@@ -26,6 +31,7 @@ import com.azure.security.keyvault.keys.cryptography.CryptographyClientBuilder;
 import com.azure.security.keyvault.keys.models.KeyVaultKey;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
+import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
 import com.azure.security.keyvault.secrets.models.SecretProperties;
 
 public class AzureKeyVault {
@@ -86,5 +92,31 @@ public class AzureKeyVault {
     return secretClient.listPropertiesOfSecrets().stream()
         .map(SecretProperties::getName)
         .collect(Collectors.toList());
+  }
+
+  public <R> Collection<R> mapSecrets(final BiFunction<String, String, R> mapper) {
+    final PagedIterable<SecretProperties> secretsPagedIterable;
+    try {
+      secretsPagedIterable = secretClient.listPropertiesOfSecrets();
+    } catch (final Exception e) {
+      throw new RuntimeException(
+          "Failed to connect to an Azure Keyvault with provided configuration.", e);
+    }
+
+    final Set<R> result = ConcurrentHashMap.newKeySet();
+    secretsPagedIterable
+        .streamByPage()
+        .forEach(
+            keyPage ->
+                keyPage
+                    .getValue()
+                    .parallelStream()
+                    .forEach(
+                        sp -> {
+                          final KeyVaultSecret secret = secretClient.getSecret(sp.getName());
+                          result.add(mapper.apply(sp.getName(), secret.getValue()));
+                        }));
+
+    return result;
   }
 }
