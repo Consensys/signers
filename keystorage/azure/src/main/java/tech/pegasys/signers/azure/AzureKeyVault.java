@@ -124,11 +124,11 @@ public class AzureKeyVault {
                               result.add(obj);
                             } else {
                               LOG.warn(
-                                  "Mapped {} to a null object, and was discarded", sp.getName());
+                                  "Mapped '{}' to a null object, and was discarded", sp.getName());
                             }
                           } catch (final Exception e) {
                             LOG.warn(
-                                "Failed to map secret {} to requested object type.", sp.getName());
+                                "Failed to map secret '{}' to requested object type.", sp.getName());
                           }
                         }));
 
