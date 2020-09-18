@@ -103,4 +103,42 @@ public class AzureKeyVaultTest {
     assertThat(entries.stream().map(Entry::getKey)).containsOnly("MyBls", "TEST-KEY");
     assertThat(entries.stream().map(Entry::getValue)).containsOnly(EXPECTED_KEY, "BlsKey");
   }
+
+  @Test
+  void azureVaultThrowsAwayObjectsWhichFailMapper() {
+    final AzureKeyVault azureKeyVault =
+        new AzureKeyVault(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
+
+    Collection<SimpleEntry<String, String>> entries =
+        azureKeyVault.mapSecrets(
+            (name, value) -> {
+              if (name.equals("MyBls")) {
+                throw new RuntimeException("Arbitrary Failure");
+              }
+              return new SimpleEntry<>(name, value);
+            });
+
+    assertThat(entries).hasSize(1);
+    assertThat(entries.stream().map(Entry::getKey)).containsOnly("TEST-KEY");
+    assertThat(entries.stream().map(Entry::getValue)).containsOnly(EXPECTED_KEY);
+  }
+
+  @Test
+  void azureVaultThrowsAwayObjectsWhichMapToNull() {
+    final AzureKeyVault azureKeyVault =
+        new AzureKeyVault(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
+
+    Collection<SimpleEntry<String, String>> entries =
+        azureKeyVault.mapSecrets(
+            (name, value) -> {
+              if (name.equals("TEST-KEY")) {
+                return null;
+              }
+              return new SimpleEntry<>(name, value);
+            });
+
+    assertThat(entries).hasSize(1);
+    assertThat(entries.stream().map(Entry::getKey)).containsOnly("MyBls");
+    assertThat(entries.stream().map(Entry::getValue)).containsOnly("BlsKey");
+  }
 }
