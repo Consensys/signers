@@ -33,8 +33,12 @@ import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
 import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
 import com.azure.security.keyvault.secrets.models.SecretProperties;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class AzureKeyVault {
+
+  private static final Logger LOG = LogManager.getLogger();
 
   private final ClientSecretCredential clientSecretCredential;
   private final SecretClient secretClient;
@@ -113,8 +117,19 @@ public class AzureKeyVault {
                     .parallelStream()
                     .forEach(
                         sp -> {
-                          final KeyVaultSecret secret = secretClient.getSecret(sp.getName());
-                          result.add(mapper.apply(sp.getName(), secret.getValue()));
+                          try {
+                            final KeyVaultSecret secret = secretClient.getSecret(sp.getName());
+                            final R obj = mapper.apply(sp.getName(), secret.getValue());
+                            if (obj != null) {
+                              result.add(obj);
+                            } else {
+                              LOG.warn(
+                                  "Mapped {} to a null object, and was discarded", sp.getName());
+                            }
+                          } catch (final Exception e) {
+                            LOG.warn(
+                                "Failed to map secret {} to requested object type.", sp.getName());
+                          }
                         }));
 
     return result;
