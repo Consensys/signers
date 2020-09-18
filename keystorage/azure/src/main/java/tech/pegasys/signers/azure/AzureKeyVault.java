@@ -128,7 +128,8 @@ public class AzureKeyVault {
                             }
                           } catch (final Exception e) {
                             LOG.warn(
-                                "Failed to map secret '{}' to requested object type.", sp.getName());
+                                "Failed to map secret '{}' to requested object type.",
+                                sp.getName());
                           }
                         }));
 
