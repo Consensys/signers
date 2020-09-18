@@ -15,6 +15,12 @@ package tech.pegasys.signers.azure;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assumptions;
@@ -87,5 +93,17 @@ public class AzureKeyVaultTest {
         new AzureKeyVault(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
 
     assertThat(azureKeyVault.getAvailableSecrets()).contains(SECRET_NAME);
+  }
+
+  @Test
+  void secretsCanBeMappedUsingCustomMappingFunction() {
+    final AzureKeyVault azureKeyVault =
+        new AzureKeyVault(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
+
+    Collection<SimpleEntry<String, String>> entries = azureKeyVault.mapSecrets(SimpleEntry::new);
+
+    assertThat(entries).hasSize(2);
+    assertThat(entries.stream().map(Entry::getKey)).containsOnly("MyBls", "TEST-KEY");
+    assertThat(entries.stream().map(Entry::getValue)).containsOnly(EXPECTED_KEY, "BlsKey");
   }
 }
