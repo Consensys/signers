@@ -100,18 +100,18 @@ public class YubiHsm2Test {
   @Test
   public void errorIsReportedIfInvalidAuthPasswordIsUsed() {
     final YubiHsm2 yubiHsm2 =
-            new YubiHsm2(
-                    yubiHsmSimulatorBinArgs(),
-                    Optional.of(envVar()),
-                    "http://localhost:12345",
-                    SECONDARY_AUTH_KEY,
-                    DEFAULT_PASSWORD,
-                    Optional.empty(),
-                    Optional.empty());
+        new YubiHsm2(
+            yubiHsmSimulatorBinArgs(),
+            Optional.of(envVar()),
+            "http://localhost:12345",
+            SECONDARY_AUTH_KEY,
+            DEFAULT_PASSWORD,
+            Optional.empty(),
+            Optional.empty());
 
     assertThatExceptionOfType(YubiHsmException.class)
-            .isThrownBy(() -> yubiHsm2.fetchKey((short) 11))
-            .withMessage("Unable to fetch data from YubiHSM: Failed to open Session");
+        .isThrownBy(() -> yubiHsm2.fetchKey((short) 11))
+        .withMessage("Unable to fetch data from YubiHSM: Failed to open Session");
   }
 
   private static void addOpaqueData() throws IOException, TimeoutException, InterruptedException {
