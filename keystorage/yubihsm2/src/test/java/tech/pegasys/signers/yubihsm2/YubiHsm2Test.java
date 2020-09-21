@@ -12,77 +12,167 @@
  */
 package tech.pegasys.signers.yubihsm2;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
+import tech.pegasys.teku.bls.BLSKeyPair;
+
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.lang3.time.StopWatch;
-import org.assertj.core.api.Assertions;
-import org.assertj.core.api.Assumptions;
-import org.junit.jupiter.api.BeforeEach;
+import com.google.common.io.Resources;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-// manual dev test -
-// Make sure yubihsm2 is plugged in
-// for http/https url scheme, make sure connector daemon is running
-// for yhusb://serial=123456 url scheme, no connector daemon is required.
-// uncomment system properties in setup method and modify accordingly
-class YubiHsm2Test {
-  private YubiHsm2 yubiHsm2;
+public class YubiHsm2Test {
+  @TempDir static Path hsmDataDir;
+  private static final short DEFAULT_AUTH_KEY = (short) 1;
+  private static final String DEFAULT_PASSWORD = "password";
+  private static final short SECONDARY_AUTH_KEY = (short) 2;
+  private static final String SECONDARY_PASSWORD = "password2";
+  private static List<String> expectedKeys = new ArrayList<>(10);
 
-  @BeforeEach
-  void setup() {
-    // System.setProperty("yubihsmConnector", "yhusb://serial=123456");
-    // System.setProperty("yubiHsmAuthId", "2");
-    // System.setProperty("yubiHsmPassword", "password");
-    // System.setProperty("yubiHsmPath", "/Users/dev/yubihsm2-sdk/bin");
-
-    final String yubihsmConnector = System.getProperty("yubihsmConnector");
-    final String yubiHsmAuthId = System.getProperty("yubiHsmAuthId");
-    final String yubiHsmPassword = System.getProperty("yubiHsmPassword");
-    final String yubiShellPath = System.getProperty("yubiHsmPath");
-    final Optional<String> caCert = Optional.empty();
-    final Optional<String> proxy = Optional.empty();
-
-    Assumptions.assumeThat(yubihsmConnector).isNotEmpty();
-    Assumptions.assumeThat(yubiHsmAuthId).isNotEmpty();
-    Assumptions.assumeThat(yubiHsmPassword).isNotEmpty();
-    Assumptions.assumeThat(yubiShellPath).isNotEmpty();
-
-    yubiHsm2 =
-        new YubiHsm2(
-            yubihsmConnector,
-            Short.parseShort(yubiHsmAuthId),
-            yubiHsmPassword,
-            Optional.of(yubiShellPath),
-            caCert,
-            proxy);
+  @BeforeAll
+  static void initYubiHsmSimulator() throws IOException, TimeoutException, InterruptedException {
+    addSecondaryAuthKey();
+    addOpaqueData();
   }
 
   @Test
-  void validDataIsReturnedFromYubiHSM() {
-    final String[] expectedKeys =
-        new String[] {
-          "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f",
-          "73d51abbd89cb8196f0efb6892f94d68fccc2c35f0b84609e5f12c55dd85aba8",
-          "39722cbbf8b91a4b9045c5e6175f1001eac32f7fcd5eccda5c6e62fc4e638508",
-          "4c9326bb9805fa8f85882c12eae724cef0c62e118427f5948aefa5c428c43c93",
-          "384a62688ee1d9a01c9d58e303f2b3c9bc1885e8131565386f75f7ae6ca8d147",
-          "4b6b5c682f2db7e510e0c00ed67ac896c21b847acadd8df29cf63a77470989d2",
-          "13086d684f4b1a1632178a8c5be08a2fb01287c4a78313c41373701eb8e66232",
-          "25296867ee96fa5b275af1b72f699efcb61586565d4c3c7e41f4b3e692471abd",
-          "10e1a313e573d96abe701d8848742cf88166dd2ded38ac22267a05d1d62baf71",
-          "0bdeebbad8f9b240192635c42f40f2d02ee524c5a3fe8cda53fb4897b08c66fe",
-          "5e8d5667ce78982a07242739ab03dc63c91e830c80a5b6adca777e3f216a405d"
-        };
+  public void validKeysAreFetchedSuccessfully() {
+    final YubiHsm2 yubiHsm2 =
+        new YubiHsm2(
+            yubiHsmSimulatorBinArgs(),
+            Optional.of(envVar()),
+            "http://localhost:12345",
+            SECONDARY_AUTH_KEY,
+            SECONDARY_PASSWORD,
+            Optional.empty(),
+            Optional.empty());
 
-    final StopWatch stopWatch = new StopWatch();
-    for (int i = 0; i < expectedKeys.length; i++) {
-      stopWatch.start();
-      final String blsKey = yubiHsm2.fetchKey((short) (i + 4));
-      stopWatch.stop();
-      System.out.println("Fetched: " + blsKey + ", Time Taken:" + stopWatch.toString());
-      stopWatch.reset();
-
-      Assertions.assertThat(blsKey).isEqualToIgnoringCase(expectedKeys[i]);
+    for (int i = 1; i <= 10; i++) {
+      final String key = yubiHsm2.fetchKey((short) i);
+      assertThat(key).isEqualTo(expectedKeys.get(i - 1));
     }
+  }
+
+  @Test
+  public void errorIsReportedIfOpaqueObjectIdDoesNotExist() {
+    final YubiHsm2 yubiHsm2 =
+        new YubiHsm2(
+            yubiHsmSimulatorBinArgs(),
+            Optional.of(envVar()),
+            "http://localhost:12345",
+            SECONDARY_AUTH_KEY,
+            SECONDARY_PASSWORD,
+            Optional.empty(),
+            Optional.empty());
+
+    assertThatExceptionOfType(YubiHsmException.class)
+        .isThrownBy(() -> yubiHsm2.fetchKey((short) 11))
+        .withMessageContaining("Unable to get opaque object");
+  }
+
+  @Test
+  public void errorIsReportedIfInvalidAuthKeyIsUsed() {
+    final YubiHsm2 yubiHsm2 =
+        new YubiHsm2(
+            yubiHsmSimulatorBinArgs(),
+            Optional.of(envVar()),
+            "http://localhost:12345",
+            (short) 4,
+            SECONDARY_PASSWORD,
+            Optional.empty(),
+            Optional.empty());
+
+    assertThatExceptionOfType(YubiHsmException.class)
+        .isThrownBy(() -> yubiHsm2.fetchKey((short) 11))
+        .withMessage("Unable to fetch data from YubiHSM: Failed to open Session");
+  }
+
+  @Test
+  public void errorIsReportedIfInvalidAuthPasswordIsUsed() {
+    final YubiHsm2 yubiHsm2 =
+            new YubiHsm2(
+                    yubiHsmSimulatorBinArgs(),
+                    Optional.of(envVar()),
+                    "http://localhost:12345",
+                    SECONDARY_AUTH_KEY,
+                    DEFAULT_PASSWORD,
+                    Optional.empty(),
+                    Optional.empty());
+
+    assertThatExceptionOfType(YubiHsmException.class)
+            .isThrownBy(() -> yubiHsm2.fetchKey((short) 11))
+            .withMessage("Unable to fetch data from YubiHSM: Failed to open Session");
+  }
+
+  private static void addOpaqueData() throws IOException, TimeoutException, InterruptedException {
+    for (int i = 1; i <= 10; i++) {
+      final BLSKeyPair blsKeyPair = BLSKeyPair.random(i);
+      final String privateKeyStr = blsKeyPair.getSecretKey().toBytes().toUnprefixedHexString();
+      expectedKeys.add(privateKeyStr);
+      final List<String> args = addOpaqueArgs((short) i, privateKeyStr);
+      final String output = YubiHsm2.executeProcess(args, envVar(), SECONDARY_PASSWORD);
+      assertThat(output).contains(String.format("Stored Opaque object 0x%04X", i));
+    }
+  }
+
+  private static void addSecondaryAuthKey()
+      throws IOException, InterruptedException, TimeoutException {
+    final List<String> args = addAuthKeyArgs(SECONDARY_AUTH_KEY, SECONDARY_PASSWORD);
+    final String output = YubiHsm2.executeProcess(args, envVar(), DEFAULT_PASSWORD);
+    assertThat(output).contains("Stored Authentication key 0x0002");
+  }
+
+  private static List<String> addAuthKeyArgs(final short newAuthKeyId, final String newPassword) {
+    ArrayList<String> args = new ArrayList<>(yubiHsmSimulatorBinArgs());
+    args.addAll(
+        List.of(
+            "--connector=http://localhost:12345",
+            "--authkey=" + DEFAULT_AUTH_KEY,
+            "--action=put-authentication-key",
+            "--new-password=" + newPassword,
+            "--object-id=" + newAuthKeyId,
+            "--domains=1,2,3",
+            "--capabilities=get-opaque,put-opaque,delete-opaque,export-wrapped,get-pseudo-random,put-wrap-key,import-wrapped",
+            "--delegated=exportable-under-wrap,export-wrapped,import-wrapped"));
+    return args;
+  }
+
+  private static List<String> addOpaqueArgs(short objId, String hexData) {
+    ArrayList<String> args = new ArrayList<>(yubiHsmSimulatorBinArgs());
+    args.addAll(
+        List.of(
+            "--connector=http://localhost:12345",
+            "--authkey=" + SECONDARY_AUTH_KEY,
+            "--action=put-opaque",
+            "--object-id=" + objId,
+            "--domains=1,2,3",
+            "--algorithm=opaque-data",
+            "--capabilities=none",
+            "--informat=hex",
+            "--in=" + hexData));
+    return args;
+  }
+
+  private static Map<String, String> envVar() {
+    return Map.of("YUBI_SIM_DATA_DIR", hsmDataDir.toString());
+  }
+
+  private static List<String> yubiHsmSimulatorBinArgs() {
+    final URL simulatorSource = Resources.getResource("YubiShellSimulator.java");
+    return List.of(
+        Path.of(System.getProperty("java.home"), "bin", "java").toString(),
+        "-cp",
+        System.getProperty("java.class.path"),
+        simulatorSource.getPath());
   }
 }

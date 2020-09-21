@@ -68,5 +68,9 @@ dependencyManagement {
     dependency 'org.web3j:core:4.5.14'
 
     dependency 'org.zeroturnaround:zt-exec:1.11'
+
+    dependency 'info.picocli:picocli:4.5.1'
+
+    dependency 'tech.pegasys.teku.internal:bls:0.12.6'
   }
 }
