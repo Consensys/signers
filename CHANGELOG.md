@@ -1,5 +1,12 @@
 #Changelog
 
+## Unreleased (1.0.9)
+### Features Added
+- YubiHSM2 as keystore
+
+### Bugs Fixed
+- N/A
+
 ## 1.0.8
 ### Features Added
 - N/A

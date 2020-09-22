@@ -10,12 +10,23 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.signers.yubihsm2;
 
-rootProject.name='signers'
-include 'bls-keystore'
-include 'keystorage:hashicorp'
-include 'keystorage:azure'
-include 'keystorage:yubihsm2'
-include 'acceptance-tests'
-include 'signing:secp256k1:api'
-include 'signing:secp256k1:impl'
+public enum OutputFormat {
+  DEFAULT("default"),
+  BASE64("base64"),
+  BINARY("binary"),
+  PEM("PEM"),
+  HEX("hex"),
+  ASCII("ASCII");
+
+  private final String value;
+
+  OutputFormat(final String value) {
+    this.value = value;
+  }
+
+  public String getValue() {
+    return value;
+  }
+}
