@@ -37,7 +37,7 @@ dependencies {
   testImplementation 'com.google.guava:guava'
 
   // required for resources/YubiShellSimulator.java
-  testRuntimeOnly 'info.picocli:picocli:4.5.1'
+  testRuntimeOnly 'info.picocli:picocli'
 
   errorprone("com.google.errorprone:error_prone_core")
 }
