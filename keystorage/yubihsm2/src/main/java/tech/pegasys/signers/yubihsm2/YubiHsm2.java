@@ -12,18 +12,15 @@
  */
 package tech.pegasys.signers.yubihsm2;
 
+import static tech.pegasys.signers.yubihsm2.ProcessUtil.executeProcess;
+
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
-
-import org.apache.commons.io.IOUtils;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
 
 /**
  * Access secrets/opaque data from Yubi HSM 2. https://developers.yubico.com/YubiHSM2/. It is
@@ -35,8 +32,8 @@ public class YubiHsm2 {
   private final String connectorUrl;
   private final short authKey;
   private final String password;
-  private final Optional<String> caCert;
-  private final Optional<String> proxy;
+  private final Optional<String> caCertPath;
+  private final Optional<String> proxyUrl;
   private final Optional<Map<String, String>> additionalEnvVars;
 
   /**
@@ -47,8 +44,8 @@ public class YubiHsm2 {
    * @param connectorUrl YubiHSM connector URL. http://127.0.01:12345 or yhusb://serial=123456
    * @param authKeyObjId The auth key object id
    * @param password Password
-   * @param caCert Optional CA Cert if connector is running in https mode
-   * @param proxy Optional proxy url if a proxy should be used to access connector url
+   * @param caCertPath Optional CA Cert if connector is running in https mode
+   * @param proxyUrl Optional proxy url if a proxy should be used to access connector url
    */
   public YubiHsm2(
       final List<String> yubiHsmShellPathArgs,
@@ -56,28 +53,30 @@ public class YubiHsm2 {
       final String connectorUrl,
       final short authKeyObjId,
       final String password,
-      Optional<String> caCert,
-      Optional<String> proxy) {
+      Optional<String> caCertPath,
+      Optional<String> proxyUrl) {
     this.yubiHsmShellPathArgs = yubiHsmShellPathArgs;
     this.additionalEnvVars = additionalEnvVars;
     this.connectorUrl = connectorUrl;
     this.authKey = authKeyObjId;
     this.password = password;
-    this.caCert = caCert;
-    this.proxy = proxy;
+    this.caCertPath = caCertPath;
+    this.proxyUrl = proxyUrl;
   }
 
   /**
    * Fetch opaque data from yubi hsm 2
    *
-   * @param opaqueObjId The object id of opque
-   * @return The data stored against opaque object id (in hex format)
+   * @param opaqueObjId The object id of opaque data to retrieve
+   * @param outformat Optional output format to be passed to yubishell process.
+   * @return The data stored against opaque object id.
    * @throws YubiHsmException In case of errors in invoking process or if command returns error.
    */
-  public String fetchKey(final short opaqueObjId) throws YubiHsmException {
+  public String fetchOpaqueData(final short opaqueObjId, final Optional<OutputFormat> outformat)
+      throws YubiHsmException {
     try {
       return executeProcess(
-          getOpaqueDataArgs(opaqueObjId),
+          getOpaqueDataArgs(opaqueObjId, outformat),
           additionalEnvVars.orElse(Collections.emptyMap()),
           password);
     } catch (final IOException | TimeoutException | InterruptedException e) {
@@ -85,36 +84,16 @@ public class YubiHsm2 {
     }
   }
 
-  static String executeProcess(
-      final List<String> args, final Map<String, String> additionalEnvVars, String password)
-      throws IOException, TimeoutException, InterruptedException {
-    final ProcessResult processResult =
-        new ProcessExecutor()
-            .environment(additionalEnvVars)
-            .command(args)
-            .readOutput(true)
-            .redirectInput(IOUtils.toInputStream(password + "\n", StandardCharsets.UTF_8.name()))
-            .destroyOnExit()
-            .execute();
-
-    final List<String> linesAsUTF8 = processResult.getOutput().getLinesAsUTF8();
-    if (processResult.getExitValue() == 0) {
-      return linesAsUTF8.get(linesAsUTF8.size() - 1);
-    }
-
-    throw new YubiHsmException(
-        "Unable to fetch data from YubiHSM: " + linesAsUTF8.get(linesAsUTF8.size() - 1));
-  }
-
-  private List<String> getOpaqueDataArgs(final short opaqueObjectId) {
+  private List<String> getOpaqueDataArgs(
+      final short opaqueObjectId, final Optional<OutputFormat> outformat) {
     final ArrayList<String> args = new ArrayList<>(yubiHsmShellPathArgs);
     args.add("--connector=" + connectorUrl);
     args.add("--authkey=" + authKey);
     args.add("--object-id=" + opaqueObjectId);
     args.add("--action=get-opaque");
-    args.add("--outformat=hex");
-    caCert.ifPresent(s -> args.add("--cacert=" + s));
-    proxy.ifPresent(s -> args.add("--proxy=" + s));
+    args.add("--outformat=" + outformat.orElse(OutputFormat.DEFAULT).getValue());
+    caCertPath.ifPresent(s -> args.add("--cacert=" + s));
+    proxyUrl.ifPresent(s -> args.add("--proxy=" + s));
     return args;
   }
 }

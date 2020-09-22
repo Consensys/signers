@@ -35,9 +35,9 @@ dependencies {
   testImplementation 'org.mockito:mockito-core'
   testImplementation 'org.apache.commons:commons-lang3'
   testImplementation 'com.google.guava:guava'
-  testImplementation 'info.picocli:picocli'
-  testImplementation 'tech.pegasys.teku.internal:bls'
-  testImplementation 'org.apache.tuweni:tuweni-bytes'
+
+  // required for resources/YubiShellSimulator.java
+  testRuntimeOnly 'info.picocli:picocli:4.5.1'
 
   errorprone("com.google.errorprone:error_prone_core")
 }

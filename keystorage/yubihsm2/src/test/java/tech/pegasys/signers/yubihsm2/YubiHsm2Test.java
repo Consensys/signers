@@ -14,8 +14,7 @@ package tech.pegasys.signers.yubihsm2;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
-import tech.pegasys.teku.bls.BLSKeyPair;
+import static tech.pegasys.signers.yubihsm2.ProcessUtil.executeProcess;
 
 import java.io.IOException;
 import java.net.URL;
@@ -58,7 +57,7 @@ public class YubiHsm2Test {
             Optional.empty());
 
     for (int i = 1; i <= 10; i++) {
-      final String key = yubiHsm2.fetchKey((short) i);
+      final String key = yubiHsm2.fetchOpaqueData((short) i, Optional.of(OutputFormat.ASCII));
       assertThat(key).isEqualTo(expectedKeys.get(i - 1));
     }
   }
@@ -76,7 +75,7 @@ public class YubiHsm2Test {
             Optional.empty());
 
     assertThatExceptionOfType(YubiHsmException.class)
-        .isThrownBy(() -> yubiHsm2.fetchKey((short) 11))
+        .isThrownBy(() -> yubiHsm2.fetchOpaqueData((short) 11, Optional.of(OutputFormat.ASCII)))
         .withMessageContaining("Unable to get opaque object");
   }
 
@@ -93,7 +92,7 @@ public class YubiHsm2Test {
             Optional.empty());
 
     assertThatExceptionOfType(YubiHsmException.class)
-        .isThrownBy(() -> yubiHsm2.fetchKey((short) 11))
+        .isThrownBy(() -> yubiHsm2.fetchOpaqueData((short) 11, Optional.of(OutputFormat.ASCII)))
         .withMessage("Unable to fetch data from YubiHSM: Failed to open Session");
   }
 
@@ -110,17 +109,16 @@ public class YubiHsm2Test {
             Optional.empty());
 
     assertThatExceptionOfType(YubiHsmException.class)
-        .isThrownBy(() -> yubiHsm2.fetchKey((short) 11))
+        .isThrownBy(() -> yubiHsm2.fetchOpaqueData((short) 11, Optional.of(OutputFormat.ASCII)))
         .withMessage("Unable to fetch data from YubiHSM: Failed to open Session");
   }
 
   private static void addOpaqueData() throws IOException, TimeoutException, InterruptedException {
     for (int i = 1; i <= 10; i++) {
-      final BLSKeyPair blsKeyPair = BLSKeyPair.random(i);
-      final String privateKeyStr = blsKeyPair.getSecretKey().toBytes().toUnprefixedHexString();
+      final String privateKeyStr = "key" + i;
       expectedKeys.add(privateKeyStr);
       final List<String> args = addOpaqueArgs((short) i, privateKeyStr);
-      final String output = YubiHsm2.executeProcess(args, envVar(), SECONDARY_PASSWORD);
+      final String output = executeProcess(args, envVar(), SECONDARY_PASSWORD);
       assertThat(output).contains(String.format("Stored Opaque object 0x%04X", i));
     }
   }
@@ -128,7 +126,7 @@ public class YubiHsm2Test {
   private static void addSecondaryAuthKey()
       throws IOException, InterruptedException, TimeoutException {
     final List<String> args = addAuthKeyArgs(SECONDARY_AUTH_KEY, SECONDARY_PASSWORD);
-    final String output = YubiHsm2.executeProcess(args, envVar(), DEFAULT_PASSWORD);
+    final String output = executeProcess(args, envVar(), DEFAULT_PASSWORD);
     assertThat(output).contains("Stored Authentication key 0x0002");
   }
 
