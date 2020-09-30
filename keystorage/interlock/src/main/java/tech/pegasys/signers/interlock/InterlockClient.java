@@ -10,13 +10,6 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.signers.interlock;
 
-rootProject.name='signers'
-include 'bls-keystore'
-include 'keystorage:hashicorp'
-include 'keystorage:azure'
-include 'keystorage:yubihsm2'
-include 'keystorage:interlock'
-include 'acceptance-tests'
-include 'signing:secp256k1:api'
-include 'signing:secp256k1:impl'
+public class InterlockClient {}
