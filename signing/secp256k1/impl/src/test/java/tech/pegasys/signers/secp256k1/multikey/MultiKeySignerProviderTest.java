@@ -85,7 +85,7 @@ class MultiKeySignerProviderTest {
     } catch (Exception e) {
       fail("Error copying metadata files", e);
     }
-    signerFactory = new MultiKeySignerProvider(loader, null, fileSelector);
+    signerFactory = new MultiKeySignerProvider(loader, null, null, null, fileSelector);
   }
 
   @Test

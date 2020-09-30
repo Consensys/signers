@@ -1,5 +1,10 @@
 #Changelog
 
+## Unreleased
+### Features Added
+- Added AWS CloudHSM signer
+- Added Generic PKCS11 signer
+
 ## 1.0.9
 ### Features Added
 - YubiHSM2 as keystore
@@ -36,13 +41,12 @@
 
 ## 1.0.4
 ### Features Added
-- Allowed CredentialSigner to hash (or not) the supplied data prior to siging
+- Allowed CredentialSigner to hash (or not) the supplied data prior to signing
 
 ### Bugs Fixed
 - N/A
 
 ## 1.0.3
-
 ### Features Added
 - Changed signer's language from 'Address' to 'PublicKey'
 - Uses java security ECPublicKey to index signers

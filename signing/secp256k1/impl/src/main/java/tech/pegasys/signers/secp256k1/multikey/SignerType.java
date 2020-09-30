@@ -17,6 +17,8 @@ public enum SignerType {
   AZURE_SIGNER("azure-signer"),
   HASHICORP_SIGNER("hashicorp-signer"),
   RAW_SIGNER("raw-signer"),
+  HSM_SIGNER("hsm-signer"),
+  CAVIUM_SIGNER("cavium-signer"),
   UNKNOWN_TYPE_SIGNER("unknown");
 
   private final String type;

@@ -1,0 +1,7 @@
+[metadata]
+createdAt = 2020-03-25T08:23:02.439983Z
+description = "Example of HSM based configuration"
+
+[signing]
+type = "hsm-signer"
+slot = "992881475"

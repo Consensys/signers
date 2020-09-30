@@ -17,7 +17,7 @@ import java.text.SimpleDateFormat
 
 plugins {
   id 'java-test-fixtures'
-  id 'com.diffplug.gradle.spotless' version '3.27.1'
+  id 'com.diffplug.spotless' version '5.1.1'
   id 'com.jfrog.bintray' version '1.8.4'
   id 'com.github.ben-manes.versions' version '0.27.0'
   id 'com.github.hierynomus.license' version '0.15.0'
@@ -120,9 +120,12 @@ allprojects {
     maven { url  "https://consensys.bintray.com/pegasys-repo" }
   }
 
-  dependencies { errorprone("com.google.errorprone:error_prone_core") }
+  dependencies {
+    compile fileTree(dir: "${rootDir}/libs", include: "*.jar")
+    errorprone("com.google.errorprone:error_prone_core")
+  }
 
-  apply plugin: 'com.diffplug.gradle.spotless'
+  apply plugin: 'com.diffplug.spotless'
   spotless {
     java {
       // This path needs to be relative to each project
@@ -216,6 +219,7 @@ allprojects {
     jvmArgs = [
       '-Xmx4g',
       '-XX:-UseGCOverheadLimit',
+      "-Djava.library.path=/opt/cloudhsm/lib",
       // Mockito and jackson-databind do some strange reflection during tests.
       // This suppresses an illegal access warning.
       '--add-opens',
@@ -301,6 +305,7 @@ subprojects {
   tasks.withType(Test) {
     // If GRADLE_MAX_TEST_FORKS is not set, use half the available processors
     maxParallelForks = (System.getenv('GRADLE_MAX_TEST_FORKS') ?: (Runtime.runtime.availableProcessors().intdiv(2) ?: 1)).toInteger()
+    systemProperty "java.library.path", "/opt/cloudhsm/lib"
   }
 
   tasks.withType(JavaCompile) {
@@ -405,7 +410,9 @@ distributions {
   }
 }
 
-installDist { dependsOn checkLicenses }
+installDist {
+  dependsOn checkLicenses
+}
 
 distTar {
   dependsOn checkLicenses

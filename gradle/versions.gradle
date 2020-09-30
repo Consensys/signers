@@ -54,6 +54,7 @@ dependencyManagement {
 
     dependency 'org.bouncycastle:bcpkix-jdk15on:1.64'
     dependency 'org.bouncycastle:bcprov-jdk15on:1.64'
+    dependency 'org.xipki.iaik:sunpkcs11-wrapper:1.4.6'
 
     dependency 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     dependency 'org.junit.jupiter:junit-jupiter-engine:5.6.0'

@@ -49,7 +49,7 @@ public class AzureBasedTomlLoadingAcceptanceTest extends MultiKeyAcceptanceTestB
         keyVaultName,
         tenantId);
 
-    setup(tomlDirectory);
+    setup(tomlDirectory, Path.of(""));
 
     assertThat(signerProvider.availablePublicKeys().stream().map(EthPublicKeyUtils::toHexString))
         .containsOnly("0x" + PUBLIC_KEY_HEX_STRING);

@@ -102,6 +102,28 @@ public class MultiKeyTomlFileUtil {
     createTomlFile(tomlPath, toml);
   }
 
+  public static void createHSMTomlFileAt(
+      final Path tomlPath, final String address, final String slot) {
+    final String toml =
+        new TomlStringBuilder("signing")
+            .withQuotedString("type", "hsm-signer")
+            .withQuotedString("address", address)
+            .withQuotedString("slot", slot)
+            .build();
+
+    createTomlFile(tomlPath, toml);
+  }
+
+  public static void createCaviumTomlFileAt(final Path tomlPath, final String address) {
+    final String toml =
+        new TomlStringBuilder("signing")
+            .withQuotedString("type", "cavium-signer")
+            .withQuotedString("address", address)
+            .build();
+
+    createTomlFile(tomlPath, toml);
+  }
+
   private static void createTomlFile(final Path tomlPath, final String toml) {
     try {
       Files.writeString(tomlPath, toml);

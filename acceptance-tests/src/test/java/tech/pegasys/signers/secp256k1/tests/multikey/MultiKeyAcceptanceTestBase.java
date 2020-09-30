@@ -21,7 +21,8 @@ public class MultiKeyAcceptanceTestBase {
 
   protected MultiKeySignerProvider signerProvider;
 
-  protected void setup(final Path tomlDirectory) {
-    this.signerProvider = MultiKeySignerProvider.create(tomlDirectory, new DefaultFileSelector());
+  protected void setup(final Path tomlDirectory, final Path configFile) {
+    this.signerProvider =
+        MultiKeySignerProvider.create(tomlDirectory, configFile, new DefaultFileSelector());
   }
 }
