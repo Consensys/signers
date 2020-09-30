@@ -7,7 +7,6 @@
  */
 
 apply plugin: 'java-library'
-apply plugin: 'java-test-fixtures'
 
 jar {
   archiveBaseName = calculateJarName(project)
@@ -21,17 +20,10 @@ jar {
   }
 }
 
-testFixturesJar {
-  archiveBaseName = calculateJarName(project)
-}
-
 dependencies {
-  implementation 'io.vertx:vertx-core'
   implementation 'org.apache.logging.log4j:log4j-api'
-  implementation 'org.web3j:core'
-  implementation 'org.xipki.iaik:sunpkcs11-wrapper'
-  implementation 'org.apache.tuweni:tuweni-toml'
-  implementation 'org.apache.tuweni:tuweni-net'
+  implementation 'org.zeroturnaround:zt-exec'
+  implementation 'commons-io:commons-io'
 
   runtimeOnly 'org.apache.logging.log4j:log4j-core'
   runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
@@ -41,11 +33,11 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-api'
   testImplementation 'org.junit.jupiter:junit-jupiter-params'
   testImplementation 'org.mockito:mockito-core'
+  testImplementation 'org.apache.commons:commons-lang3'
+  testImplementation 'com.google.guava:guava'
 
-  integrationTestImplementation 'org.assertj:assertj-core'
-  integrationTestImplementation 'org.junit.jupiter:junit-jupiter-api'
-  integrationTestImplementation 'org.junit.jupiter:junit-jupiter-engine'
-  integrationTestImplementation 'org.mock-server:mockserver-netty'
+  // required for resources/YubiShellSimulator.java
+  testRuntimeOnly 'info.picocli:picocli'
 
   errorprone("com.google.errorprone:error_prone_core")
 }

@@ -19,11 +19,13 @@ dependencyManagement {
 
     dependency 'com.google.guava:guava:28.2-jre'
 
-    dependency 'com.azure:azure-security-keyvault-secrets:4.1.5'
+    dependency 'com.azure:azure-security-keyvault-secrets:4.2.1'
     dependency 'com.azure:azure-security-keyvault-keys:4.1.5'
     dependency 'com.azure:azure-identity:1.0.9'
 
     dependency 'commons-cli:commons-cli:1.4'
+
+    dependency 'commons-io:commons-io:2.8.0'
 
     dependency 'io.rest-assured:rest-assured:4.2.0'
 
@@ -34,6 +36,8 @@ dependencyManagement {
     dependency 'io.vertx:vertx-web:3.8.2'
 
     dependency 'javax.activation:activation:1.1.1'
+
+    dependency 'org.apache.commons:commons-lang3:3.11'
 
     dependency 'org.apache.logging.log4j:log4j-api:2.13.0'
     dependency 'org.apache.logging.log4j:log4j-core:2.13.0'
@@ -65,5 +69,7 @@ dependencyManagement {
     dependency 'org.web3j:core:4.5.14'
 
     dependency 'org.zeroturnaround:zt-exec:1.11'
+
+    dependency 'info.picocli:picocli:4.5.1'
   }
 }
