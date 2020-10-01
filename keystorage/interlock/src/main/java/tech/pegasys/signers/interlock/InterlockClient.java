@@ -15,9 +15,14 @@ package tech.pegasys.signers.interlock;
 import static io.vertx.core.http.HttpHeaders.COOKIE;
 import static tech.pegasys.signers.interlock.model.ApiAuth.XSRF_TOKEN_HEADER;
 
+import tech.pegasys.signers.interlock.handlers.FileDownloadHandler;
+import tech.pegasys.signers.interlock.handlers.FileDownloadIdHandler;
 import tech.pegasys.signers.interlock.handlers.LoginHandler;
 import tech.pegasys.signers.interlock.handlers.LogoutHandler;
 import tech.pegasys.signers.interlock.model.ApiAuth;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpHeaders;
@@ -54,6 +59,44 @@ public class InterlockClient {
         .end(loginHandler.body(volume, password));
 
     return loginHandler.waitForResponse();
+  }
+
+  /**
+   * Fetch contents of file from given path
+   *
+   * @param apiAuth Instance of ApiAuth returned from login call
+   * @param path The path to the file containing the private key. For instance /bls/key1.txt
+   * @return contents of file as String
+   */
+  public String fetchKey(final ApiAuth apiAuth, final String path) {
+    final String downloadId = fetchDownloadId(apiAuth, path);
+
+    // fetch actual file contents
+    final FileDownloadHandler fileDownloadHandler = new FileDownloadHandler();
+    httpClient
+        .get("/api/file/download?" + downloadIdQueryParam(downloadId), fileDownloadHandler::handle)
+        .exceptionHandler(fileDownloadHandler::handle)
+        .putHeader(COOKIE.toString(), apiAuth.getCookies())
+        .end();
+
+    return fileDownloadHandler.waitForResponse();
+  }
+
+  private String fetchDownloadId(final ApiAuth apiAuth, final String path) {
+    final FileDownloadIdHandler fileDownloadIdHandler = new FileDownloadIdHandler();
+    httpClient
+        .post("/api/file/download", fileDownloadIdHandler::handle)
+        .exceptionHandler(fileDownloadIdHandler::handle)
+        .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+        .putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken())
+        .putHeader(COOKIE.toString(), apiAuth.getCookies())
+        .end(fileDownloadIdHandler.body(path));
+
+    return fileDownloadIdHandler.waitForResponse();
+  }
+
+  private String downloadIdQueryParam(final String downloadId) {
+    return "id=" + URLEncoder.encode(downloadId, StandardCharsets.UTF_8);
   }
 
   /**

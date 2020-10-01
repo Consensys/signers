@@ -60,6 +60,7 @@ public class VertxHttpClientFactory {
             .setDefaultHost(this.host)
             .setDefaultPort(this.port)
             .setTryUseCompression(true)
+            .setConnectTimeout(10_000)
             .setSsl(true)
             .setTrustOptions(trustServerOnFirstUse(serverWhitelist.toAbsolutePath(), true));
 
