@@ -12,6 +12,39 @@
  */
 package tech.pegasys.signers.interlock;
 
-import junit.framework.TestCase;
+import tech.pegasys.signers.interlock.model.ApiAuth;
 
-public class InterlockClientTest extends TestCase {}
+import java.nio.file.Path;
+
+import io.vertx.core.Vertx;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+@Disabled("Required access to actual Usb Armory")
+public class InterlockClientTest {
+  private static Vertx vertx;
+  @TempDir Path tempDir;
+
+  @BeforeAll
+  static void beforeAll() {
+    vertx = Vertx.vertx();
+  }
+
+  @AfterAll
+  static void afterAll() {
+    vertx.close();
+  }
+
+  @Test
+  void successfullyLoginAndLogout() {
+    final Path whitelistFile = tempDir.resolve("whitelist.txt");
+    final VertxHttpClientFactory vertxHttpClientFactory =
+        new VertxHttpClientFactory(vertx, "10.0.0.1", 443, whitelistFile);
+    final InterlockClient interlockClient = new InterlockClient(vertxHttpClientFactory);
+    final ApiAuth apiAuth = interlockClient.login("armory", "usbarmory");
+    interlockClient.logout(apiAuth);
+  }
+}

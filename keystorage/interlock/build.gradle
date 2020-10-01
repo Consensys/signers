@@ -9,30 +9,38 @@
 apply plugin: 'java-library'
 
 jar {
-    archiveBaseName = calculateJarName(project)
-    manifest {
-        attributes(
-                'Specification-Title': archiveBaseName.get(),
-                'Specification-Version': rootProject.version,
-                'Implementation-Title': archiveBaseName.get(),
-                'Implementation-Version': calculateVersion()
-        )
-    }
+  archiveBaseName = calculateJarName(project)
+  manifest {
+    attributes(
+      'Specification-Title': archiveBaseName.get(),
+      'Specification-Version': rootProject.version,
+      'Implementation-Title': archiveBaseName.get(),
+      'Implementation-Version': calculateVersion()
+      )
+  }
 }
 
 dependencies {
-    implementation 'io.vertx:vertx-core'
-    implementation 'org.apache.logging.log4j:log4j-api'
+  implementation 'io.vertx:vertx-core'
+  implementation 'org.apache.logging.log4j:log4j-api'
 
-    implementation 'org.apache.tuweni:tuweni-toml'
-    implementation 'org.apache.tuweni:tuweni-net'
+  implementation 'org.apache.tuweni:tuweni-toml'
+  implementation 'org.apache.tuweni:tuweni-net'
 
-    runtimeOnly 'org.apache.logging.log4j:log4j-core'
-    runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
+  runtimeOnly 'org.apache.logging.log4j:log4j-core'
+  runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
+  runtimeOnly 'org.bouncycastle:bcpkix-jdk15on'
+  runtimeOnly 'org.bouncycastle:bcprov-jdk15on'
 
-    testImplementation 'org.assertj:assertj-core'
-    testImplementation 'org.junit.jupiter:junit-jupiter-engine'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params'
-    testImplementation 'org.mockito:mockito-core'
+  testImplementation 'org.assertj:assertj-core'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params'
+  testImplementation 'org.mockito:mockito-core'
+
+  testRuntimeOnly 'org.bouncycastle:bcpkix-jdk15on'
+  testRuntimeOnly 'org.bouncycastle:bcprov-jdk15on'
+  testRuntimeOnly 'org.apache.logging.log4j:log4j-core'
+  testRuntimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
+  testRuntimeOnly 'org.apache.logging.log4j:log4j-api'
 }
