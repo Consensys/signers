@@ -19,11 +19,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import io.vertx.core.http.HttpClientResponse;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class FileDownloadHandler {
-  private static final Logger LOG = LogManager.getLogger();
   private final CompletableFuture<String> responseFuture = new CompletableFuture<>();
   private final ExceptionConverter exceptionConverter = new ExceptionConverter();
 

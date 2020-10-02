@@ -21,11 +21,8 @@ import java.util.concurrent.ExecutionException;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class FileSizeHandler {
-  private static final Logger LOG = LogManager.getLogger();
   private final CompletableFuture<Long> responseFuture = new CompletableFuture<>();
   private final ExceptionConverter exceptionConverter = new ExceptionConverter();
   private final String path;
@@ -46,7 +43,6 @@ public class FileSizeHandler {
         buffer -> {
           try {
             final JsonObject json = new JsonObject(buffer);
-            LOG.debug(json.encodePrettily());
 
             final String status = json.getString("status");
             if (!status.equals("OK")) {
