@@ -24,13 +24,13 @@ import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class FileListHandler {
+public class FileSizeHandler {
   private static final Logger LOG = LogManager.getLogger();
   private final CompletableFuture<Long> responseFuture = new CompletableFuture<>();
   private final ExceptionConverter exceptionConverter = new ExceptionConverter();
   private final String path;
 
-  public FileListHandler(final String path) {
+  public FileSizeHandler(final String path) {
     this.path = path;
   }
 

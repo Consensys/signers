@@ -19,7 +19,7 @@ import tech.pegasys.signers.interlock.handlers.FileDecryptHandler;
 import tech.pegasys.signers.interlock.handlers.FileDeleteHandler;
 import tech.pegasys.signers.interlock.handlers.FileDownloadHandler;
 import tech.pegasys.signers.interlock.handlers.FileDownloadIdHandler;
-import tech.pegasys.signers.interlock.handlers.FileListHandler;
+import tech.pegasys.signers.interlock.handlers.FileSizeHandler;
 import tech.pegasys.signers.interlock.handlers.LoginHandler;
 import tech.pegasys.signers.interlock.handlers.LogoutHandler;
 import tech.pegasys.signers.interlock.model.ApiAuth;
@@ -139,7 +139,8 @@ public class InterlockClient {
       ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
       for (int i = 0; i < 2; i++) {
         final ScheduledFuture<Long> future =
-            executor.schedule(() -> list(apiAuth, decryptedFilePath), 200, TimeUnit.MILLISECONDS);
+            executor.schedule(
+                () -> fileSize(apiAuth, decryptedFilePath), 200, TimeUnit.MILLISECONDS);
         final Long decryptedFileSize = future.get();
         LOG.debug("decrypted File size: {}", decryptedFileSize);
         if (decryptedFileSize > 0) {
@@ -223,9 +224,9 @@ public class InterlockClient {
     return fileDownloadIdHandler.waitForResponse();
   }
 
-  private Long list(final ApiAuth apiAuth, final String path) {
+  private Long fileSize(final ApiAuth apiAuth, final String path) {
     LOG.debug("list path {}", path);
-    final FileListHandler handler = new FileListHandler(path);
+    final FileSizeHandler handler = new FileSizeHandler(path);
     httpClient
         .post("/api/file/list", handler::handle)
         .exceptionHandler(handler::handle)
