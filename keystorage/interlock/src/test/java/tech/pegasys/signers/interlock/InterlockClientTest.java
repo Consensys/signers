@@ -15,6 +15,7 @@ package tech.pegasys.signers.interlock;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import tech.pegasys.signers.interlock.model.ApiAuth;
+import tech.pegasys.signers.interlock.model.Cipher;
 
 import java.nio.file.Path;
 
@@ -41,20 +42,20 @@ public class InterlockClientTest {
   }
 
   @Test
-  void successfullyFetchKey() {
+  void successfullyDecryptAndFetchKey() {
     final Path whitelistFile = tempDir.resolve("whitelist.txt");
     final VertxHttpClientFactory vertxHttpClientFactory =
         new VertxHttpClientFactory(vertx, "10.0.0.1", 443, whitelistFile);
     final InterlockClient interlockClient = new InterlockClient(vertxHttpClientFactory);
     final ApiAuth apiAuth = interlockClient.login("armory", "usbarmory");
 
-    try {
-      final String blsKey = interlockClient.fetchKey(apiAuth, "/bls/key1.txt");
-      assertThat(blsKey)
-          .isEqualTo("3ee2224386c82ffea477e2adf28a2929f5c349165a4196158c7f3a2ecca40f35")
-          .as("BLS Key");
-    } finally {
-      interlockClient.logout(apiAuth);
-    }
+    final String blsKey =
+        interlockClient.fetchKey(
+            apiAuth, "/bls/key1.txt.pgp", Cipher.OPENPGP, "", "/keys/pgp/private/test.armor");
+    assertThat(blsKey)
+        .isEqualTo("3ee2224386c82ffea477e2adf28a2929f5c349165a4196158c7f3a2ecca40f35")
+        .as("BLS Key");
+
+    interlockClient.logout(apiAuth);
   }
 }

@@ -44,7 +44,7 @@ public class LoginHandler {
             final JsonObject json = new JsonObject(buffer);
             final String status = json.getString("status");
             if (!status.equals("OK")) {
-              handle(new InterlockClientException("Login failed."));
+              handle(new InterlockClientException("Login failed with status " + status));
             }
 
             // response.XSRFToken and cookies

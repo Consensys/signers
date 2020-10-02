@@ -18,9 +18,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class LogoutHandler {
+public class FileDeleteHandler {
   private final CompletableFuture<Void> responseFuture = new CompletableFuture<>();
   private final ExceptionConverter exceptionConverter = new ExceptionConverter();
 
@@ -28,7 +29,7 @@ public class LogoutHandler {
     if (response.statusCode() != 200) {
       responseFuture.completeExceptionally(
           new InterlockClientException(
-              "Unexpected Logout response status code " + response.statusCode()));
+              "File Delete unexpected response status code " + response.statusCode()));
       return;
     }
 
@@ -38,7 +39,8 @@ public class LogoutHandler {
             final JsonObject json = new JsonObject(buffer);
             final String status = json.getString("status");
             if (!status.equals("OK")) {
-              handle(new InterlockClientException("Logout failed with status " + status));
+              final String jsonResponse = json.getJsonArray("response").encode();
+              handle(new InterlockClientException("File Delete failed: " + jsonResponse));
             }
 
             responseFuture.complete(null);
@@ -60,5 +62,9 @@ public class LogoutHandler {
     } catch (final ExecutionException e) {
       throw exceptionConverter.apply(e);
     }
+  }
+
+  public String body(final String path) {
+    return new JsonObject().put("path", new JsonArray().add(path)).encode();
   }
 }
