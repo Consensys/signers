@@ -16,8 +16,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import tech.pegasys.signers.interlock.model.ApiAuth;
 import tech.pegasys.signers.interlock.model.Cipher;
+import tech.pegasys.signers.interlock.model.DecryptCredentials;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 import io.vertx.core.Vertx;
 import org.junit.jupiter.api.AfterAll;
@@ -49,9 +51,11 @@ public class InterlockClientTest {
     final InterlockClient interlockClient = new InterlockClient(vertxHttpClientFactory);
     final ApiAuth apiAuth = interlockClient.login("armory", "usbarmory");
 
+    final DecryptCredentials decryptCredentials =
+        new DecryptCredentials(Cipher.OPENPGP, Path.of("/keys/pgp/private/test.armor"));
     final String blsKey =
         interlockClient.fetchKey(
-            apiAuth, "/bls/key1.txt.pgp", Cipher.OPENPGP, "", "/keys/pgp/private/test.armor");
+            apiAuth, Path.of("/bls/key1.txt.pgp"), Optional.of(decryptCredentials));
     assertThat(blsKey)
         .isEqualTo("3ee2224386c82ffea477e2adf28a2929f5c349165a4196158c7f3a2ecca40f35")
         .as("BLS Key");

@@ -12,53 +12,22 @@
  */
 package tech.pegasys.signers.interlock.handlers;
 
-import tech.pegasys.signers.interlock.InterlockClientException;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-
-import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonObject;
 
-public class LogoutHandler {
-  private final CompletableFuture<Void> responseFuture = new CompletableFuture<>();
-  private final ExceptionConverter exceptionConverter = new ExceptionConverter();
+public class LogoutHandler extends AbstractHandler<Void> {
 
-  public void handle(final HttpClientResponse response) {
-    if (response.statusCode() != 200) {
-      responseFuture.completeExceptionally(
-          new InterlockClientException(
-              "Unexpected Logout response status code " + response.statusCode()));
-      return;
-    }
-
-    response.bodyHandler(
-        buffer -> {
-          try {
-            final JsonObject json = new JsonObject(buffer);
-            final String status = json.getString("status");
-            if (!status.equals("OK")) {
-              handle(new InterlockClientException("Logout failed with status " + status));
-            }
-
-            responseFuture.complete(null);
-          } catch (final RuntimeException e) {
-            handle(e);
-          }
-        });
+  public LogoutHandler() {
+    super("logout");
   }
 
-  public void handle(final Throwable ex) {
-    responseFuture.completeExceptionally(ex);
+  @Override
+  protected Void processJsonResponse(final JsonObject json, final MultiMap headers) {
+    return null;
   }
 
-  public Void waitForResponse() {
-    try {
-      return responseFuture.get();
-    } catch (final InterruptedException e) {
-      throw new InterlockClientException(getClass().getSimpleName() + " thread interrupted.", e);
-    } catch (final ExecutionException e) {
-      throw exceptionConverter.apply(e);
-    }
+  @Override
+  public String body() {
+    return "";
   }
 }

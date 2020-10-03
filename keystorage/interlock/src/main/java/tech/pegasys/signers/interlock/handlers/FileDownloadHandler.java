@@ -15,46 +15,44 @@ package tech.pegasys.signers.interlock.handlers;
 import tech.pegasys.signers.interlock.InterlockClientException;
 
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.json.JsonObject;
 
-public class FileDownloadHandler {
-  private final CompletableFuture<String> responseFuture = new CompletableFuture<>();
-  private final ExceptionConverter exceptionConverter = new ExceptionConverter();
+public class FileDownloadHandler extends AbstractHandler<String> {
 
+  public FileDownloadHandler() {
+    super("File Download");
+  }
+
+  @Override
+  protected String processJsonResponse(final JsonObject json, final MultiMap headers) {
+    return null;
+  }
+
+  @Override
+  public String body() {
+    return null;
+  }
+
+  @Override
   public void handle(final HttpClientResponse response) {
     if (response.statusCode() != 200) {
-      responseFuture.completeExceptionally(
-          new InterlockClientException(
-              "Unexpected file download response status code " + response.statusCode()));
+      getResponseFuture()
+          .completeExceptionally(
+              new InterlockClientException(
+                  "Unexpected file download response status code " + response.statusCode()));
       return;
     }
 
     response.bodyHandler(
         buffer -> {
           try {
-            responseFuture.complete(buffer.toString(StandardCharsets.UTF_8));
-
-            // TODO: Failure case where file is encrypted or 0 bytes??
+            getResponseFuture().complete(buffer.toString(StandardCharsets.UTF_8));
           } catch (final RuntimeException e) {
             handle(e);
           }
         });
-  }
-
-  public void handle(final Throwable ex) {
-    responseFuture.completeExceptionally(ex);
-  }
-
-  public String waitForResponse() {
-    try {
-      return responseFuture.get();
-    } catch (final InterruptedException e) {
-      throw new InterlockClientException(getClass().getSimpleName() + " thread interrupted.", e);
-    } catch (final ExecutionException e) {
-      throw exceptionConverter.apply(e);
-    }
   }
 }

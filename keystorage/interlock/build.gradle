@@ -27,6 +27,7 @@ dependencies {
   implementation 'org.apache.tuweni:tuweni-toml'
   implementation 'org.apache.tuweni:tuweni-net'
   implementation 'org.apache.commons:commons-lang3'
+  implementation 'commons-io:commons-io'
 
   runtimeOnly 'org.apache.logging.log4j:log4j-core'
   runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'

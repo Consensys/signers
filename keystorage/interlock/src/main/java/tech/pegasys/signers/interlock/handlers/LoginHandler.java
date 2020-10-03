@@ -12,64 +12,32 @@
  */
 package tech.pegasys.signers.interlock.handlers;
 
-import tech.pegasys.signers.interlock.InterlockClientException;
 import tech.pegasys.signers.interlock.model.ApiAuth;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
-import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 
-public class LoginHandler {
-  private final CompletableFuture<ApiAuth> responseFuture = new CompletableFuture<>();
-  private final ExceptionConverter exceptionConverter = new ExceptionConverter();
+public class LoginHandler extends AbstractHandler<ApiAuth> {
+  private final String volume;
+  private final String password;
 
-  public void handle(final HttpClientResponse response) {
-    if (response.statusCode() != 200) {
-      responseFuture.completeExceptionally(
-          new InterlockClientException(
-              "Unexpected Login response status code " + response.statusCode()));
-      return;
-    }
-
-    response.bodyHandler(
-        buffer -> {
-          try {
-            final JsonObject json = new JsonObject(buffer);
-            final String status = json.getString("status");
-            if (!status.equals("OK")) {
-              handle(new InterlockClientException("Login failed with status " + status));
-            }
-
-            // response.XSRFToken and cookies
-            final String xsrfToken = json.getJsonObject("response").getString("XSRFToken");
-            final List<String> cookies = response.headers().getAll(HttpHeaders.SET_COOKIE);
-
-            responseFuture.complete(new ApiAuth(xsrfToken, cookies));
-          } catch (final RuntimeException e) {
-            handle(e);
-          }
-        });
+  public LoginHandler(final String volume, final String password) {
+    super("Login");
+    this.volume = volume;
+    this.password = password;
   }
 
-  public void handle(final Throwable ex) {
-    responseFuture.completeExceptionally(ex);
+  @Override
+  protected ApiAuth processJsonResponse(final JsonObject json, final MultiMap headers) {
+    final String xsrfToken = json.getJsonObject("response").getString("XSRFToken");
+    final List<String> cookies = headers.getAll(HttpHeaders.SET_COOKIE);
+    return new ApiAuth(xsrfToken, cookies);
   }
 
-  public ApiAuth waitForResponse() {
-    try {
-      return responseFuture.get();
-    } catch (final InterruptedException e) {
-      throw new InterlockClientException("Login Response Handler thread interrupted.", e);
-    } catch (final ExecutionException e) {
-      throw exceptionConverter.apply(e);
-    }
-  }
-
-  public String body(final String volume, final String password) {
+  public String body() {
     return new JsonObject()
         .put("volume", volume)
         .put("password", password)

@@ -12,59 +12,27 @@
  */
 package tech.pegasys.signers.interlock.handlers;
 
-import tech.pegasys.signers.interlock.InterlockClientException;
+import java.nio.file.Path;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-
-import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class FileDeleteHandler {
-  private final CompletableFuture<Void> responseFuture = new CompletableFuture<>();
-  private final ExceptionConverter exceptionConverter = new ExceptionConverter();
+public class FileDeleteHandler extends AbstractHandler<Void> {
+  private final Path decryptedFile;
 
-  public void handle(final HttpClientResponse response) {
-    if (response.statusCode() != 200) {
-      responseFuture.completeExceptionally(
-          new InterlockClientException(
-              "File Delete unexpected response status code " + response.statusCode()));
-      return;
-    }
-
-    response.bodyHandler(
-        buffer -> {
-          try {
-            final JsonObject json = new JsonObject(buffer);
-            final String status = json.getString("status");
-            if (!status.equals("OK")) {
-              final String jsonResponse = json.getJsonArray("response").encode();
-              handle(new InterlockClientException("File Delete failed: " + jsonResponse));
-            }
-
-            responseFuture.complete(null);
-          } catch (final RuntimeException e) {
-            handle(e);
-          }
-        });
+  public FileDeleteHandler(final Path decryptedFile) {
+    super("File Delete");
+    this.decryptedFile = decryptedFile;
   }
 
-  public void handle(final Throwable ex) {
-    responseFuture.completeExceptionally(ex);
+  @Override
+  protected Void processJsonResponse(final JsonObject json, final MultiMap headers) {
+    return null;
   }
 
-  public Void waitForResponse() {
-    try {
-      return responseFuture.get();
-    } catch (final InterruptedException e) {
-      throw new InterlockClientException(getClass().getSimpleName() + " thread interrupted.", e);
-    } catch (final ExecutionException e) {
-      throw exceptionConverter.apply(e);
-    }
-  }
-
-  public String body(final String path) {
-    return new JsonObject().put("path", new JsonArray().add(path)).encode();
+  @Override
+  public String body() {
+    return new JsonObject().put("path", new JsonArray().add(decryptedFile)).encode();
   }
 }

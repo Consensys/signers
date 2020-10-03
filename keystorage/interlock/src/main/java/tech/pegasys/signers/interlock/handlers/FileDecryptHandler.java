@@ -12,65 +12,50 @@
  */
 package tech.pegasys.signers.interlock.handlers;
 
-import tech.pegasys.signers.interlock.InterlockClientException;
 import tech.pegasys.signers.interlock.model.Cipher;
+import tech.pegasys.signers.interlock.model.DecryptCredentials;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.nio.file.Path;
+import java.util.Objects;
 
-import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.io.FilenameUtils;
 
-public class FileDecryptHandler {
-  private final CompletableFuture<Void> responseFuture = new CompletableFuture<>();
-  private final ExceptionConverter exceptionConverter = new ExceptionConverter();
+public class FileDecryptHandler extends AbstractHandler<Path> {
+  private final Path path;
+  private final DecryptCredentials decryptCredentials;
 
-  public void handle(final HttpClientResponse response) {
-    if (response.statusCode() != 200) {
-      responseFuture.completeExceptionally(
-          new InterlockClientException(
-              "Unexpected decrypt response status code " + response.statusCode()));
-      return;
+  public FileDecryptHandler(final Path path, final DecryptCredentials decryptCredentials) {
+    super("File Decrypt");
+    this.path = path;
+    this.decryptCredentials = decryptCredentials;
+  }
+
+  @Override
+  protected Path processJsonResponse(final JsonObject json, final MultiMap headers) {
+    // Following decrypted file naming is observed in Interlock UI.
+    final String fileName = path.getFileName().toString();
+    if (Objects.equals(
+        FilenameUtils.getExtension(fileName),
+        decryptCredentials.getCipher().getCipherExtension())) {
+      return path.resolveSibling(FilenameUtils.removeExtension(fileName));
     }
 
-    response.bodyHandler(
-        buffer -> {
-          try {
-            final JsonObject json = new JsonObject(buffer);
-            final String status = json.getString("status");
-            if (!status.equals("OK")) {
-              final String jsonResponse = json.getJsonArray("response").encode();
-              handle(new InterlockClientException("File Decrypt failed: " + jsonResponse));
-            }
-
-            responseFuture.complete(null);
-          } catch (final RuntimeException e) {
-            handle(e);
-          }
-        });
+    return path.resolveSibling(fileName + ".decrypted");
   }
 
-  public void handle(final Throwable ex) {
-    responseFuture.completeExceptionally(ex);
-  }
-
-  public Void waitForResponse() {
-    try {
-      return responseFuture.get();
-    } catch (final InterruptedException e) {
-      throw new InterlockClientException(getClass().getSimpleName() + " thread interrupted.", e);
-    } catch (final ExecutionException e) {
-      throw exceptionConverter.apply(e);
-    }
-  }
-
-  public String body(
-      final String path, final String password, final String keyPath, final Cipher cipher) {
+  @Override
+  public String body() {
+    final Cipher cipher = decryptCredentials.getCipher();
+    final String password = cipher.isUsePassword() ? decryptCredentials.getPassword() : "";
+    final String key =
+        cipher.isUsePrivateKey() ? decryptCredentials.getPrivateKeyPath().toString() : "";
     return new JsonObject()
         .put("src", path)
         .put("password", password)
         .put("verify", false)
-        .put("key", keyPath)
+        .put("key", key)
         .put("sig_key", "")
         .put("cipher", cipher.getCipherName())
         .encode();
