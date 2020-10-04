@@ -71,7 +71,7 @@ public class InterlockClient {
     httpClient
         .post("/api/auth/login", handler::handle)
         .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-        .exceptionHandler(handler::handle)
+        .exceptionHandler(handler::handleException)
         .end(handler.body());
 
     return handler.waitForResponse();
@@ -89,7 +89,7 @@ public class InterlockClient {
 
     httpClient
         .post("/api/auth/logout", handler::handle)
-        .exceptionHandler(handler::handle)
+        .exceptionHandler(handler::handleException)
         .putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken())
         .putHeader(COOKIE.toString(), apiAuth.getCookies())
         .end();
@@ -168,7 +168,7 @@ public class InterlockClient {
     final FileDownloadHandler handler = new FileDownloadHandler();
     httpClient
         .get("/api/file/download?" + downloadIdQueryParam(downloadId), handler::handle)
-        .exceptionHandler(handler::handle)
+        .exceptionHandler(handler::handleException)
         .putHeader(COOKIE.toString(), apiAuth.getCookies())
         .end();
 
@@ -181,7 +181,7 @@ public class InterlockClient {
     final FileDecryptHandler handler = new FileDecryptHandler(path, decryptCredentials);
     httpClient
         .post("/api/file/decrypt", handler::handle)
-        .exceptionHandler(handler::handle)
+        .exceptionHandler(handler::handleException)
         .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
         .putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken())
         .putHeader(COOKIE.toString(), apiAuth.getCookies())
@@ -195,7 +195,7 @@ public class InterlockClient {
     final FileDeleteHandler handler = new FileDeleteHandler(decryptedFile);
     httpClient
         .post("/api/file/delete", handler::handle)
-        .exceptionHandler(handler::handle)
+        .exceptionHandler(handler::handleException)
         .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
         .putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken())
         .putHeader(COOKIE.toString(), apiAuth.getCookies())
@@ -209,7 +209,7 @@ public class InterlockClient {
     final FileDownloadIdHandler handler = new FileDownloadIdHandler(path);
     httpClient
         .post("/api/file/download", handler::handle)
-        .exceptionHandler(handler::handle)
+        .exceptionHandler(handler::handleException)
         .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
         .putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken())
         .putHeader(COOKIE.toString(), apiAuth.getCookies())
@@ -223,7 +223,7 @@ public class InterlockClient {
     final FileSizeHandler handler = new FileSizeHandler(path);
     httpClient
         .post("/api/file/list", handler::handle)
-        .exceptionHandler(handler::handle)
+        .exceptionHandler(handler::handleException)
         .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
         .putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken())
         .putHeader(COOKIE.toString(), apiAuth.getCookies())

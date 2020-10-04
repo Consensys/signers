@@ -41,6 +41,7 @@ public class FileSizeHandler extends AbstractHandler<Long> {
     return -1L;
   }
 
+  @Override
   public String body() {
     return new JsonObject().put("path", path.getParent().toString()).put("sha256", true).encode();
   }

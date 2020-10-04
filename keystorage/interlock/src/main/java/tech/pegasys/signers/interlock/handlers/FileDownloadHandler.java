@@ -12,11 +12,10 @@
  */
 package tech.pegasys.signers.interlock.handlers;
 
-import tech.pegasys.signers.interlock.InterlockClientException;
-
 import java.nio.charset.StandardCharsets;
 
 import io.vertx.core.MultiMap;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonObject;
 
@@ -37,22 +36,7 @@ public class FileDownloadHandler extends AbstractHandler<String> {
   }
 
   @Override
-  public void handle(final HttpClientResponse response) {
-    if (response.statusCode() != 200) {
-      getResponseFuture()
-          .completeExceptionally(
-              new InterlockClientException(
-                  "Unexpected file download response status code " + response.statusCode()));
-      return;
-    }
-
-    response.bodyHandler(
-        buffer -> {
-          try {
-            getResponseFuture().complete(buffer.toString(StandardCharsets.UTF_8));
-          } catch (final RuntimeException e) {
-            handle(e);
-          }
-        });
+  protected void handleResponseBuffer(final HttpClientResponse response, final Buffer buffer) {
+    getResponseFuture().complete(buffer.toString(StandardCharsets.UTF_8));
   }
 }
