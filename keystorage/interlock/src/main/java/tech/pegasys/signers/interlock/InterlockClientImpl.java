@@ -120,8 +120,8 @@ class InterlockClientImpl implements InterlockClient {
 
     So, we schedule two runs with a delay of 200 ms to make sure file size changes from 0
     */
+    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     try {
-      ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
       for (int i = 0; i < 2; i++) {
         final ScheduledFuture<Long> future =
             executor.schedule(() -> fileSize(apiAuth, decryptedFile), 200, TimeUnit.MILLISECONDS);
@@ -131,9 +131,10 @@ class InterlockClientImpl implements InterlockClient {
           break;
         }
       }
-      executor.shutdown();
     } catch (final InterruptedException | ExecutionException e) {
       LOG.warn("Waiting for file size execution failed: " + e);
+    } finally {
+      executor.shutdown();
     }
   }
 
