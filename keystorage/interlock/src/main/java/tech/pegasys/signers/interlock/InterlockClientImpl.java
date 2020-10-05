@@ -47,24 +47,10 @@ class InterlockClientImpl implements InterlockClient {
   private static final Logger LOG = LogManager.getLogger();
   private final HttpClient httpClient;
 
-  /**
-   * Constructor for InterlockClient
-   *
-   * @param httpClient An instance of VertxHttpClientFactory defining connection properties.
-   */
   InterlockClientImpl(final HttpClient httpClient) {
     this.httpClient = httpClient;
   }
 
-  /**
-   * Performs login to Interlock. This should be the first call.
-   *
-   * @param volume The LUKS volume name to use.
-   * @param password The LUKS volume password
-   * @return ApiAuth containing XSRF Token and list of Cookies that will be used by consecutive
-   *     calls.
-   * @throws InterlockClientException In case login fails.
-   */
   @Override
   public ApiAuth login(final String volume, final String password) throws InterlockClientException {
     LOG.trace("Login for volume {}", volume);
@@ -85,12 +71,6 @@ class InterlockClientImpl implements InterlockClient {
     return handler.waitForResponse();
   }
 
-  /**
-   * Performs logout from Interlock server. This should be the last call sequence.
-   *
-   * @param apiAuth An instance of ApiAuth returned from login method
-   * @throws InterlockClientException If logout fails.
-   */
   @Override
   public void logout(final ApiAuth apiAuth) throws InterlockClientException {
     LOG.trace("Logout");
@@ -106,16 +86,6 @@ class InterlockClientImpl implements InterlockClient {
     handler.waitForResponse();
   }
 
-  /**
-   * Attempts to fetch contents from file. If decryptCredentials is not empty, attempt to decrypt
-   * file as well.
-   *
-   * @param apiAuth An instance of ApiAuth from login call
-   * @param path The path of file, for instance "/bls/key1.txt.pgp" or "/bls/key1.txt.aes256ofb"
-   * @param decryptCredentials For encrypted file, specify decrypt credentials describing cipher to
-   *     use and its password or private key path. For non-encrypted file specify Optional.empty
-   * @return decrypted file contents.
-   */
   @Override
   public String fetchKey(
       final ApiAuth apiAuth,
