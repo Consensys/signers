@@ -21,13 +21,9 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 
 public class LoginHandler extends AbstractHandler<ApiAuth> {
-  private final String volume;
-  private final String password;
 
-  public LoginHandler(final String volume, final String password) {
+  public LoginHandler() {
     super("Login");
-    this.volume = volume;
-    this.password = password;
   }
 
   @Override
@@ -35,13 +31,5 @@ public class LoginHandler extends AbstractHandler<ApiAuth> {
     final String xsrfToken = json.getJsonObject("response").getString("XSRFToken");
     final List<String> cookies = headers.getAll(HttpHeaders.SET_COOKIE);
     return new ApiAuth(xsrfToken, cookies);
-  }
-
-  public String body() {
-    return new JsonObject()
-        .put("volume", volume)
-        .put("password", password)
-        .put("dispose", false)
-        .encode();
   }
 }

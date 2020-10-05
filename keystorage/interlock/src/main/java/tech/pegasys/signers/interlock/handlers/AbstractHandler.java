@@ -81,8 +81,6 @@ public abstract class AbstractHandler<T> {
     }
   }
 
-  public abstract String body();
-
   private boolean isValidHttpResponseCode(final HttpClientResponse response) {
     return response.statusCode() == 200;
   }

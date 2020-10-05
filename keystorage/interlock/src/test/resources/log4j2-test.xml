@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="INFO">
-  <Properties>
-    <Property name="root.log.level">DEBUG</Property>
-  </Properties>
-
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSSZZZ} | %t | %-5level | %c{1} | %msg%n" />    </Console>
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSSZZZ} | %t | %-5level | %c{1} | %msg%n" />
+    </Console>
   </Appenders>
   <Loggers>
-    <Root level="${sys:root.log.level}">
+    <logger name="tech.pegasys.signers.interlock" level="TRACE">
+      <appender-ref ref="console" />
+    </logger>
+    <Root level="INFO">
       <AppenderRef ref="Console" />
     </Root>
   </Loggers>

@@ -25,9 +25,4 @@ public class LogoutHandler extends AbstractHandler<Void> {
   protected Void processJsonResponse(final JsonObject json, final MultiMap headers) {
     return null;
   }
-
-  @Override
-  public String body() {
-    return "";
-  }
 }

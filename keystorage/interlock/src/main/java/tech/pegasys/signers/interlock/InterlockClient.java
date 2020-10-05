@@ -12,48 +12,21 @@
  */
 package tech.pegasys.signers.interlock;
 
-import static io.vertx.core.http.HttpHeaders.COOKIE;
-import static tech.pegasys.signers.interlock.model.ApiAuth.XSRF_TOKEN_HEADER;
-
-import tech.pegasys.signers.interlock.handlers.FileDecryptHandler;
-import tech.pegasys.signers.interlock.handlers.FileDeleteHandler;
-import tech.pegasys.signers.interlock.handlers.FileDownloadHandler;
-import tech.pegasys.signers.interlock.handlers.FileDownloadIdHandler;
-import tech.pegasys.signers.interlock.handlers.FileSizeHandler;
-import tech.pegasys.signers.interlock.handlers.LoginHandler;
-import tech.pegasys.signers.interlock.handlers.LogoutHandler;
 import tech.pegasys.signers.interlock.model.ApiAuth;
 import tech.pegasys.signers.interlock.model.DecryptCredentials;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpHeaders;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-public class InterlockClient {
-  private static final Logger LOG = LogManager.getLogger();
-  private final HttpClient httpClient;
-
-  /**
-   * Constructor for InterlockClient
-   *
-   * @param vertxHttpClientFactory An instance of VertxHttpClientFactory defining connection
-   *     properties.
-   */
-  public InterlockClient(final VertxHttpClientFactory vertxHttpClientFactory) {
-    this.httpClient = vertxHttpClientFactory.create();
-  }
-
+/**
+ * Defines operations to communicate with f-secure Interlock rest API. See
+ * https://www.f-secure.com/en/consulting/foundry/usb-armory.
+ *
+ * <p>The call sequence should be login, fetchKey, logout. The login operation is time extensive
+ * (takes about 4-5 seconds), hence multiple keys should be fetched with single login operation. The
+ * logout must be performed as Interlock forces single login session.
+ */
+public interface InterlockClient {
   /**
    * Performs login to Interlock. This should be the first call.
    *
@@ -63,19 +36,22 @@ public class InterlockClient {
    *     calls.
    * @throws InterlockClientException In case login fails.
    */
-  public ApiAuth login(final String volume, final String password) throws InterlockClientException {
-    LOG.trace("Login for volume {}", volume);
+  ApiAuth login(final String volume, final String password) throws InterlockClientException;
 
-    final LoginHandler handler = new LoginHandler(volume, password);
-
-    httpClient
-        .post("/api/auth/login", handler::handle)
-        .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-        .exceptionHandler(handler::handleException)
-        .end(handler.body());
-
-    return handler.waitForResponse();
-  }
+  /**
+   * Attempts to fetch contents from file. If decryptCredentials is present, decrypts file, fetch
+   * content and finally deletes decrypted file.
+   *
+   * @param apiAuth An instance of ApiAuth from login call
+   * @param path The path of file, for instance "/bls/key1.txt.pgp" or "/bls/key1.txt.aes256ofb"
+   * @param decryptCredentials For encrypted file, specify decrypt credentials describing cipher to
+   *     use and its password or private key path. For non-encrypted file specify Optional.empty
+   * @return contents from file defined by path.
+   * @throws InterlockClientException In case of an error while fetching key
+   */
+  String fetchKey(
+      final ApiAuth apiAuth, final Path path, final Optional<DecryptCredentials> decryptCredentials)
+      throws InterlockClientException;
 
   /**
    * Performs logout from Interlock server. This should be the last call sequence.
@@ -83,156 +59,5 @@ public class InterlockClient {
    * @param apiAuth An instance of ApiAuth returned from login method
    * @throws InterlockClientException If logout fails.
    */
-  public void logout(final ApiAuth apiAuth) throws InterlockClientException {
-    LOG.trace("Logout");
-    final LogoutHandler handler = new LogoutHandler();
-
-    httpClient
-        .post("/api/auth/logout", handler::handle)
-        .exceptionHandler(handler::handleException)
-        .putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken())
-        .putHeader(COOKIE.toString(), apiAuth.getCookies())
-        .end();
-
-    handler.waitForResponse();
-  }
-
-  /**
-   * Attempts to fetch contents from file. If decryptCredentials is not empty, attempt to decrypt
-   * file as well.
-   *
-   * @param apiAuth An instance of ApiAuth from login call
-   * @param path The path of file, for instance "/bls/key1.txt.pgp" or "/bls/key1.txt.aes256ofb"
-   * @param decryptCredentials For encrypted file, specify decrypt credentials describing cipher to
-   *     use and its password or private key path. For non-encrypted file specify Optional.empty
-   * @return decrypted file contents.
-   */
-  public String fetchKey(
-      final ApiAuth apiAuth,
-      final Path path,
-      final Optional<DecryptCredentials> decryptCredentials) {
-    LOG.trace("Fetching key from {}. Encrypted {}", path, decryptCredentials.isPresent());
-
-    final Path decryptedFilePath;
-    if (decryptCredentials.isEmpty()) {
-      decryptedFilePath = path;
-    } else {
-      decryptedFilePath = decryptFile(apiAuth, path, decryptCredentials.get());
-
-      waitForDecryption(apiAuth, decryptedFilePath);
-    }
-
-    final String contents = downloadFile(apiAuth, decryptedFilePath);
-
-    if (decryptCredentials.isPresent()) {
-      deleteFile(apiAuth, decryptedFilePath);
-    }
-
-    return contents;
-  }
-
-  private void waitForDecryption(final ApiAuth apiAuth, final Path decryptedFile) {
-    /* Note: This is a hack.
-
-    Interlock file decrypt operation takes some time to decrypt the file completely.
-    if decrypt is successful, the file size changes to non-zero approximately after 200 ms.
-    if decrypt fails, the file size remains 0.
-
-    So, we schedule two runs with a delay of 200 ms to make sure file size changes from 0
-    */
-    try {
-      ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-      for (int i = 0; i < 2; i++) {
-        final ScheduledFuture<Long> future =
-            executor.schedule(() -> fileSize(apiAuth, decryptedFile), 200, TimeUnit.MILLISECONDS);
-        final Long decryptedFileSize = future.get();
-        LOG.trace("decrypted File size: {}", decryptedFileSize);
-        if (decryptedFileSize > 0) {
-          break;
-        }
-      }
-      executor.shutdown();
-    } catch (final InterruptedException | ExecutionException e) {
-      LOG.warn("Waiting for list execution failed: " + e);
-    }
-  }
-
-  private String downloadFile(final ApiAuth apiAuth, final Path path) {
-    LOG.trace("Downloading File {}", path);
-
-    // first fetch unique file download id
-    final String downloadId = fetchDownloadId(apiAuth, path);
-    LOG.trace("Download ID {}", downloadId);
-
-    // now fetch actual file contents
-    final FileDownloadHandler handler = new FileDownloadHandler();
-    httpClient
-        .get("/api/file/download?" + downloadIdQueryParam(downloadId), handler::handle)
-        .exceptionHandler(handler::handleException)
-        .putHeader(COOKIE.toString(), apiAuth.getCookies())
-        .end();
-
-    return handler.waitForResponse();
-  }
-
-  private Path decryptFile(
-      final ApiAuth apiAuth, final Path path, final DecryptCredentials decryptCredentials) {
-    LOG.debug("Decrypting file");
-    final FileDecryptHandler handler = new FileDecryptHandler(path, decryptCredentials);
-    httpClient
-        .post("/api/file/decrypt", handler::handle)
-        .exceptionHandler(handler::handleException)
-        .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-        .putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken())
-        .putHeader(COOKIE.toString(), apiAuth.getCookies())
-        .end(handler.body());
-
-    return handler.waitForResponse();
-  }
-
-  private void deleteFile(final ApiAuth apiAuth, final Path decryptedFile) {
-    LOG.trace("Deleting File {}", decryptedFile);
-    final FileDeleteHandler handler = new FileDeleteHandler(decryptedFile);
-    httpClient
-        .post("/api/file/delete", handler::handle)
-        .exceptionHandler(handler::handleException)
-        .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-        .putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken())
-        .putHeader(COOKIE.toString(), apiAuth.getCookies())
-        .end(handler.body());
-
-    handler.waitForResponse();
-  }
-
-  private String fetchDownloadId(final ApiAuth apiAuth, final Path path) {
-    LOG.trace("Fetching download id {}", path);
-    final FileDownloadIdHandler handler = new FileDownloadIdHandler(path);
-    httpClient
-        .post("/api/file/download", handler::handle)
-        .exceptionHandler(handler::handleException)
-        .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-        .putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken())
-        .putHeader(COOKIE.toString(), apiAuth.getCookies())
-        .end(handler.body());
-
-    return handler.waitForResponse();
-  }
-
-  private Long fileSize(final ApiAuth apiAuth, final Path path) {
-    LOG.trace("list path {}", path);
-    final FileSizeHandler handler = new FileSizeHandler(path);
-    httpClient
-        .post("/api/file/list", handler::handle)
-        .exceptionHandler(handler::handleException)
-        .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-        .putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken())
-        .putHeader(COOKIE.toString(), apiAuth.getCookies())
-        .end(handler.body());
-
-    return handler.waitForResponse();
-  }
-
-  private String downloadIdQueryParam(final String downloadId) {
-    return "id=" + URLEncoder.encode(downloadId, StandardCharsets.UTF_8);
-  }
+  void logout(final ApiAuth apiAuth) throws InterlockClientException;
 }

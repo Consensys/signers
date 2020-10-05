@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-@Disabled("Required access to actual Usb Armory")
+@Disabled("Required access to actual Usb Armory with Interlock")
 public class InterlockClientTest {
   private static Vertx vertx;
   @TempDir Path tempDir;
@@ -46,9 +46,8 @@ public class InterlockClientTest {
   @Test
   void successfullyDecryptAndFetchKey() {
     final Path whitelistFile = tempDir.resolve("whitelist.txt");
-    final VertxHttpClientFactory vertxHttpClientFactory =
-        new VertxHttpClientFactory(vertx, "10.0.0.1", 443, whitelistFile);
-    final InterlockClient interlockClient = new InterlockClient(vertxHttpClientFactory);
+    final InterlockClient interlockClient =
+        InterlockClientFactory.create(vertx, "10.0.0.1", 443, whitelistFile);
     final ApiAuth apiAuth = interlockClient.login("armory", "usbarmory");
 
     final DecryptCredentials decryptCredentials =

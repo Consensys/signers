@@ -12,26 +12,16 @@
  */
 package tech.pegasys.signers.interlock.handlers;
 
-import java.nio.file.Path;
-
 import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonObject;
 
 public class FileDownloadIdHandler extends AbstractHandler<String> {
-  private final Path path;
-
-  public FileDownloadIdHandler(final Path path) {
+  public FileDownloadIdHandler() {
     super("Download File Id");
-    this.path = path;
   }
 
   @Override
   protected String processJsonResponse(final JsonObject json, final MultiMap headers) {
     return json.getString("response");
-  }
-
-  @Override
-  public String body() {
-    return new JsonObject().put("path", path.toString()).encode();
   }
 }

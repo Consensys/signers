@@ -12,7 +12,6 @@
  */
 package tech.pegasys.signers.interlock.handlers;
 
-import tech.pegasys.signers.interlock.model.Cipher;
 import tech.pegasys.signers.interlock.model.DecryptCredentials;
 
 import java.nio.file.Path;
@@ -43,21 +42,5 @@ public class FileDecryptHandler extends AbstractHandler<Path> {
     }
 
     return path.resolveSibling(fileName + ".decrypted");
-  }
-
-  @Override
-  public String body() {
-    final Cipher cipher = decryptCredentials.getCipher();
-    final String password = cipher.isUsePassword() ? decryptCredentials.getPassword() : "";
-    final String key =
-        cipher.isUsePrivateKey() ? decryptCredentials.getPrivateKeyPath().toString() : "";
-    return new JsonObject()
-        .put("src", path)
-        .put("password", password)
-        .put("verify", false)
-        .put("key", key)
-        .put("sig_key", "")
-        .put("cipher", cipher.getCipherName())
-        .encode();
   }
 }

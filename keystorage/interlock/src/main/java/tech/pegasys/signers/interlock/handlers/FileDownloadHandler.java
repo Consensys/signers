@@ -31,11 +31,6 @@ public class FileDownloadHandler extends AbstractHandler<String> {
   }
 
   @Override
-  public String body() {
-    return null;
-  }
-
-  @Override
   protected void handleResponseBuffer(final HttpClientResponse response, final Buffer buffer) {
     getResponseFuture().complete(buffer.toString(StandardCharsets.UTF_8));
   }

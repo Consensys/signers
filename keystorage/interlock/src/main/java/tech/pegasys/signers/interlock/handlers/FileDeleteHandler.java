@@ -12,27 +12,17 @@
  */
 package tech.pegasys.signers.interlock.handlers;
 
-import java.nio.file.Path;
-
 import io.vertx.core.MultiMap;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class FileDeleteHandler extends AbstractHandler<Void> {
-  private final Path decryptedFile;
 
-  public FileDeleteHandler(final Path decryptedFile) {
+  public FileDeleteHandler() {
     super("File Delete");
-    this.decryptedFile = decryptedFile;
   }
 
   @Override
   protected Void processJsonResponse(final JsonObject json, final MultiMap headers) {
     return null;
-  }
-
-  @Override
-  public String body() {
-    return new JsonObject().put("path", new JsonArray().add(decryptedFile)).encode();
   }
 }
