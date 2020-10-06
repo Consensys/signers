@@ -14,7 +14,11 @@ package tech.pegasys.signers.interlock.model;
 
 public enum Cipher {
   OPENPGP("OpenPGP", ".pgp", false, true),
-  AES256OFB("AES-256-OFB", ".aes256ofb", true, false);
+  AES256OFB("AES-256-OFB", ".aes256ofb", true, false),
+  // following are hsm specific ciphers and may only be available if enabled in interlock
+  AES256CAM("AES-256-CAAM", ".aes256caam", true, false),
+  AES128DCP("AES-128-DCP", ".aes128dcp", true, false),
+  AES256SCC("AES-256-SCC", ".aes256scc", true, false);
 
   private final String cipherName;
   private final String cipherExtension;
