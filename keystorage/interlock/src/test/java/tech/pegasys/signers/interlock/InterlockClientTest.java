@@ -94,7 +94,6 @@ public class InterlockClientTest {
     final ApiAuth apiAuth = new ApiAuth("test", Collections.emptyList());
     assertThatExceptionOfType(InterlockClientException.class)
         .isThrownBy(() -> interlockClient.logout(apiAuth))
-        .withMessage(
-            "Logout failed. Status: INVALID_SESSION, Response: null");
+        .withMessage("Logout failed. Status: INVALID_SESSION, Response: null");
   }
 }
