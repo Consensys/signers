@@ -13,10 +13,8 @@
 package tech.pegasys.signers.interlock;
 
 import tech.pegasys.signers.interlock.model.ApiAuth;
-import tech.pegasys.signers.interlock.model.DecryptCredentials;
 
 import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * Defines operations to communicate with f-secure Interlock rest API. See
@@ -39,19 +37,15 @@ public interface InterlockClient {
   ApiAuth login(final String volume, final String password) throws InterlockClientException;
 
   /**
-   * Attempts to fetch contents from file. If decryptCredentials is present, decrypts file, fetch
-   * content and finally deletes decrypted file.
+   * Fetch key from given path. It is expected that the private key is stored in hex format in given
+   * file.
    *
    * @param apiAuth An instance of ApiAuth from login call
-   * @param path The path of file, for instance "/bls/key1.txt.pgp" or "/bls/key1.txt.aes256ofb"
-   * @param decryptCredentials For encrypted file, specify decrypt credentials describing cipher to
-   *     use and its password or private key path. For non-encrypted file specify Optional.empty
+   * @param keyPath The path of key file in Interlock, for instance "/bls/key1.txt"
    * @return contents from file defined by path.
    * @throws InterlockClientException In case of an error while fetching key
    */
-  String fetchKey(
-      final ApiAuth apiAuth, final Path path, final Optional<DecryptCredentials> decryptCredentials)
-      throws InterlockClientException;
+  String fetchKey(final ApiAuth apiAuth, final Path keyPath) throws InterlockClientException;
 
   /**
    * Performs logout from Interlock server. This should be the last call sequence.

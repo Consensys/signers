@@ -28,7 +28,7 @@ public class InterlockClientFactory {
    *
    * @param vertx An instance of Vertx which will be used to create HttpClient
    * @param host The host name of interlock. Usually 10.0.0.1
-   * @param port The port of intrelock server. Usually 443
+   * @param port The port of interlock server. Usually 443
    * @param serverWhitelist The server whitelist file containing host+port
    *     server_certificate_fingerprint. If file doesn't exist or is empty, it will be created and
    *     populated with server's TLS certificate fingerprint on first use.

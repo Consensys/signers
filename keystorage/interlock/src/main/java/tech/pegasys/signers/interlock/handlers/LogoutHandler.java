@@ -18,7 +18,7 @@ import io.vertx.core.json.JsonObject;
 public class LogoutHandler extends AbstractHandler<Void> {
 
   public LogoutHandler() {
-    super("logout");
+    super("Logout");
   }
 
   @Override

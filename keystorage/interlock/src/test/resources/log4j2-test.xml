@@ -6,7 +6,7 @@
     </Console>
   </Appenders>
   <Loggers>
-    <logger name="tech.pegasys.signers.interlock" level="TRACE">
+    <logger name="tech.pegasys.signers.interlock" level="TRACE" additivity="false">
       <appender-ref ref="Console" />
     </logger>
     <Root level="INFO">

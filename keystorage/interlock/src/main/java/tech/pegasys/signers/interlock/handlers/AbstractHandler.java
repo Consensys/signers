@@ -59,9 +59,16 @@ public abstract class AbstractHandler<T> {
     if (isValidJsonResponseStatus(json)) {
       responseFuture.complete(processJsonResponse(json, response.headers()));
     } else {
-      final String jsonResponse = json.getJsonArray("response").encode();
+      final Object jsonResponse = json.getValue("response");
+      final String responseMessage = jsonResponse == null ? "null" : jsonResponse.toString();
+
       handleException(
-          new InterlockClientException("Invalid response for " + operation + ": " + jsonResponse));
+          new InterlockClientException(
+              operation
+                  + " failed. Status: "
+                  + json.getString("status")
+                  + ", Response: "
+                  + responseMessage));
     }
   }
 

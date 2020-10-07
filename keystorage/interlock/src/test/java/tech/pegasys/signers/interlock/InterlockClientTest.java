@@ -13,13 +13,12 @@
 package tech.pegasys.signers.interlock;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import tech.pegasys.signers.interlock.model.ApiAuth;
-import tech.pegasys.signers.interlock.model.Cipher;
-import tech.pegasys.signers.interlock.model.DecryptCredentials;
 
 import java.nio.file.Path;
-import java.util.Optional;
+import java.util.Collections;
 
 import io.vertx.core.Vertx;
 import org.junit.jupiter.api.AfterAll;
@@ -30,6 +29,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 @Disabled("Required access to actual Usb Armory with Interlock")
 public class InterlockClientTest {
+  private static final String EXPECTED =
+      "3ee2224386c82ffea477e2adf28a2929f5c349165a4196158c7f3a2ecca40f35";
   private static Vertx vertx;
   @TempDir Path tempDir;
 
@@ -50,15 +51,50 @@ public class InterlockClientTest {
         InterlockClientFactory.create(vertx, "10.0.0.1", 443, whitelistFile);
     final ApiAuth apiAuth = interlockClient.login("armory", "usbarmory");
 
-    final DecryptCredentials decryptCredentials =
-        new DecryptCredentials(Cipher.OPENPGP, Path.of("/keys/pgp/private/test.armor"));
-    final String blsKey =
-        interlockClient.fetchKey(
-            apiAuth, Path.of("/bls/key1.txt.pgp"), Optional.of(decryptCredentials));
-    assertThat(blsKey)
-        .isEqualTo("3ee2224386c82ffea477e2adf28a2929f5c349165a4196158c7f3a2ecca40f35")
-        .as("BLS Key");
+    final String blsKey = interlockClient.fetchKey(apiAuth, Path.of("/bls/key1.txt"));
+    assertThat(blsKey).isEqualTo(EXPECTED);
 
     interlockClient.logout(apiAuth);
+  }
+
+  @Test
+  void errorRaisedForInvalidLoginCredentials() {
+    final Path whitelistFile = tempDir.resolve("whitelist.txt");
+    final InterlockClient interlockClient =
+        InterlockClientFactory.create(vertx, "10.0.0.1", 443, whitelistFile);
+
+    assertThatExceptionOfType(InterlockClientException.class)
+        .isThrownBy(() -> interlockClient.login("test", "test"))
+        .withMessage(
+            "Login failed. Status: INVALID_SESSION, Response: [\"Device /dev/lvmvolume/test doesn't exist or access denied.\\n\"]");
+  }
+
+  @Test
+  void errorRaisedForInvalidKeyPath() {
+    final Path whitelistFile = tempDir.resolve("whitelist.txt");
+    final InterlockClient interlockClient =
+        InterlockClientFactory.create(vertx, "10.0.0.1", 443, whitelistFile);
+
+    final ApiAuth apiAuth = interlockClient.login("armory", "usbarmory");
+
+    assertThatExceptionOfType(InterlockClientException.class)
+        .isThrownBy(() -> interlockClient.fetchKey(apiAuth, Path.of("/test/test.txt")))
+        .withMessage(
+            "Download File Id failed. Status: KO, Response: [\"stat /home/interlock/.interlock-mnt/test/test.txt: no such file or directory\"]");
+
+    interlockClient.logout(apiAuth);
+  }
+
+  @Test
+  void errorRaisedForInvalidAuthLogout() {
+    final Path whitelistFile = tempDir.resolve("whitelist.txt");
+    final InterlockClient interlockClient =
+        InterlockClientFactory.create(vertx, "10.0.0.1", 443, whitelistFile);
+
+    final ApiAuth apiAuth = new ApiAuth("test", Collections.emptyList());
+    assertThatExceptionOfType(InterlockClientException.class)
+        .isThrownBy(() -> interlockClient.logout(apiAuth))
+        .withMessage(
+            "Logout failed. Status: INVALID_SESSION, Response: null");
   }
 }
