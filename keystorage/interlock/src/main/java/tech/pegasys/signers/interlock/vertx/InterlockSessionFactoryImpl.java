@@ -82,14 +82,13 @@ public class InterlockSessionFactoryImpl implements InterlockSessionFactory {
   }
 
   private int timeoutMS() {
-    final String timeoutEnv = System.getenv(TIMEOUT_ENV);
     try {
-      final int timeout = Integer.parseInt(timeoutEnv);
+      final int timeout = Integer.parseInt(System.getenv(TIMEOUT_ENV));
       if (timeout < 0) {
         return DEFAULT_TIMEOUT_MS;
       }
       return timeout;
-    } catch (final NumberFormatException | NullPointerException e) {
+    } catch (final NumberFormatException e) {
       return DEFAULT_TIMEOUT_MS;
     }
   }
