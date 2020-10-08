@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.interlock.handlers;
+package tech.pegasys.signers.interlock.vertx.operations;
 
 import tech.pegasys.signers.interlock.InterlockClientException;
 
@@ -24,23 +24,33 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonObject;
 
-public abstract class AbstractHandler<T> {
+public abstract class AbstractOperation<T> implements ApiOperation<T> {
   private final CompletableFuture<T> responseFuture = new CompletableFuture<>();
-  private final String operation;
 
-  protected AbstractHandler(final String operation) {
-    this.operation = operation;
+  @Override
+  public final T waitForResponse() {
+    invoke();
+
+    try {
+      return responseFuture.get();
+    } catch (final InterruptedException e) {
+      throw new InterlockClientException("response handler thread interrupted unexpectedly.", e);
+    } catch (final ExecutionException e) {
+      throw convertException(e);
+    }
   }
+
+  protected abstract void invoke();
 
   protected final CompletableFuture<T> getResponseFuture() {
     return responseFuture;
   }
 
-  public final void handle(final HttpClientResponse response) {
+  protected final void handle(final HttpClientResponse response) {
     if (!isValidHttpResponseCode(response)) {
       handleException(
           new InterlockClientException(
-              "Unexpected " + operation + " response status code " + response.statusCode()));
+              "Unexpected http response status code " + response.statusCode()));
       return;
     }
 
@@ -64,28 +74,16 @@ public abstract class AbstractHandler<T> {
 
       handleException(
           new InterlockClientException(
-              operation
-                  + " failed. Status: "
-                  + json.getString("status")
-                  + ", Response: "
-                  + responseMessage));
+              "Status: " + json.getString("status") + ", Response: " + responseMessage));
     }
   }
 
-  protected abstract T processJsonResponse(final JsonObject json, final MultiMap headers);
+  protected T processJsonResponse(final JsonObject json, final MultiMap headers) {
+    return null;
+  }
 
-  public final void handleException(final Throwable ex) {
+  protected final void handleException(final Throwable ex) {
     responseFuture.completeExceptionally(ex);
-  }
-
-  public final T waitForResponse() {
-    try {
-      return responseFuture.get();
-    } catch (final InterruptedException e) {
-      throw new InterlockClientException(operation + " response handler thread interrupted.", e);
-    } catch (final ExecutionException e) {
-      throw convertException(e);
-    }
   }
 
   private boolean isValidHttpResponseCode(final HttpClientResponse response) {
@@ -106,14 +104,9 @@ public abstract class AbstractHandler<T> {
 
     if (cause instanceof TimeoutException) {
       return new InterlockClientException(
-          "Interlock response handling timed out for operation: " + operation, cause);
+          "Timeout occurred while waiting for response from Interlock", cause);
     }
 
-    return new InterlockClientException(
-        "Interlock response handling failed for operation: "
-            + operation
-            + " due to :"
-            + cause.getMessage(),
-        cause);
+    return new InterlockClientException(cause.getMessage(), cause);
   }
 }

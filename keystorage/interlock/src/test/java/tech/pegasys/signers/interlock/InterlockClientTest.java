@@ -15,10 +15,9 @@ package tech.pegasys.signers.interlock;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import tech.pegasys.signers.interlock.model.ApiAuth;
-
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.util.Collections;
 
 import io.vertx.core.Vertx;
 import org.junit.jupiter.api.AfterAll;
@@ -45,26 +44,31 @@ public class InterlockClientTest {
   }
 
   @Test
-  void successfullyDecryptAndFetchKey() {
+  void successfullyFetchKey() throws URISyntaxException {
     final Path whitelistFile = tempDir.resolve("whitelist.txt");
-    final InterlockClient interlockClient =
-        InterlockClientFactory.create(vertx, "10.0.0.1", 443, whitelistFile);
-    final ApiAuth apiAuth = interlockClient.login("armory", "usbarmory");
 
-    final String blsKey = interlockClient.fetchKey(apiAuth, Path.of("/bls/key1.txt"));
-    assertThat(blsKey).isEqualTo(EXPECTED);
-
-    interlockClient.logout(apiAuth);
+    final InterlockSessionFactory interlockSessionFactory =
+        InterlockSessionFactoryProvider.newInstance(vertx, whitelistFile);
+    try (final InterlockSession session =
+        interlockSessionFactory.newSession(new URI("https://10.0.0.1"), "armory", "usbarmory")) {
+      final String blsKey = session.fetchKey(Path.of("/bls/key1.txt"));
+      assertThat(blsKey).isEqualTo(EXPECTED);
+    }
   }
 
   @Test
   void errorRaisedForInvalidLoginCredentials() {
     final Path whitelistFile = tempDir.resolve("whitelist.txt");
-    final InterlockClient interlockClient =
-        InterlockClientFactory.create(vertx, "10.0.0.1", 443, whitelistFile);
+    final InterlockSessionFactory interlockSessionFactory =
+        InterlockSessionFactoryProvider.newInstance(vertx, whitelistFile);
 
     assertThatExceptionOfType(InterlockClientException.class)
-        .isThrownBy(() -> interlockClient.login("test", "test"))
+        .isThrownBy(
+            () -> {
+              try (final InterlockSession session =
+                  interlockSessionFactory.newSession(
+                      new URI("https://10.0.0.1"), "test", "test")) {}
+            })
         .withMessage(
             "Login failed. Status: INVALID_SESSION, Response: [\"Device /dev/lvmvolume/test doesn't exist or access denied.\\n\"]");
   }
@@ -72,28 +76,18 @@ public class InterlockClientTest {
   @Test
   void errorRaisedForInvalidKeyPath() {
     final Path whitelistFile = tempDir.resolve("whitelist.txt");
-    final InterlockClient interlockClient =
-        InterlockClientFactory.create(vertx, "10.0.0.1", 443, whitelistFile);
-
-    final ApiAuth apiAuth = interlockClient.login("armory", "usbarmory");
+    final InterlockSessionFactory interlockSessionFactory =
+        InterlockSessionFactoryProvider.newInstance(vertx, whitelistFile);
 
     assertThatExceptionOfType(InterlockClientException.class)
-        .isThrownBy(() -> interlockClient.fetchKey(apiAuth, Path.of("/test/test.txt")))
-        .withMessage(
-            "Download File Id failed. Status: KO, Response: [\"stat /home/interlock/.interlock-mnt/test/test.txt: no such file or directory\"]");
-
-    interlockClient.logout(apiAuth);
-  }
-
-  @Test
-  void errorRaisedForInvalidAuthLogout() {
-    final Path whitelistFile = tempDir.resolve("whitelist.txt");
-    final InterlockClient interlockClient =
-        InterlockClientFactory.create(vertx, "10.0.0.1", 443, whitelistFile);
-
-    final ApiAuth apiAuth = new ApiAuth("test", Collections.emptyList());
-    assertThatExceptionOfType(InterlockClientException.class)
-        .isThrownBy(() -> interlockClient.logout(apiAuth))
-        .withMessage("Logout failed. Status: INVALID_SESSION, Response: null");
+        .isThrownBy(
+            () -> {
+              try (final InterlockSession session =
+                  interlockSessionFactory.newSession(
+                      new URI("https://10.0.0.1"), "armory", "usbarmory")) {
+                session.fetchKey(Path.of("/doesnotexist.txt"));
+              }
+            })
+        .withMessage("Unable to download /doesnotexist.txt");
   }
 }

@@ -1,0 +1,61 @@
+/*
+ * Copyright 2020 ConsenSys AG.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+package tech.pegasys.signers.interlock.vertx;
+
+import tech.pegasys.signers.interlock.InterlockClientException;
+import tech.pegasys.signers.interlock.InterlockSession;
+import tech.pegasys.signers.interlock.model.ApiAuth;
+import tech.pegasys.signers.interlock.vertx.operations.FileDownloadIdOperation;
+import tech.pegasys.signers.interlock.vertx.operations.FileDownloadOperation;
+import tech.pegasys.signers.interlock.vertx.operations.LogoutOperation;
+
+import java.nio.file.Path;
+
+import io.vertx.core.http.HttpClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+public class InterlockSessionImpl implements InterlockSession {
+  private static final Logger LOG = LogManager.getLogger();
+
+  private final ApiAuth apiAuth;
+  private final HttpClient httpClient;
+
+  public InterlockSessionImpl(final HttpClient httpClient, final ApiAuth apiAuth) {
+    this.httpClient = httpClient;
+    this.apiAuth = apiAuth;
+  }
+
+  @Override
+  public String fetchKey(final Path keyPath) throws InterlockClientException {
+    LOG.trace("Fetching key from {}.", keyPath);
+    try {
+      final String downloadId =
+          new FileDownloadIdOperation(httpClient, apiAuth, keyPath).waitForResponse();
+      return new FileDownloadOperation(httpClient, apiAuth, downloadId).waitForResponse();
+    } catch (final InterlockClientException e) {
+      LOG.warn("Downloading {} failed due to: {}", keyPath, e.getMessage());
+      throw new InterlockClientException("Unable to download " + keyPath);
+    }
+  }
+
+  @Override
+  public void close() {
+    LOG.trace("Closing session");
+    try {
+      new LogoutOperation(httpClient, apiAuth).waitForResponse();
+    } catch (final RuntimeException e) {
+      LOG.warn("Interlock Session Logout operation failed: " + e.getMessage());
+    }
+  }
+}

@@ -10,25 +10,17 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.interlock.model;
+package tech.pegasys.signers.interlock;
 
-import java.util.List;
+import tech.pegasys.signers.interlock.vertx.InterlockSessionFactoryImpl;
 
-public class ApiAuth {
-  public static final String XSRF_TOKEN_HEADER = "X-XSRFToken";
-  private final String token;
-  private final List<String> cookies;
+import java.nio.file.Path;
 
-  public ApiAuth(final String token, final List<String> cookies) {
-    this.token = token;
-    this.cookies = cookies;
-  }
+import io.vertx.core.Vertx;
 
-  public List<String> getCookies() {
-    return cookies;
-  }
-
-  public String getToken() {
-    return token;
+public class InterlockSessionFactoryProvider {
+  public static InterlockSessionFactoryImpl newInstance(
+      final Vertx vertx, final Path serverWhitelist) {
+    return new InterlockSessionFactoryImpl(vertx, serverWhitelist);
   }
 }

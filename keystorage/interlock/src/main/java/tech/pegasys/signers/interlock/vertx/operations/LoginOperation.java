@@ -10,20 +10,41 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.interlock.handlers;
+package tech.pegasys.signers.interlock.vertx.operations;
 
 import tech.pegasys.signers.interlock.model.ApiAuth;
 
 import java.util.List;
 
 import io.vertx.core.MultiMap;
+import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 
-public class LoginHandler extends AbstractHandler<ApiAuth> {
+public class LoginOperation extends AbstractOperation<ApiAuth> {
+  private final HttpClient httpClient;
+  private final String volume;
+  private final String password;
 
-  public LoginHandler() {
-    super("Login");
+  public LoginOperation(final HttpClient httpClient, final String volume, final String password) {
+    this.httpClient = httpClient;
+    this.volume = volume;
+    this.password = password;
+  }
+
+  @Override
+  protected void invoke() {
+    final String body =
+        new JsonObject()
+            .put("volume", volume)
+            .put("password", password)
+            .put("dispose", false)
+            .encode();
+    httpClient
+        .post("/api/auth/login", this::handle)
+        .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+        .exceptionHandler(this::handleException)
+        .end(body);
   }
 
   @Override

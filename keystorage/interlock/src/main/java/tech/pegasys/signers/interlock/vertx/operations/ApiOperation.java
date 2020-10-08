@@ -10,18 +10,10 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.interlock.handlers;
+package tech.pegasys.signers.interlock.vertx.operations;
 
-import io.vertx.core.MultiMap;
-import io.vertx.core.json.JsonObject;
+import tech.pegasys.signers.interlock.InterlockClientException;
 
-public class FileDownloadIdHandler extends AbstractHandler<String> {
-  public FileDownloadIdHandler() {
-    super("Download File Id");
-  }
-
-  @Override
-  protected String processJsonResponse(final JsonObject json, final MultiMap headers) {
-    return json.getString("response");
-  }
+public interface ApiOperation<T> {
+  T waitForResponse() throws InterlockClientException;
 }

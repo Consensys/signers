@@ -10,19 +10,10 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.interlock.handlers;
+package tech.pegasys.signers.interlock;
 
-import io.vertx.core.MultiMap;
-import io.vertx.core.json.JsonObject;
+import java.net.URI;
 
-public class LogoutHandler extends AbstractHandler<Void> {
-
-  public LogoutHandler() {
-    super("Logout");
-  }
-
-  @Override
-  protected Void processJsonResponse(final JsonObject json, final MultiMap headers) {
-    return null;
-  }
+public interface InterlockSessionFactory {
+  InterlockSession newSession(URI interlockURI, String volume, String password);
 }
