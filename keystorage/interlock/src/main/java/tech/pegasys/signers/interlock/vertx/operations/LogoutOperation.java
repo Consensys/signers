@@ -20,8 +20,8 @@ import tech.pegasys.signers.interlock.model.ApiAuth;
 import io.vertx.core.http.HttpClient;
 
 public class LogoutOperation extends AbstractOperation<Void> {
-  private HttpClient httpClient;
-  private ApiAuth apiAuth;
+  private final HttpClient httpClient;
+  private final ApiAuth apiAuth;
 
   public LogoutOperation(final HttpClient httpClient, final ApiAuth apiAuth) {
     this.httpClient = httpClient;

@@ -17,10 +17,32 @@ import tech.pegasys.signers.interlock.vertx.InterlockSessionFactoryImpl;
 import java.nio.file.Path;
 
 import io.vertx.core.Vertx;
+import org.apache.commons.lang3.StringUtils;
 
 public class InterlockSessionFactoryProvider {
+  private static final String HTTP_CLIENT_TIMEOUT_ENV = "INTERLOCK_CLIENT_TIMEOUT";
+  private static final int DEFAULT_TIMEOUT_MS = 5000;
+  private static final int HTTP_CLIENT_TIMEOUT_MS = timeoutMS();
+
   public static InterlockSessionFactoryImpl newInstance(
       final Vertx vertx, final Path serverWhitelist) {
-    return new InterlockSessionFactoryImpl(vertx, serverWhitelist);
+    return new InterlockSessionFactoryImpl(vertx, serverWhitelist, HTTP_CLIENT_TIMEOUT_MS);
+  }
+
+  private static int timeoutMS() {
+    final String timeoutStr = System.getenv(HTTP_CLIENT_TIMEOUT_ENV);
+    if (StringUtils.isBlank(timeoutStr)) {
+      return DEFAULT_TIMEOUT_MS;
+    }
+
+    try {
+      final int timeout = Integer.parseInt(timeoutStr);
+      if (timeout < 0) {
+        throw new NumberFormatException();
+      }
+      return timeout;
+    } catch (final NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid Interlock client timeout " + timeoutStr);
+    }
   }
 }

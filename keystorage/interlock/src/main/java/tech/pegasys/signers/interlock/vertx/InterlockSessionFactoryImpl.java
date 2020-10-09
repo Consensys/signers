@@ -33,14 +33,15 @@ import org.apache.logging.log4j.Logger;
 public class InterlockSessionFactoryImpl implements InterlockSessionFactory {
   private static final Logger LOG = LogManager.getLogger();
 
-  private static final String TIMEOUT_ENV = "INTERLOCK_CLIENT_TIMEOUT";
-  private static final int DEFAULT_TIMEOUT_MS = 5000;
   private final Vertx vertx;
   private final Path serverWhitelist;
+  private final int httpClientTimeoutMs;
 
-  public InterlockSessionFactoryImpl(final Vertx vertx, final Path serverWhitelist) {
+  public InterlockSessionFactoryImpl(
+      final Vertx vertx, final Path serverWhitelist, final int httpClientTimeoutMs) {
     this.vertx = vertx;
     this.serverWhitelist = serverWhitelist;
+    this.httpClientTimeoutMs = httpClientTimeoutMs;
   }
 
   @Override
@@ -71,7 +72,7 @@ public class InterlockSessionFactoryImpl implements InterlockSessionFactory {
             .setDefaultHost(interlockURI.getHost())
             .setDefaultPort(port)
             .setTryUseCompression(true)
-            .setConnectTimeout(timeoutMS())
+            .setConnectTimeout(httpClientTimeoutMs)
             .setSsl(useSsl);
     if (useSsl) {
       httpClientOptions.setTrustOptions(
@@ -79,17 +80,5 @@ public class InterlockSessionFactoryImpl implements InterlockSessionFactory {
     }
 
     return vertx.createHttpClient(httpClientOptions);
-  }
-
-  private int timeoutMS() {
-    try {
-      final int timeout = Integer.parseInt(System.getenv(TIMEOUT_ENV));
-      if (timeout < 0) {
-        return DEFAULT_TIMEOUT_MS;
-      }
-      return timeout;
-    } catch (final NumberFormatException e) {
-      return DEFAULT_TIMEOUT_MS;
-    }
   }
 }

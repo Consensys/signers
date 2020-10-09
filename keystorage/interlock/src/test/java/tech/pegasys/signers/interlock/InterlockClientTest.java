@@ -20,6 +20,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 
 import io.vertx.core.Vertx;
+import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -28,8 +29,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 @Disabled("Required access to actual Usb Armory with Interlock")
 public class InterlockClientTest {
-  private static final String EXPECTED =
-      "3ee2224386c82ffea477e2adf28a2929f5c349165a4196158c7f3a2ecca40f35";
+  private static final Bytes EXPECTED =
+      Bytes.fromHexString("3ee2224386c82ffea477e2adf28a2929f5c349165a4196158c7f3a2ecca40f35");
   private static Vertx vertx;
   @TempDir Path tempDir;
 
@@ -51,7 +52,7 @@ public class InterlockClientTest {
         InterlockSessionFactoryProvider.newInstance(vertx, whitelistFile);
     try (final InterlockSession session =
         interlockSessionFactory.newSession(new URI("https://10.0.0.1"), "armory", "usbarmory")) {
-      final String blsKey = session.fetchKey(Path.of("/bls/key1.txt"));
+      final Bytes blsKey = session.fetchKey(Path.of("/bls/key1.txt"));
       assertThat(blsKey).isEqualTo(EXPECTED);
     }
   }

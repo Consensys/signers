@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import io.vertx.core.http.HttpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.bytes.Bytes;
 
 public class InterlockSessionImpl implements InterlockSession {
   private static final Logger LOG = LogManager.getLogger();
@@ -37,15 +38,21 @@ public class InterlockSessionImpl implements InterlockSession {
   }
 
   @Override
-  public String fetchKey(final Path keyPath) throws InterlockClientException {
+  public Bytes fetchKey(final Path keyPath) throws InterlockClientException {
     LOG.trace("Fetching key from {}.", keyPath);
     try {
       final String downloadId =
           new FileDownloadIdOperation(httpClient, apiAuth, keyPath).waitForResponse();
-      return new FileDownloadOperation(httpClient, apiAuth, downloadId).waitForResponse();
+      final String keyStr =
+          new FileDownloadOperation(httpClient, apiAuth, downloadId).waitForResponse();
+      return Bytes.fromHexString(keyStr);
     } catch (final InterlockClientException e) {
       LOG.warn("Downloading {} failed due to: {}", keyPath, e.getMessage());
       throw new InterlockClientException("Unable to download " + keyPath);
+    } catch (final IllegalArgumentException e) {
+      LOG.warn(
+          "Downloaded content from {} failed to convert to Bytes: {}", keyPath, e.getMessage());
+      throw new InterlockClientException("Invalid content received from " + keyPath);
     }
   }
 
