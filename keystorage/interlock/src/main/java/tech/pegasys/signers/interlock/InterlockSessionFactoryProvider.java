@@ -15,24 +15,25 @@ package tech.pegasys.signers.interlock;
 import tech.pegasys.signers.interlock.vertx.InterlockSessionFactoryImpl;
 
 import java.nio.file.Path;
+import java.time.Duration;
 
 import io.vertx.core.Vertx;
 import org.apache.commons.lang3.StringUtils;
 
 public class InterlockSessionFactoryProvider {
-  private static final String HTTP_CLIENT_TIMEOUT_ENV = "INTERLOCK_CLIENT_TIMEOUT";
+  private static final String HTTP_CLIENT_TIMEOUT_ENV = "INTERLOCK_CLIENT_TIMEOUT_MS";
   private static final int DEFAULT_TIMEOUT_MS = 5000;
-  private static final int HTTP_CLIENT_TIMEOUT_MS = timeoutMS();
+  private static final Duration HTTP_CLIENT_TIMEOUT_DURATION = timeoutDuration();
 
   public static InterlockSessionFactoryImpl newInstance(
-      final Vertx vertx, final Path serverWhitelist) {
-    return new InterlockSessionFactoryImpl(vertx, serverWhitelist, HTTP_CLIENT_TIMEOUT_MS);
+      final Vertx vertx, final Path knownServersFile) {
+    return new InterlockSessionFactoryImpl(vertx, knownServersFile, HTTP_CLIENT_TIMEOUT_DURATION);
   }
 
-  private static int timeoutMS() {
+  private static Duration timeoutDuration() {
     final String timeoutStr = System.getenv(HTTP_CLIENT_TIMEOUT_ENV);
     if (StringUtils.isBlank(timeoutStr)) {
-      return DEFAULT_TIMEOUT_MS;
+      return Duration.ofMillis(DEFAULT_TIMEOUT_MS);
     }
 
     try {
@@ -40,7 +41,7 @@ public class InterlockSessionFactoryProvider {
       if (timeout < 0) {
         throw new NumberFormatException();
       }
-      return timeout;
+      return Duration.ofMillis(timeout);
     } catch (final NumberFormatException e) {
       throw new IllegalArgumentException("Invalid Interlock client timeout " + timeoutStr);
     }

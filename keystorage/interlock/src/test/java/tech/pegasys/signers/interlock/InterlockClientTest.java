@@ -21,8 +21,10 @@ import java.nio.file.Path;
 
 import io.vertx.core.Vertx;
 import org.apache.tuweni.bytes.Bytes;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -34,6 +36,8 @@ public class InterlockClientTest {
   private static Vertx vertx;
   @TempDir Path tempDir;
 
+  private InterlockSessionFactory interlockSessionFactory;
+
   @BeforeAll
   static void beforeAll() {
     vertx = Vertx.vertx();
@@ -44,12 +48,14 @@ public class InterlockClientTest {
     vertx.close();
   }
 
+  @BeforeEach
+  void setUp() {
+    final Path knownServersFile = tempDir.resolve("known_servers.txt");
+    interlockSessionFactory = InterlockSessionFactoryProvider.newInstance(vertx, knownServersFile);
+  }
+
   @Test
   void successfullyFetchKey() throws URISyntaxException {
-    final Path whitelistFile = tempDir.resolve("whitelist.txt");
-
-    final InterlockSessionFactory interlockSessionFactory =
-        InterlockSessionFactoryProvider.newInstance(vertx, whitelistFile);
     try (final InterlockSession session =
         interlockSessionFactory.newSession(new URI("https://10.0.0.1"), "armory", "usbarmory")) {
       final Bytes blsKey = session.fetchKey(Path.of("/bls/key1.txt"));
@@ -59,16 +65,13 @@ public class InterlockClientTest {
 
   @Test
   void errorRaisedForInvalidLoginCredentials() {
-    final Path whitelistFile = tempDir.resolve("whitelist.txt");
-    final InterlockSessionFactory interlockSessionFactory =
-        InterlockSessionFactoryProvider.newInstance(vertx, whitelistFile);
-
     assertThatExceptionOfType(InterlockClientException.class)
         .isThrownBy(
             () -> {
               try (final InterlockSession session =
-                  interlockSessionFactory.newSession(
-                      new URI("https://10.0.0.1"), "test", "test")) {}
+                  interlockSessionFactory.newSession(new URI("https://10.0.0.1"), "test", "test")) {
+                Assertions.fail("newSession should have failed.");
+              }
             })
         .withMessage(
             "Login failed. Status: INVALID_SESSION, Response: [\"Device /dev/lvmvolume/test doesn't exist or access denied.\\n\"]");
@@ -76,10 +79,6 @@ public class InterlockClientTest {
 
   @Test
   void errorRaisedForInvalidKeyPath() {
-    final Path whitelistFile = tempDir.resolve("whitelist.txt");
-    final InterlockSessionFactory interlockSessionFactory =
-        InterlockSessionFactoryProvider.newInstance(vertx, whitelistFile);
-
     assertThatExceptionOfType(InterlockClientException.class)
         .isThrownBy(
             () -> {

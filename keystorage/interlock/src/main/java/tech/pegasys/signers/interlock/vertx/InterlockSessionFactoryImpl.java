@@ -22,6 +22,7 @@ import tech.pegasys.signers.interlock.vertx.operations.LoginOperation;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Objects;
 
 import io.vertx.core.Vertx;
@@ -34,14 +35,14 @@ public class InterlockSessionFactoryImpl implements InterlockSessionFactory {
   private static final Logger LOG = LogManager.getLogger();
 
   private final Vertx vertx;
-  private final Path serverWhitelist;
-  private final int httpClientTimeoutMs;
+  private final Path knownServersFile;
+  private final Duration httpClientTimeout;
 
   public InterlockSessionFactoryImpl(
-      final Vertx vertx, final Path serverWhitelist, final int httpClientTimeoutMs) {
+      final Vertx vertx, final Path knownServersFile, final Duration httpClientTimeout) {
     this.vertx = vertx;
-    this.serverWhitelist = serverWhitelist;
-    this.httpClientTimeoutMs = httpClientTimeoutMs;
+    this.knownServersFile = knownServersFile;
+    this.httpClientTimeout = httpClientTimeout;
   }
 
   @Override
@@ -72,11 +73,11 @@ public class InterlockSessionFactoryImpl implements InterlockSessionFactory {
             .setDefaultHost(interlockURI.getHost())
             .setDefaultPort(port)
             .setTryUseCompression(true)
-            .setConnectTimeout(httpClientTimeoutMs)
+            .setConnectTimeout((int) httpClientTimeout.toMillis())
             .setSsl(useSsl);
     if (useSsl) {
       httpClientOptions.setTrustOptions(
-          trustServerOnFirstUse(serverWhitelist.toAbsolutePath(), true));
+          trustServerOnFirstUse(knownServersFile.toAbsolutePath(), true));
     }
 
     return vertx.createHttpClient(httpClientOptions);
