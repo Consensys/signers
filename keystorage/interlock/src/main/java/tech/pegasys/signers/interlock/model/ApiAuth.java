@@ -10,13 +10,25 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
+package tech.pegasys.signers.interlock.model;
 
-rootProject.name='signers'
-include 'bls-keystore'
-include 'keystorage:hashicorp'
-include 'keystorage:azure'
-include 'keystorage:yubihsm2'
-include 'keystorage:interlock'
-include 'acceptance-tests'
-include 'signing:secp256k1:api'
-include 'signing:secp256k1:impl'
+import java.util.List;
+
+public class ApiAuth {
+  public static final String XSRF_TOKEN_HEADER = "X-XSRFToken";
+  private final String token;
+  private final List<String> cookies;
+
+  public ApiAuth(final String token, final List<String> cookies) {
+    this.token = token;
+    this.cookies = cookies;
+  }
+
+  public List<String> getCookies() {
+    return cookies;
+  }
+
+  public String getToken() {
+    return token;
+  }
+}
