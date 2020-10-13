@@ -15,6 +15,9 @@ package tech.pegasys.signers.yubihsm2;
 import static tech.pegasys.signers.yubihsm2.ProcessUtil.executeProcess;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,12 +25,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * Access secrets/opaque data from Yubi HSM 2. https://developers.yubico.com/YubiHSM2/. It is
  * assumed that yubi hsm sdk is installed on the system which contains yubihsm-shell. This class
  * uses yubihsm-shell, which is a thin wrapper over libyubihsm.
  */
 public class YubiHsm2 {
+  private static final Logger LOG = LogManager.getLogger(YubiHsm2.class);
+
   private final List<String> yubiHsmShellPathArgs;
   private final String connectorUrl;
   private final short authKey;
@@ -68,32 +76,75 @@ public class YubiHsm2 {
    * Fetch opaque data from yubi hsm 2
    *
    * @param opaqueObjId The object id of opaque data to retrieve
-   * @param outformat Optional output format to be passed to yubishell process.
+   * @param outputFormat Optional output format to be passed to yubishell process.
    * @return The data stored against opaque object id.
    * @throws YubiHsmException In case of errors in invoking process or if command returns error.
    */
-  public String fetchOpaqueData(final short opaqueObjId, final Optional<OutputFormat> outformat)
+  public String fetchOpaqueData(final short opaqueObjId, final Optional<OutputFormat> outputFormat)
       throws YubiHsmException {
+    final Path yubiHsmConfig = yubihsmShellConfig(opaqueObjId, outputFormat);
+
     try {
       return executeProcess(
-          getOpaqueDataArgs(opaqueObjId, outformat),
-          additionalEnvVars.orElse(Collections.emptyMap()),
-          password);
+          getArgs(yubiHsmConfig), additionalEnvVars.orElse(Collections.emptyMap()));
     } catch (final IOException | TimeoutException | InterruptedException e) {
       throw new YubiHsmException("Error in invoking yubihsm-shell process: " + e.getMessage());
+    } finally {
+      try {
+        Files.deleteIfExists(yubiHsmConfig);
+      } catch (IOException e) {
+        LOG.warn("Error deleting file " + yubiHsmConfig + " due to: " + e.getMessage(), e);
+      }
     }
   }
 
-  private List<String> getOpaqueDataArgs(
-      final short opaqueObjectId, final Optional<OutputFormat> outformat) {
+  private Path yubihsmShellConfig(
+      final short opaqueObjId, final Optional<OutputFormat> outputFormat) {
+    final Path yubiHsmConfig;
+    try {
+      yubiHsmConfig =
+          Files.createTempFile(
+              "interlock",
+              ".config",
+              PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+      Files.write(yubiHsmConfig, configFileContents(opaqueObjId, outputFormat));
+    } catch (IOException e) {
+      throw new YubiHsmException("Error creating temp yubihsm-shell config file " + e.getMessage());
+    }
+    return yubiHsmConfig;
+  }
+
+  private List<String> getArgs(final Path yubiHsmConfig) {
     final ArrayList<String> args = new ArrayList<>(yubiHsmShellPathArgs);
-    args.add("--connector=" + connectorUrl);
-    args.add("--authkey=" + authKey);
-    args.add("--object-id=" + opaqueObjectId);
-    args.add("--action=get-opaque");
-    args.add("--outformat=" + outformat.orElse(OutputFormat.DEFAULT).getValue());
-    caCertPath.ifPresent(s -> args.add("--cacert=" + s));
-    proxyUrl.ifPresent(s -> args.add("--proxy=" + s));
+    args.add("--config-file=" + yubiHsmConfig);
     return args;
+  }
+
+  private List<String> configFileContents(
+      final short opaqueObjectId, final Optional<OutputFormat> outformat) {
+    final ArrayList<String> args = new ArrayList<>();
+    args.add("connector " + connectorUrl);
+    args.add("authkey " + authKey);
+    args.add("password " + password);
+    args.add("object-id " + opaqueObjectId);
+    args.add("action get-opaque");
+    args.add("outformat " + outformat.orElse(OutputFormat.DEFAULT).getValue());
+    caCertPath.ifPresent(s -> args.add("cacert " + s));
+    proxyUrl.ifPresent(s -> args.add("proxy " + s));
+    return args;
+  }
+
+  public static void main(String[] args) {
+    final List<String> shellArgs = List.of("/Users/usmansaleem/dev/yubihsm2-sdk/bin/yubihsm-shell");
+    YubiHsm2 yubiHsm2 =
+        new YubiHsm2(
+            shellArgs,
+            Optional.empty(),
+            "http://localhost:12345",
+            (short) 1,
+            "password",
+            Optional.empty(),
+            Optional.empty());
+    yubiHsm2.fetchOpaqueData((short) 1, Optional.of(OutputFormat.ASCII));
   }
 }

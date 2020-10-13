@@ -13,26 +13,22 @@
 package tech.pegasys.signers.yubihsm2;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.io.IOUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 
 public class ProcessUtil {
   // visible for testing as well
-  static String executeProcess(
-      final List<String> args, final Map<String, String> additionalEnvVars, String password)
-      throws IOException, TimeoutException, InterruptedException {
+  static String executeProcess(final List<String> args, final Map<String, String> additionalEnvVars)
+      throws IOException, InterruptedException, TimeoutException {
     final ProcessResult processResult =
         new ProcessExecutor()
             .environment(additionalEnvVars)
             .command(args)
             .readOutput(true)
-            .redirectInput(IOUtils.toInputStream(password + "\n", StandardCharsets.UTF_8.name()))
             .destroyOnExit()
             .execute();
 
