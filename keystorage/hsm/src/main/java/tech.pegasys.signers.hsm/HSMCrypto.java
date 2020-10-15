@@ -14,6 +14,7 @@ package tech.pegasys.signers.hsm;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -155,28 +156,28 @@ public class HSMCrypto {
 
   // generateECKeyPair generates a new key pair inside the wallet
   public String generateECKeyPair(long slotIndex) {
-    String address = null;
-    byte[] id = timeToBytes();
-    byte[] ecParams = null;
-    try {
-      ecParams = params.getEncoded();
-    } catch (IOException ex) {
-      LOG.error(ex);
-      throw new HSMCryptoException("Failed get EC parameters.", ex);
-    }
+    String address;
+    byte[] priId = timeToBytes();
+    char[] priLabel = timeToChars();
+    byte[] ecParams =
+        new byte[] {
+          (byte) 0x06, (byte) 0x05, (byte) 0x2B, (byte) 0x81, (byte) 0x04, (byte) 0x00, (byte) 0x0A
+        };
     ECPrivateKey privateKeyTemplate = new ECPrivateKey();
-    privateKeyTemplate.getToken().setBooleanValue(true);
-    privateKeyTemplate.getSign().setBooleanValue(true);
-    privateKeyTemplate.getPrivate().setBooleanValue(true);
-    privateKeyTemplate.getLabel().setCharArrayValue("EC-private-key".toCharArray());
-    privateKeyTemplate.getId().setByteArrayValue(id);
+    privateKeyTemplate.getToken().setBooleanValue(Boolean.TRUE);
+    privateKeyTemplate.getSign().setBooleanValue(Boolean.TRUE);
+    privateKeyTemplate.getPrivate().setBooleanValue(Boolean.TRUE);
+    privateKeyTemplate.getLabel().setCharArrayValue(priLabel);
+    privateKeyTemplate.getId().setByteArrayValue(priId);
+    byte[] pubId = timeToBytes();
+    char[] pubLabel = timeToChars();
     ECPublicKey publicKeyTemplate = new ECPublicKey();
-    publicKeyTemplate.getToken().setBooleanValue(true);
-    publicKeyTemplate.getVerify().setBooleanValue(true);
+    publicKeyTemplate.getToken().setBooleanValue(Boolean.TRUE);
+    publicKeyTemplate.getVerify().setBooleanValue(Boolean.TRUE);
     publicKeyTemplate.getEcdsaParams().setByteArrayValue(ecParams);
-    publicKeyTemplate.getPrivate().setBooleanValue(true);
-    publicKeyTemplate.getLabel().setCharArrayValue("EC-public-key".toCharArray());
-    publicKeyTemplate.getId().setByteArrayValue(id);
+    publicKeyTemplate.getPrivate().setBooleanValue(Boolean.FALSE);
+    publicKeyTemplate.getLabel().setCharArrayValue(pubLabel);
+    publicKeyTemplate.getId().setByteArrayValue(pubId);
     KeyPair keyPair;
     Session session = openSession(slotIndex);
     try {
@@ -194,7 +195,6 @@ public class HSMCrypto {
     } finally {
       closeSession(session);
     }
-
     return address;
   }
 
@@ -362,6 +362,12 @@ public class HSMCrypto {
       l >>= 8;
     }
     return result;
+  }
+
+  // timeToChars returns the current unix time as a byte array
+  private char[] timeToChars() {
+    byte[] result = timeToBytes();
+    return new String(result, Charset.defaultCharset()).toCharArray();
   }
 
   // getECPoint returns the CKA_EC_POINT of the given public key.
