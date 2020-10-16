@@ -27,8 +27,10 @@ jar {
 
 dependencies {
   implementation 'org.apache.logging.log4j:log4j-api'
-  implementation 'org.zeroturnaround:zt-exec'
+  implementation 'org.zeroturnaround:zt-exec' //TODO: Remove
   implementation 'commons-io:commons-io'
+  implementation 'org.apache.tuweni:tuweni-bytes'
+  implementation 'org.bouncycastle:bcprov-jdk15on'
 
   runtimeOnly 'org.apache.logging.log4j:log4j-core'
   runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
