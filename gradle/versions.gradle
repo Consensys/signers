@@ -70,5 +70,7 @@ dependencyManagement {
     dependency 'org.zeroturnaround:zt-exec:1.11'
 
     dependency 'info.picocli:picocli:4.5.1'
+
+    dependency 'io.specto:hoverfly-java-junit5:0.13.0'
   }
 }

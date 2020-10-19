@@ -17,18 +17,9 @@ import tech.pegasys.signers.yubihsm.model.Errors;
 public class YubiHsmException extends RuntimeException {
   Errors yhError;
 
-  public YubiHsmException() {
-    super();
-    yhError = null;
-  }
 
   public YubiHsmException(final String message) {
     super(message);
-    yhError = null;
-  }
-
-  public YubiHsmException(final Throwable cause) {
-    super(cause);
     yhError = null;
   }
 
@@ -38,30 +29,11 @@ public class YubiHsmException extends RuntimeException {
   }
 
   public YubiHsmException(final Errors error) {
-    super();
-    yhError = error;
-  }
-
-  public YubiHsmException(final Errors error, final String message) {
-    super(message);
-    yhError = error;
-  }
-
-  public YubiHsmException(final Errors error, final Throwable cause) {
-    super(cause);
-    yhError = error;
-  }
-
-  public YubiHsmException(final Errors error, final String message, final Throwable cause) {
-    super(message, cause);
+    super(error.getDescription());
     yhError = error;
   }
 
   public Errors getYubiHsmError() {
     return yhError;
-  }
-
-  public void setYubiHsmError(final Errors error) {
-    yhError = error;
   }
 }

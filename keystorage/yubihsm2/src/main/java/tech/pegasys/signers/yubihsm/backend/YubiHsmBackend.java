@@ -24,5 +24,5 @@ public interface YubiHsmBackend {
    * @return The device response
    * @throws YubiHsmConnectionException If connection with the device fails
    */
-  Bytes transceive(Bytes message) throws YubiHsmConnectionException;
+  Bytes send(Bytes message) throws YubiHsmConnectionException;
 }

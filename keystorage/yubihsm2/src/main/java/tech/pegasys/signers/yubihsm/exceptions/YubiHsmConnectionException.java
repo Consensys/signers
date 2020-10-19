@@ -12,22 +12,8 @@
  */
 package tech.pegasys.signers.yubihsm.exceptions;
 
-import tech.pegasys.signers.yubihsm.model.Errors;
-
 public class YubiHsmConnectionException extends YubiHsmException {
-  public YubiHsmConnectionException() {
-    super("The connection to the YubiHsm failed");
-  }
-
   public YubiHsmConnectionException(final Throwable cause) {
     super("The connection to the YubiHsm failed", cause);
-  }
-
-  public YubiHsmConnectionException(final Errors errorCode) {
-    super(errorCode, "The connection to the YubiHsm failed. Error code: " + errorCode);
-  }
-
-  public YubiHsmConnectionException(final Errors errorCode, final Throwable cause) {
-    super(errorCode, "The connection to the YubiHsm failed. Error code: " + errorCode, cause);
   }
 }

@@ -32,10 +32,10 @@ public class Opaque {
   }
 
   /**
-   * Fetch Opaque data
-   *
-   * @param yubiHsmSession Session to use
-   * @return Opaque data
+   * Fetch Opaque Data
+   * @param yubiHsmSession YubiHsmSession to use
+   * @param outputFormat Use ASCII or HEX output format of opaque data
+   * @return Opaque data in Bytes
    */
   public Bytes getOpaque(final YubiHsmSession yubiHsmSession, final OutputFormat outputFormat) {
     final Bytes response =

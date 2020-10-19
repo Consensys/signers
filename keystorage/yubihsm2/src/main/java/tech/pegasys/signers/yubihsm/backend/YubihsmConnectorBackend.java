@@ -12,49 +12,92 @@
  */
 package tech.pegasys.signers.yubihsm.backend;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.net.tls.TrustManagerFactories;
 import tech.pegasys.signers.yubihsm.exceptions.YubiHsmConnectionException;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Path;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.Duration;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.tuweni.bytes.Bytes;
+import java.util.Optional;
 
 public class YubihsmConnectorBackend implements YubiHsmBackend {
   private static final Logger LOG = LogManager.getLogger(YubihsmConnectorBackend.class);
   private static final String CONNECTOR_URL_SUFFIX = "/connector/api";
-  private static final Duration DEFAULT_TIMEOUT = Duration.ofMillis(0);
   private static final int MAX_MESSAGE_SIZE = 2048;
 
   private final URI connectorUri;
   private final HttpClient httpClient;
+  private final Optional<Duration> requestTimeout;
 
-  public YubihsmConnectorBackend(final URI uri, final Duration timeout) {
+  /**
+   * YubiHsm Connector Backend
+   *
+   * @param uri YubiHSMConnector URI. For instance, http://localhost:12345
+   * @param connectionTimeout Connection timeout duration. Use empty to block forever.
+   * @param requestTimeout Request timeout duration. Use empty to block forever.
+   * @param knownServersFile Known servers file which contains server certificate signature. If file
+   *     doesn't exist, it will be created and certificate fingerprint will be recorded on first
+   *     access. If null, will use defaults.
+   */
+  public YubihsmConnectorBackend(
+          final URI uri, final Optional<Duration> connectionTimeout, final Optional<Duration> requestTimeout, final Path knownServersFile) {
     this.connectorUri = uri.resolve(CONNECTOR_URL_SUFFIX);
-    this.httpClient =
-        HttpClient.newBuilder()
-            .connectTimeout(timeout.isNegative() ? DEFAULT_TIMEOUT : timeout)
-            .build();
+    this.requestTimeout = requestTimeout;
+    LOG.debug("yubihsm-connector {}", connectorUri);
+
+    final HttpClient.Builder builder = HttpClient.newBuilder();
+    connectionTimeout.ifPresent(builder::connectTimeout);
+    getSSLContext(knownServersFile).ifPresent(builder::sslContext);
+
+    this.httpClient = builder.build();
+  }
+
+  private Optional<SSLContext> getSSLContext(final Path knownServersFile) {
+    if (!isTLS() || knownServersFile == null) {
+      return Optional.empty();
+    }
+
+    try {
+      final TrustManagerFactory trustManagerFactory =
+          TrustManagerFactories.recordServerFingerprints(knownServersFile);
+      final SSLContext sc = SSLContext.getInstance("TLS");
+      // no mutual authentication supported by yubihsm connector
+      sc.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
+      return Optional.of(sc);
+    } catch (final NoSuchAlgorithmException | KeyManagementException e) {
+      LOG.warn("Unable to initialize SSL Context", e);
+      return Optional.empty();
+    }
+  }
+
+  private boolean isTLS() {
+    return "https".equalsIgnoreCase(connectorUri.getScheme());
   }
 
   @Override
-  public Bytes transceive(final Bytes message) throws YubiHsmConnectionException {
+  public Bytes send(final Bytes message) throws YubiHsmConnectionException {
     if (message.size() > MAX_MESSAGE_SIZE) {
       throw new IllegalArgumentException("Message exceed maximum size of " + MAX_MESSAGE_SIZE);
     }
 
     // send POST byte array
-    final HttpRequest req =
-        HttpRequest.newBuilder(connectorUri)
-            .timeout(Duration.ofSeconds(5))
+    final HttpRequest.Builder builder = HttpRequest.newBuilder(connectorUri)
             .header("Content-Type", "application/octet-stream")
-            .POST(HttpRequest.BodyPublishers.ofByteArray(message.toArrayUnsafe()))
-            .build();
+            .POST(HttpRequest.BodyPublishers.ofByteArray(message.toArrayUnsafe()));
+    requestTimeout.ifPresent(builder::timeout);
+    final HttpRequest req = builder.build();
 
     try {
       final HttpResponse<byte[]> response =

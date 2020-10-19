@@ -36,7 +36,7 @@ public class CommandUtils {
 
   public static Bytes sendCmd(final YubiHsmBackend backend, final Command cmd, final Bytes data) {
     final Bytes msg = getFullCommand(cmd, data);
-    final Bytes response = backend.transceive(msg);
+    final Bytes response = backend.send(msg);
     return parseCmdResponse(cmd, response);
   }
 

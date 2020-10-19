@@ -17,17 +17,23 @@ import tech.pegasys.signers.yubihsm.backend.YubihsmConnectorBackend;
 import tech.pegasys.signers.yubihsm.model.Opaque;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class YubiHsmSessionTest {
 
   @Test
-  void authenticateSessionAndGetOpaqueData() {
+  void authenticateSessionAndGetOpaqueData(@TempDir Path tempDir) {
+    final Path knownServersFile = tempDir.resolve("knownServersFile.txt");
+    final Optional<Duration> timeout = Optional.of(Duration.ofSeconds(3));
     final YubiHsmBackend backend =
-        new YubihsmConnectorBackend(URI.create("http://localhost:12345"), Duration.ofSeconds(3));
+        new YubihsmConnectorBackend(
+            URI.create("https://localhost:12345"), timeout, timeout, knownServersFile);
     try (final YubiHsmSession yubiHsmSession =
         new YubiHsmSession(backend, (short) 1, "password".toCharArray())) {
       yubiHsmSession.authenticateSession();

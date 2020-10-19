@@ -95,6 +95,7 @@ public class YubiHsmSession implements AutoCloseable {
   public void authenticateSession() {
     if (status == SessionStatus.AUTHENTICATED) {
       LOG.debug("Session already authenticated. {}" + sessionID);
+      return;
     }
 
     // create session
@@ -114,7 +115,7 @@ public class YubiHsmSession implements AutoCloseable {
 
     // Authenticate the session
     byte[] authenticateSessionMessage = getAuthenticateSessionMessage(hostCryptogram);
-    Bytes authenticateSessionResponse = backend.transceive(Bytes.wrap(authenticateSessionMessage));
+    Bytes authenticateSessionResponse = backend.send(Bytes.wrap(authenticateSessionMessage));
 
     // Parse the response
     authenticateSessionResponse =
@@ -137,14 +138,14 @@ public class YubiHsmSession implements AutoCloseable {
   public Bytes sendSecureCmd(final Command cmd, final Bytes data) {
     Bytes resp = null;
     try {
-      resp = secureTransceive(CommandUtils.getFullCommand(cmd, data));
+      resp = secureSend(CommandUtils.getFullCommand(cmd, data));
     } catch (GeneralSecurityException e) {
       throw new YubiHsmException("Error in message contruction", e);
     }
     return CommandUtils.parseCmdResponse(cmd, resp);
   }
 
-  private Bytes secureTransceive(final Bytes message)
+  private Bytes secureSend(final Bytes message)
       throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException,
           NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException {
 
@@ -174,7 +175,7 @@ public class YubiHsmSession implements AutoCloseable {
         getSessionMessageWithMac(sessionMsgNoMac, nextSessionChain);
 
     // Send session message command
-    final Bytes sessionMsgResp = backend.transceive(Bytes.wrap(sessionMessageWithMac));
+    final Bytes sessionMsgResp = backend.send(Bytes.wrap(sessionMessageWithMac));
     LOG.trace("Session Message Response: {}:{}", sessionMsgResp, sessionMsgResp.size());
     // Verify response mac
     verifyResponseMac(sessionMsgResp.toArrayUnsafe(), nextSessionChain);
@@ -347,13 +348,13 @@ public class YubiHsmSession implements AutoCloseable {
   private byte[] getIv(final SecretKey key)
       throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException,
           BadPaddingException, IllegalBlockSizeException {
-    byte[] ivCounter = getSessionCounter();
+    final byte[] ivCounter = getSessionCounter();
     LOG.debug("IV counter: {}", Bytes.wrap(ivCounter));
 
     @SuppressWarnings("InsecureCryptoUsage")
-    Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
+    final Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
     cipher.init(Cipher.ENCRYPT_MODE, key);
-    byte[] iv = cipher.doFinal(ivCounter);
+    final byte[] iv = cipher.doFinal(ivCounter);
     LOG.debug("IV: {}", Bytes.wrap(iv));
     return iv;
   }
