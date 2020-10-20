@@ -27,10 +27,6 @@
             "matcher" : "exact",
             "value" : "application/octet-stream"
           } ],
-          "User-Agent" : [ {
-            "matcher" : "exact",
-            "value" : "Java-http-client/14.0.1"
-          } ],
           "X-Debug" : [ {
             "matcher" : "exact",
             "value" : "0"

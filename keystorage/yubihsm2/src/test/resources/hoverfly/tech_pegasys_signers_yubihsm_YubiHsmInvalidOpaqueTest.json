@@ -27,10 +27,6 @@
             "matcher" : "exact",
             "value" : "application/octet-stream"
           } ],
-          "User-Agent" : [ {
-            "matcher" : "exact",
-            "value" : "Java-http-client/14.0.1"
-          } ],
           "X-Debug" : [ {
             "matcher" : "exact",
             "value" : "0"
@@ -76,10 +72,6 @@
           "Content-Type" : [ {
             "matcher" : "exact",
             "value" : "application/octet-stream"
-          } ],
-          "User-Agent" : [ {
-            "matcher" : "exact",
-            "value" : "Java-http-client/14.0.1"
           } ],
           "X-Debug" : [ {
             "matcher" : "exact",
@@ -127,10 +119,6 @@
             "matcher" : "exact",
             "value" : "application/octet-stream"
           } ],
-          "User-Agent" : [ {
-            "matcher" : "exact",
-            "value" : "Java-http-client/14.0.1"
-          } ],
           "X-Debug" : [ {
             "matcher" : "exact",
             "value" : "2"
@@ -176,10 +164,6 @@
           "Content-Type" : [ {
             "matcher" : "exact",
             "value" : "application/octet-stream"
-          } ],
-          "User-Agent" : [ {
-            "matcher" : "exact",
-            "value" : "Java-http-client/14.0.1"
           } ],
           "X-Debug" : [ {
             "matcher" : "exact",
