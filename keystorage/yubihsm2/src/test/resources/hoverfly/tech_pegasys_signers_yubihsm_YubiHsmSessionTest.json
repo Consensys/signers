@@ -1,0 +1,263 @@
+{
+  "data" : {
+    "pairs" : [ {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/connector/api"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "POST"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "localhost:12345"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "http"
+        } ],
+        "headers" : {
+          "Content-Length" : [ {
+            "matcher" : "exact",
+            "value" : "13"
+          } ],
+          "Content-Type" : [ {
+            "matcher" : "exact",
+            "value" : "application/octet-stream"
+          } ],
+          "User-Agent" : [ {
+            "matcher" : "exact",
+            "value" : "Java-http-client/14.0.1"
+          } ],
+          "X-Debug" : [ {
+            "matcher" : "exact",
+            "value" : "0"
+          } ]
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "gwARALL0mTrXLdlVEWMMOEkG/S0=",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Content-Length" : [ "20" ],
+          "Content-Type" : [ "application/octet-stream" ],
+          "Date" : [ "Tue, 20 Oct 2020 05:21:34 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "X-Request-Id" : [ "afb2e2c3-aed9-96a7-afa8-d5c5dfd5593d" ]
+        }
+      }
+    }, {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/connector/api"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "POST"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "localhost:12345"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "http"
+        } ],
+        "headers" : {
+          "Content-Length" : [ {
+            "matcher" : "exact",
+            "value" : "20"
+          } ],
+          "Content-Type" : [ {
+            "matcher" : "exact",
+            "value" : "application/octet-stream"
+          } ],
+          "User-Agent" : [ {
+            "matcher" : "exact",
+            "value" : "Java-http-client/14.0.1"
+          } ],
+          "X-Debug" : [ {
+            "matcher" : "exact",
+            "value" : "1"
+          } ]
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "hAAA",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Content-Length" : [ "3" ],
+          "Content-Type" : [ "application/octet-stream" ],
+          "Date" : [ "Tue, 20 Oct 2020 05:21:34 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "X-Request-Id" : [ "781130f0-b911-db45-1231-b90e7e4b07bb" ]
+        }
+      }
+    }, {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/connector/api"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "POST"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "localhost:12345"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "http"
+        } ],
+        "headers" : {
+          "Content-Length" : [ {
+            "matcher" : "exact",
+            "value" : "28"
+          } ],
+          "Content-Type" : [ {
+            "matcher" : "exact",
+            "value" : "application/octet-stream"
+          } ],
+          "User-Agent" : [ {
+            "matcher" : "exact",
+            "value" : "Java-http-client/14.0.1"
+          } ],
+          "X-Debug" : [ {
+            "matcher" : "exact",
+            "value" : "2"
+          } ]
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "hQA5AL2QLVVf1CuvQx7ICM5vMEXKQGi/Rs/zJ1Y44V3+5e+SgPcmoP4WICBsj8lEnSej55OzAb7WJiVl",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Content-Length" : [ "60" ],
+          "Content-Type" : [ "application/octet-stream" ],
+          "Date" : [ "Tue, 20 Oct 2020 05:21:34 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "X-Request-Id" : [ "72a3b351-1e9b-d9b6-dc53-050f99c3eefa" ]
+        }
+      }
+    }, {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/connector/api"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "POST"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "localhost:12345"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "http"
+        } ],
+        "headers" : {
+          "Content-Length" : [ {
+            "matcher" : "exact",
+            "value" : "28"
+          } ],
+          "Content-Type" : [ {
+            "matcher" : "exact",
+            "value" : "application/octet-stream"
+          } ],
+          "User-Agent" : [ {
+            "matcher" : "exact",
+            "value" : "Java-http-client/14.0.1"
+          } ],
+          "X-Debug" : [ {
+            "matcher" : "exact",
+            "value" : "3"
+          } ]
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "hQBZADD4S+xGeMF2Vta4+iAjx6eRpRYGHuS9IUVWH592o+H9IxgDfI5afZ9VcpkjsQBoVQazRXFPNCadRA72Oe7H73ykmc9k/Exh7sFH82uNzmY1kr3DkmCYky4=",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Content-Length" : [ "92" ],
+          "Content-Type" : [ "application/octet-stream" ],
+          "Date" : [ "Tue, 20 Oct 2020 05:21:34 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "X-Request-Id" : [ "58d823d1-02dc-f8ca-d53f-69f3195dbb1d" ]
+        }
+      }
+    }, {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/connector/api"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "POST"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "localhost:12345"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "http"
+        } ],
+        "headers" : {
+          "Content-Length" : [ {
+            "matcher" : "exact",
+            "value" : "28"
+          } ],
+          "Content-Type" : [ {
+            "matcher" : "exact",
+            "value" : "application/octet-stream"
+          } ],
+          "User-Agent" : [ {
+            "matcher" : "exact",
+            "value" : "Java-http-client/14.0.1"
+          } ],
+          "X-Debug" : [ {
+            "matcher" : "exact",
+            "value" : "4"
+          } ]
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "hQAZAAbuCn/lhSPCWyBvB5fr/tZd+NOr5pUpsg==",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Content-Length" : [ "28" ],
+          "Content-Type" : [ "application/octet-stream" ],
+          "Date" : [ "Tue, 20 Oct 2020 05:21:34 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "X-Request-Id" : [ "1dc587d1-9b62-7e58-377f-0f1cf781e41f" ]
+        }
+      }
+    } ],
+    "globalActions" : {
+      "delays" : [ ]
+    }
+  },
+  "meta" : {
+    "schemaVersion" : "v5",
+    "hoverflyVersion" : "v1.1.5",
+    "timeExported" : "2020-10-20T15:21:34+10:00"
+  }
+}

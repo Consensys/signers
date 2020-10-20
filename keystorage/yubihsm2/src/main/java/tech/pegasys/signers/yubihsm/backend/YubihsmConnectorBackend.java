@@ -12,14 +12,8 @@
  */
 package tech.pegasys.signers.yubihsm.backend;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.net.tls.TrustManagerFactories;
 import tech.pegasys.signers.yubihsm.exceptions.YubiHsmConnectionException;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -31,6 +25,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.tuweni.bytes.Bytes;
+import org.apache.tuweni.net.tls.TrustManagerFactories;
 
 public class YubihsmConnectorBackend implements YubiHsmBackend {
   private static final Logger LOG = LogManager.getLogger(YubihsmConnectorBackend.class);
@@ -40,6 +42,9 @@ public class YubihsmConnectorBackend implements YubiHsmBackend {
   private final URI connectorUri;
   private final HttpClient httpClient;
   private final Optional<Duration> requestTimeout;
+
+  private final AtomicLong debugHeaderCounter = new AtomicLong(0);
+  private boolean enableDebugHeader = false;
 
   /**
    * YubiHsm Connector Backend
@@ -52,7 +57,10 @@ public class YubihsmConnectorBackend implements YubiHsmBackend {
    *     access. If null, will use defaults.
    */
   public YubihsmConnectorBackend(
-          final URI uri, final Optional<Duration> connectionTimeout, final Optional<Duration> requestTimeout, final Path knownServersFile) {
+      final URI uri,
+      final Optional<Duration> connectionTimeout,
+      final Optional<Duration> requestTimeout,
+      final Path knownServersFile) {
     this.connectorUri = uri.resolve(CONNECTOR_URL_SUFFIX);
     this.requestTimeout = requestTimeout;
     LOG.debug("yubihsm-connector {}", connectorUri);
@@ -93,10 +101,16 @@ public class YubihsmConnectorBackend implements YubiHsmBackend {
     }
 
     // send POST byte array
-    final HttpRequest.Builder builder = HttpRequest.newBuilder(connectorUri)
+    final HttpRequest.Builder builder =
+        HttpRequest.newBuilder(connectorUri)
             .header("Content-Type", "application/octet-stream")
             .POST(HttpRequest.BodyPublishers.ofByteArray(message.toArrayUnsafe()));
     requestTimeout.ifPresent(builder::timeout);
+
+    if (enableDebugHeader) {
+      builder.header("X-DEBUG", String.valueOf(debugHeaderCounter.getAndIncrement()));
+    }
+
     final HttpRequest req = builder.build();
 
     try {
@@ -111,5 +125,10 @@ public class YubihsmConnectorBackend implements YubiHsmBackend {
       LOG.warn("Error in sending request to connector: {}", e.getMessage());
       throw new YubiHsmConnectionException(e);
     }
+  }
+
+  // visible for testing - add debug header which helps in replaying mock responses
+  void enableDebugHeader() {
+    this.enableDebugHeader = true;
   }
 }

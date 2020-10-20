@@ -33,6 +33,7 @@ public class Opaque {
 
   /**
    * Fetch Opaque Data
+   *
    * @param yubiHsmSession YubiHsmSession to use
    * @param outputFormat Use ASCII or HEX output format of opaque data
    * @return Opaque data in Bytes

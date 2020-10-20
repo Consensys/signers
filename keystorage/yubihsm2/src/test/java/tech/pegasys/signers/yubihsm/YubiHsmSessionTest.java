@@ -12,35 +12,101 @@
  */
 package tech.pegasys.signers.yubihsm;
 
+import io.specto.hoverfly.junit5.HoverflyExtension;
+import io.specto.hoverfly.junit5.api.HoverflyConfig;
+import io.specto.hoverfly.junit5.api.HoverflySimulate;
+import org.apache.tuweni.bytes.Bytes;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import tech.pegasys.signers.yubihsm.backend.YubiHsmBackend;
-import tech.pegasys.signers.yubihsm.backend.YubihsmConnectorBackend;
+import tech.pegasys.signers.yubihsm.backend.YubiHsmBackendTestFactory;
+import tech.pegasys.signers.yubihsm.exceptions.YubiHsmException;
 import tech.pegasys.signers.yubihsm.model.Opaque;
 
-import java.net.URI;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.util.Optional;
 
-import org.apache.tuweni.bytes.Bytes;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
+@Nested
+@HoverflySimulate(
+    enableAutoCapture = true,
+    config =
+        @HoverflyConfig(captureAllHeaders = true, proxyLocalHost = true, statefulCapture = true))
+@ExtendWith(HoverflyExtension.class)
 class YubiHsmSessionTest {
 
   @Test
   void authenticateSessionAndGetOpaqueData(@TempDir Path tempDir) {
-    final Path knownServersFile = tempDir.resolve("knownServersFile.txt");
-    final Optional<Duration> timeout = Optional.of(Duration.ofSeconds(3));
-    final YubiHsmBackend backend =
-        new YubihsmConnectorBackend(
-            URI.create("https://localhost:12345"), timeout, timeout, knownServersFile);
+    final YubiHsmBackend backend = YubiHsmBackendTestFactory.createYubiHsmBackend(tempDir);
+
     try (final YubiHsmSession yubiHsmSession =
-        new YubiHsmSession(backend, (short) 1, "password".toCharArray())) {
+        spy(new YubiHsmSession(backend, (short) 1, "password".toCharArray()))) {
+      when(yubiHsmSession.getHostChallenge()).thenReturn(Bytes.fromHexString("aaaabbbbccccdddd"));
+
       yubiHsmSession.authenticateSession();
-      final short opaqueId = (short) 15;
+
+      final Bytes expected = Bytes.fromHexString("0x5e8d5667ce78982a07242739ab03dc63c91e830c80a5b6adca777e3f216a405d");
+
+      final Bytes key1 = new Opaque((short)15).getOpaque(yubiHsmSession, Opaque.OutputFormat.HEX);
+      assertThat(key1).isEqualTo(expected);
+
+      final Bytes key2 = new Opaque((short)16).getOpaque(yubiHsmSession, Opaque.OutputFormat.ASCII);
+      assertThat(key2).isEqualTo(expected);
+    }
+  }
+}
+
+@Nested
+@HoverflySimulate(
+        enableAutoCapture = true,
+        config =
+        @HoverflyConfig(captureAllHeaders = true, proxyLocalHost = true, statefulCapture = true))
+@ExtendWith(HoverflyExtension.class)
+class YubiHsmInvalidAuthenticateSessionTest {
+
+  @Test
+  void invalidCredentialsThrowsException(@TempDir Path tempDir) {
+    final YubiHsmBackend backend = YubiHsmBackendTestFactory.createYubiHsmBackend(tempDir);
+
+    try(final YubiHsmSession session = spy(new YubiHsmSession(backend, (short) 1, "invalidpassword".toCharArray()))) {
+      when(session.getHostChallenge()).thenReturn(Bytes.fromHexString("aaaabbbbccccdddd"));
+
+      assertThatExceptionOfType(YubiHsmException.class)
+              .isThrownBy(session::authenticateSession)
+              .withMessage("Wrong Authentication Key");
+    }
+  }
+}
+
+@Nested
+@HoverflySimulate(
+        enableAutoCapture = true,
+        config =
+        @HoverflyConfig(captureAllHeaders = true, proxyLocalHost = true, statefulCapture = true))
+@ExtendWith(HoverflyExtension.class)
+class YubiHsmInvalidOpaqueTest {
+
+  @Test
+  void nonExistingOpaqueThrowsError(@TempDir Path tempDir) {
+    final YubiHsmBackend backend = YubiHsmBackendTestFactory.createYubiHsmBackend(tempDir);
+
+    try (final YubiHsmSession yubiHsmSession =
+                 spy(new YubiHsmSession(backend, (short) 1, "password".toCharArray()))) {
+      when(yubiHsmSession.getHostChallenge()).thenReturn(Bytes.fromHexString("aaaabbbbccccdddd"));
+
+      yubiHsmSession.authenticateSession();
+
+      final short opaqueId = (short) 400;
       final Opaque opaque = new Opaque(opaqueId);
-      final Bytes key1 = opaque.getOpaque(yubiHsmSession, Opaque.OutputFormat.HEX);
-      System.out.println("Key in hex " + key1);
+      assertThatExceptionOfType(YubiHsmException.class).
+              isThrownBy(() -> opaque.getOpaque(yubiHsmSession, Opaque.OutputFormat.HEX))
+              .withMessage("No object found matching given ID and Type");
+
     }
   }
 }

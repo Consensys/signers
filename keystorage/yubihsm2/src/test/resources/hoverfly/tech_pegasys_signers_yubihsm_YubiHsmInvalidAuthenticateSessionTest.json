@@ -1,0 +1,63 @@
+{
+  "data" : {
+    "pairs" : [ {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/connector/api"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "POST"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "localhost:12345"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "http"
+        } ],
+        "headers" : {
+          "Content-Length" : [ {
+            "matcher" : "exact",
+            "value" : "13"
+          } ],
+          "Content-Type" : [ {
+            "matcher" : "exact",
+            "value" : "application/octet-stream"
+          } ],
+          "User-Agent" : [ {
+            "matcher" : "exact",
+            "value" : "Java-http-client/14.0.1"
+          } ],
+          "X-Debug" : [ {
+            "matcher" : "exact",
+            "value" : "0"
+          } ]
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "gwARACm0936y45q3rE0QNDMgREo=",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Content-Length" : [ "20" ],
+          "Content-Type" : [ "application/octet-stream" ],
+          "Date" : [ "Tue, 20 Oct 2020 01:17:18 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "X-Request-Id" : [ "5a3f1727-2cf7-65c6-c34b-f4eafd5bfff1" ]
+        }
+      }
+    } ],
+    "globalActions" : {
+      "delays" : [ ]
+    }
+  },
+  "meta" : {
+    "schemaVersion" : "v5",
+    "hoverflyVersion" : "v1.1.5",
+    "timeExported" : "2020-10-20T11:17:18+10:00"
+  }
+}

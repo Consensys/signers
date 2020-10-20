@@ -17,7 +17,6 @@ import tech.pegasys.signers.yubihsm.model.Errors;
 public class YubiHsmException extends RuntimeException {
   Errors yhError;
 
-
   public YubiHsmException(final String message) {
     super(message);
     yhError = null;

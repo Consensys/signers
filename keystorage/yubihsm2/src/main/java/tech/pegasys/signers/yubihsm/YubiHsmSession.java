@@ -55,6 +55,7 @@ public class YubiHsmSession implements AutoCloseable {
     NOT_INITIALIZED,
     CREATED,
     AUTHENTICATED,
+    NOT_AUTHENTICATED,
     CLOSED
   }
 
@@ -93,13 +94,14 @@ public class YubiHsmSession implements AutoCloseable {
 
   /** Creates and authenticate a session with the device */
   public void authenticateSession() {
+    final Bytes hostChallenge = getHostChallenge();
+
     if (status == SessionStatus.AUTHENTICATED) {
-      LOG.debug("Session already authenticated. {}" + sessionID);
+      LOG.debug("Session already authenticated. {}", sessionID);
       return;
     }
 
     // create session
-    final Bytes hostChallenge = Bytes.wrap(new SecureRandom().generateSeed(HALF_CHALLENGE_SIZE));
     LOG.trace("Host Challenge: {}:{}", hostChallenge, hostChallenge.size());
     List<Bytes> deviceChallengeResponse = createSessionAndGetResponse(hostChallenge);
 
@@ -107,6 +109,7 @@ public class YubiHsmSession implements AutoCloseable {
     LOG.trace("Authenticating session context: {}:{}", challenge, challenge.size());
 
     deriveSessionKeys(challenge);
+    status = SessionStatus.NOT_AUTHENTICATED;
     verifyDeviceCryptogram(deviceChallengeResponse.get(1), challenge);
 
     // Derive a host cryptogram
@@ -249,6 +252,7 @@ public class YubiHsmSession implements AutoCloseable {
     byte[] generatedCryptogram =
         deriveKey(sessionMacKey, CARD_CRYPTOGRAM, challenge.toArrayUnsafe(), HALF_CHALLENGE_SIZE);
     if (!Bytes.wrap(generatedCryptogram).equals(deviceCryptogram)) {
+      LOG.debug("Cryptogram failed");
       throw new YubiHsmException(Errors.AUTHENTICATION_FAILED);
     }
     LOG.debug("Card cryptogram successfully verified");
@@ -456,8 +460,10 @@ public class YubiHsmSession implements AutoCloseable {
 
   @Override
   public void close() {
+    LOG.trace("Status: {}", status);
+
     if (status != SessionStatus.CREATED && status != SessionStatus.AUTHENTICATED) {
-      LOG.info("Session is not open. Doing nothing");
+      LOG.debug("Session is not open. Doing nothing");
       return;
     }
 
@@ -472,7 +478,6 @@ public class YubiHsmSession implements AutoCloseable {
         LOG.warn("Unexpected error while closing session", e);
       }
     } finally {
-      // TODO: Destroy session keys
       destroySessionKeys();
       status = SessionStatus.CLOSED;
     }
@@ -489,5 +494,10 @@ public class YubiHsmSession implements AutoCloseable {
       Arrays.fill(sessionRMacKey, (byte) 0x00);
     }
     LOG.trace("Destroyed the session encryption key, MAC key and RMAC key");
+  }
+
+  // visible for testing
+  Bytes getHostChallenge() {
+    return Bytes.wrap(new SecureRandom().generateSeed(HALF_CHALLENGE_SIZE));
   }
 }
