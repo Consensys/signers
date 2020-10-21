@@ -34,10 +34,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 
 @Nested
-@HoverflySimulate(
-    enableAutoCapture = true,
-    config =
-        @HoverflyConfig(captureAllHeaders = true, proxyLocalHost = true, statefulCapture = true))
+@HoverflySimulate(config = @HoverflyConfig(proxyLocalHost = true))
 @ExtendWith(HoverflyExtension.class)
 class YubiHsmSessionTest {
 
@@ -65,10 +62,7 @@ class YubiHsmSessionTest {
 }
 
 @Nested
-@HoverflySimulate(
-    enableAutoCapture = true,
-    config =
-        @HoverflyConfig(captureAllHeaders = true, proxyLocalHost = true, statefulCapture = true))
+@HoverflySimulate(config = @HoverflyConfig(proxyLocalHost = true))
 @ExtendWith(HoverflyExtension.class)
 class YubiHsmInvalidAuthenticateSessionTest {
 
@@ -88,10 +82,7 @@ class YubiHsmInvalidAuthenticateSessionTest {
 }
 
 @Nested
-@HoverflySimulate(
-    enableAutoCapture = true,
-    config =
-        @HoverflyConfig(captureAllHeaders = true, proxyLocalHost = true, statefulCapture = true))
+@HoverflySimulate(config = @HoverflyConfig(proxyLocalHost = true))
 @ExtendWith(HoverflyExtension.class)
 class YubiHsmInvalidOpaqueTest {
 
