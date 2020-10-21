@@ -19,7 +19,6 @@ import tech.pegasys.signers.yubihsm.exceptions.YubiHsmException;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Arrays;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -39,6 +38,7 @@ public class AuthenticationKey {
   private final Bytes encryptionKey;
   /** The long term MAC key of this Authentication Key */
   private final Bytes macKey;
+
   /**
    * Creates an AuthenticationKey object containing the long term encryption key and MAC key derived
    * from the password
@@ -46,7 +46,7 @@ public class AuthenticationKey {
    * @param authKeyId The Object ID of the authentication key
    * @param password The password to derive the long term encryption key and MAC key from
    */
-  public AuthenticationKey(final short authKeyId, char[] password) {
+  public AuthenticationKey(final short authKeyId, final char[] password) {
     this.authKeyId = authKeyId;
     final Bytes keyBytes;
     try {
@@ -58,22 +58,18 @@ public class AuthenticationKey {
     this.macKey = keyBytes.slice(KEY_SIZE).copy();
   }
 
-  private Bytes deriveSecretKey(char[] password)
+  private Bytes deriveSecretKey(final char[] password)
       throws InvalidKeySpecException, NoSuchAlgorithmException {
     if (password.length == 0) {
       throw new IllegalArgumentException("Missing password for derivation of authentication key");
     }
 
-    try {
-      SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(ALGORITHM);
-      // keyLength in bits: 2 keys each KEY_SIZE long * 8 bits
-      PBEKeySpec keySpec = new PBEKeySpec(password, SALT, ITERATIONS, KEY_SIZE * 2 * 8);
-      // in each byte
-      SecretKey key = keyFactory.generateSecret(keySpec);
-      return Bytes.wrap(key.getEncoded());
-    } finally {
-      Arrays.fill(password, 'c');
-    }
+    SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(ALGORITHM);
+    // keyLength in bits: 2 keys each KEY_SIZE long * 8 bits
+    PBEKeySpec keySpec = new PBEKeySpec(password, SALT, ITERATIONS, KEY_SIZE * 2 * 8);
+    // in each byte
+    SecretKey key = keyFactory.generateSecret(keySpec);
+    return Bytes.wrap(key.getEncoded());
   }
 
   /** @return The long term encryption key of this Authentication Key */

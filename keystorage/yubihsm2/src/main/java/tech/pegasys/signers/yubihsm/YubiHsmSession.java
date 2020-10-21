@@ -87,7 +87,8 @@ public class YubiHsmSession implements AutoCloseable {
   private long lowCounter = 0;
   private long highCounter = 0;
 
-  public YubiHsmSession(final YubiHsmBackend backend, final short authKeyId, char[] password) {
+  public YubiHsmSession(
+      final YubiHsmBackend backend, final short authKeyId, final char[] password) {
     this.backend = backend;
     authenticationKey = new AuthenticationKey(authKeyId, password);
   }
