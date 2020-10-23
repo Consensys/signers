@@ -10,23 +10,9 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.yubihsm2;
+package tech.pegasys.signers.yubihsm;
 
-public enum OutputFormat {
-  DEFAULT("default"),
-  BASE64("base64"),
-  BINARY("binary"),
-  PEM("PEM"),
-  HEX("hex"),
-  ASCII("ASCII");
-
-  private final String value;
-
-  OutputFormat(final String value) {
-    this.value = value;
-  }
-
-  public String getValue() {
-    return value;
-  }
+public enum OpaqueDataFormat {
+  ASCII,
+  HEX
 }

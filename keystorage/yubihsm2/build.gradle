@@ -27,8 +27,9 @@ jar {
 
 dependencies {
   implementation 'org.apache.logging.log4j:log4j-api'
-  implementation 'org.zeroturnaround:zt-exec'
   implementation 'commons-io:commons-io'
+  implementation 'org.apache.tuweni:tuweni-bytes'
+  implementation 'org.xipki.iaik:sunpkcs11-wrapper'
 
   runtimeOnly 'org.apache.logging.log4j:log4j-core'
   runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
@@ -41,8 +42,6 @@ dependencies {
   testImplementation 'org.apache.commons:commons-lang3'
   testImplementation 'com.google.guava:guava'
 
-  // required for resources/YubiShellSimulator.java
-  testRuntimeOnly 'info.picocli:picocli'
 
   errorprone("com.google.errorprone:error_prone_core")
 }
