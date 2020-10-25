@@ -15,13 +15,13 @@ package tech.pegasys.signers.yubihsm;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import org.junit.jupiter.api.Disabled;
 import tech.pegasys.signers.yubihsm.pkcs11.Configuration;
 
 import java.nio.file.Path;
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 @Disabled("Require physical YubiHSM device")
@@ -33,18 +33,13 @@ public class ManualYubiHsmPKCS11Test {
       Bytes.fromHexString("0x5e8d5667ce78982a07242739ab03dc63c91e830c80a5b6adca777e3f216a405d");
   private static final Path PKCS_11_MODULE_PATH =
       Path.of("/Users/user/yubihsm2-sdk/lib/pkcs11/yubihsm_pkcs11.dylib");
-  private static final String CONNECTOR_URL = "yhusb://";
+  private static final String CONNECTOR_URL = "http://localhost:12345";
 
   @Test
   public void validKeysAreFetchedSuccessfully() {
     Configuration configuration =
         new Configuration(
-            PKCS_11_MODULE_PATH,
-            CONNECTOR_URL,
-            Optional.empty(),
-            Optional.empty(),
-            AUTH_KEY,
-            PASSWORD);
+            PKCS_11_MODULE_PATH, CONNECTOR_URL, Optional.of("debug libdebug"), AUTH_KEY, PASSWORD);
 
     try (final YubiHsmSession session = YubiHsmSessionFactory.createYubiHsmSession(configuration)) {
       final Bytes key1 = session.fetchOpaqueData((short) 30, OpaqueDataFormat.HEX);
@@ -58,13 +53,7 @@ public class ManualYubiHsmPKCS11Test {
   @Test
   public void errorIsReportedIfOpaqueObjectIdDoesNotExist() {
     Configuration configuration =
-        new Configuration(
-            PKCS_11_MODULE_PATH,
-            CONNECTOR_URL,
-            Optional.empty(),
-            Optional.empty(),
-            AUTH_KEY,
-            PASSWORD);
+        new Configuration(PKCS_11_MODULE_PATH, CONNECTOR_URL, Optional.empty(), AUTH_KEY, PASSWORD);
 
     try (final YubiHsmSession session = YubiHsmSessionFactory.createYubiHsmSession(configuration)) {
       assertThatExceptionOfType(YubiHsmException.class)
@@ -77,12 +66,7 @@ public class ManualYubiHsmPKCS11Test {
   public void errorIsReportedIfInvalidAuthKeyIsUsed() {
     final Configuration configuration =
         new Configuration(
-            PKCS_11_MODULE_PATH,
-            CONNECTOR_URL,
-            Optional.empty(),
-            Optional.empty(),
-            (short) 30,
-            PASSWORD);
+            PKCS_11_MODULE_PATH, CONNECTOR_URL, Optional.empty(), (short) 30, PASSWORD);
 
     assertThatExceptionOfType(YubiHsmException.class)
         .isThrownBy(() -> YubiHsmSessionFactory.createYubiHsmSession(configuration))
@@ -93,12 +77,7 @@ public class ManualYubiHsmPKCS11Test {
   public void errorIsReportedIfInvalidPasswordIsUsed() {
     final Configuration configuration =
         new Configuration(
-            PKCS_11_MODULE_PATH,
-            CONNECTOR_URL,
-            Optional.empty(),
-            Optional.empty(),
-            AUTH_KEY,
-            "invalidpassword");
+            PKCS_11_MODULE_PATH, CONNECTOR_URL, Optional.empty(), AUTH_KEY, "invalidpassword");
 
     assertThatExceptionOfType(YubiHsmException.class)
         .isThrownBy(() -> YubiHsmSessionFactory.createYubiHsmSession(configuration))
@@ -109,12 +88,7 @@ public class ManualYubiHsmPKCS11Test {
   public void errorIsReportedIfInvalidModulePathIsUsed() {
     final Configuration configuration =
         new Configuration(
-            Path.of("/invalid"),
-            CONNECTOR_URL,
-            Optional.empty(),
-            Optional.empty(),
-            AUTH_KEY,
-            "invalidpassword");
+            Path.of("/invalid"), CONNECTOR_URL, Optional.empty(), AUTH_KEY, "invalidpassword");
 
     assertThatExceptionOfType(YubiHsmException.class)
         .isThrownBy(() -> YubiHsmSessionFactory.createYubiHsmSession(configuration))
@@ -125,12 +99,7 @@ public class ManualYubiHsmPKCS11Test {
   public void errorIsReportedIfInvalidConnectorUrlIsUsed() {
     final Configuration configuration =
         new Configuration(
-            PKCS_11_MODULE_PATH,
-            "http://localhost:11111",
-            Optional.empty(),
-            Optional.empty(),
-            AUTH_KEY,
-            PASSWORD);
+            PKCS_11_MODULE_PATH, "http://localhost:11111", Optional.empty(), AUTH_KEY, PASSWORD);
 
     assertThatExceptionOfType(YubiHsmException.class)
         .isThrownBy(() -> YubiHsmSessionFactory.createYubiHsmSession(configuration))

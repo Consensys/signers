@@ -41,7 +41,7 @@ public class YubiHsmSessionPkcs11 implements YubiHsmSession {
   public void init() {
     this.module =
         Pkcs11ModuleFactory.initPkcs11Module(
-            configuration.getPkcs11ModulePath(), configuration.getPkcs11Conf());
+            configuration.getPkcs11ModulePath(), configuration.getPkcs11ModuleConfiguration());
     this.session = Pkcs11SessionFactory.loginSession(module, configuration.getPin());
   }
 
