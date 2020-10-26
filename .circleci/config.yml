@@ -147,13 +147,13 @@ workflows:
                 - master
     jobs:
       - build:
-          context:
-            - dockerhub-quorumengineering-ro
+#          context:
+#            - dockerhub-quorumengineering-ro
   default:
     jobs:
       - build:
-          context:
-            - dockerhub-quorumengineering-ro
+#          context:
+#            - dockerhub-quorumengineering-ro
       - publish:
           filters:
             branches:
@@ -162,6 +162,6 @@ workflows:
                 - /^release-.*/
           requires:
             - build
-          context:
-            - dockerhub-quorumengineering-rw
+#          context:
+#            - dockerhub-quorumengineering-rw
 
