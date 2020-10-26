@@ -12,9 +12,6 @@
  */
 package tech.pegasys.signers.yubihsm.pkcs11;
 
-import static java.nio.charset.StandardCharsets.ISO_8859_1;
-
-import tech.pegasys.signers.yubihsm.OpaqueDataFormat;
 import tech.pegasys.signers.yubihsm.YubiHsm;
 import tech.pegasys.signers.yubihsm.YubiHsmException;
 
@@ -36,16 +33,11 @@ public class Pkcs11YubiHsm implements YubiHsm {
   }
 
   @Override
-  public Bytes fetchOpaqueData(final short opaqueObjId, final OpaqueDataFormat opaqueDataFormat)
-      throws YubiHsmException {
+  public synchronized Bytes fetchOpaqueData(final short opaqueObjId) throws YubiHsmException {
     try {
       initFind(opaqueObjId);
 
-      final byte[] data = findData();
-
-      return opaqueDataFormat == OpaqueDataFormat.HEX
-          ? Bytes.wrap(data)
-          : Bytes.fromHexString(new String(data, ISO_8859_1));
+      return Bytes.wrap(findData());
 
     } finally {
       finalizeFind();

@@ -59,11 +59,9 @@ public class ManualYubiHsmPKCS11Test {
     try (Pkcs11Session pkcs11Session =
         new Pkcs11Session(module, new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD))) {
       YubiHsm yubiHsm = new Pkcs11YubiHsm(pkcs11Session);
-      final Bytes key1 = yubiHsm.fetchOpaqueData((short) 30, OpaqueDataFormat.HEX);
-      final Bytes key2 = yubiHsm.fetchOpaqueData((short) 31, OpaqueDataFormat.ASCII);
+      final Bytes key1 = yubiHsm.fetchOpaqueData((short) 30);
 
       assertThat(key1).isEqualTo(expected);
-      assertThat(key2).isEqualTo(expected);
     }
   }
 
@@ -73,7 +71,7 @@ public class ManualYubiHsmPKCS11Test {
         new Pkcs11Session(module, new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD))) {
       final YubiHsm yubiHsm = new Pkcs11YubiHsm(pkcs11Session);
       assertThatExceptionOfType(YubiHsmException.class)
-          .isThrownBy(() -> yubiHsm.fetchOpaqueData((short) 40, OpaqueDataFormat.HEX))
+          .isThrownBy(() -> yubiHsm.fetchOpaqueData((short) 40))
           .withMessage("Opaque data not found");
     }
   }

@@ -20,10 +20,8 @@ public interface YubiHsm {
    * Fetch key as opaque data from YubiHSM
    *
    * @param opaqueObjId Opaque object id
-   * @param opaqueDataFormat Specify format of stored data i.e. HEX or ASCII
    * @return data as Bytes
    * @throws YubiHsmException if unable to fetch data
    */
-  Bytes fetchOpaqueData(short opaqueObjId, OpaqueDataFormat opaqueDataFormat)
-      throws YubiHsmException;
+  Bytes fetchOpaqueData(short opaqueObjId) throws YubiHsmException;
 }
