@@ -6,7 +6,10 @@ orbs:
 executors:
   executor_med:  # 2cpu, 4G ram
     docker:
-      - image: circleci/openjdk:11.0.4-jdk-stretch
+      - image: circleci/openjdk:11.0.8-jdk-buster
+        auth:
+          username: $DOCKER_USER_RO
+          password: $DOCKER_PASSWORD_RO
     resource_class: medium
     working_directory: ~/project
     environment:
@@ -15,7 +18,10 @@ executors:
 
   executor_large: # 4cpu, 8G ram
     docker:
-      - image: circleci/openjdk:11.0.4-jdk-stretch
+      - image: circleci/openjdk:11.0.8-jdk-buster
+        auth:
+          username: $DOCKER_USER_RO
+          password: $DOCKER_PASSWORD_RO
     resource_class: large
     working_directory: ~/project
     environment:
@@ -140,11 +146,14 @@ workflows:
               only:
                 - master
     jobs:
-      - build
-
+      - build:
+          context:
+            - dockerhub-quorumengineering-ro
   default:
     jobs:
-      - build
+      - build:
+          context:
+            - dockerhub-quorumengineering-ro
       - publish:
           filters:
             branches:
@@ -153,3 +162,6 @@ workflows:
                 - /^release-.*/
           requires:
             - build
+          context:
+            - dockerhub-quorumengineering-rw
+
