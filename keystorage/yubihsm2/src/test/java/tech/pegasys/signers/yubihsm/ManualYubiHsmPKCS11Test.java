@@ -15,13 +15,13 @@ package tech.pegasys.signers.yubihsm;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import org.junit.jupiter.api.Disabled;
 import tech.pegasys.signers.yubihsm.pkcs11.Configuration;
 
 import java.nio.file.Path;
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 @Disabled("Require physical YubiHSM device")
