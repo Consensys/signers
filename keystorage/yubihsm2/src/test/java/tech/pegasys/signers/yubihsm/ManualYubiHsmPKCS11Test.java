@@ -15,12 +15,16 @@ package tech.pegasys.signers.yubihsm;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import tech.pegasys.signers.yubihsm.pkcs11.Configuration;
+import tech.pegasys.signers.yubihsm.pkcs11.Pkcs11Module;
+import tech.pegasys.signers.yubihsm.pkcs11.Pkcs11Session;
+import tech.pegasys.signers.yubihsm.pkcs11.Pkcs11YubiHsm;
+import tech.pegasys.signers.yubihsm.pkcs11.Pkcs11YubiHsmPin;
 
 import java.nio.file.Path;
-import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -33,17 +37,30 @@ public class ManualYubiHsmPKCS11Test {
       Bytes.fromHexString("0x5e8d5667ce78982a07242739ab03dc63c91e830c80a5b6adca777e3f216a405d");
   private static final Path PKCS_11_MODULE_PATH =
       Path.of("/Users/user/yubihsm2-sdk/lib/pkcs11/yubihsm_pkcs11.dylib");
-  private static final String CONNECTOR_URL = "http://localhost:12345";
+  private static final String PKCS11_INIT_CONFIG = "connector=yhusb:// debug";
+
+  private static Pkcs11Module module;
+  private static final short INVALID_AUTH_KEY = (short) 100;
+
+  @BeforeAll
+  static void initModule() {
+    module = new Pkcs11Module(PKCS_11_MODULE_PATH, PKCS11_INIT_CONFIG);
+  }
+
+  @AfterAll
+  static void finalizeModule() {
+    if (module != null) {
+      module.close();
+    }
+  }
 
   @Test
   public void validKeysAreFetchedSuccessfully() {
-    Configuration configuration =
-        new Configuration(
-            PKCS_11_MODULE_PATH, CONNECTOR_URL, Optional.of("debug libdebug"), AUTH_KEY, PASSWORD);
-
-    try (final YubiHsmSession session = YubiHsmSessionFactory.createYubiHsmSession(configuration)) {
-      final Bytes key1 = session.fetchOpaqueData((short) 30, OpaqueDataFormat.HEX);
-      final Bytes key2 = session.fetchOpaqueData((short) 31, OpaqueDataFormat.ASCII);
+    try (Pkcs11Session pkcs11Session =
+        new Pkcs11Session(module, new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD))) {
+      YubiHsm yubiHsm = new Pkcs11YubiHsm(pkcs11Session);
+      final Bytes key1 = yubiHsm.fetchOpaqueData((short) 30, OpaqueDataFormat.HEX);
+      final Bytes key2 = yubiHsm.fetchOpaqueData((short) 31, OpaqueDataFormat.ASCII);
 
       assertThat(key1).isEqualTo(expected);
       assertThat(key2).isEqualTo(expected);
@@ -52,57 +69,34 @@ public class ManualYubiHsmPKCS11Test {
 
   @Test
   public void errorIsReportedIfOpaqueObjectIdDoesNotExist() {
-    Configuration configuration =
-        new Configuration(PKCS_11_MODULE_PATH, CONNECTOR_URL, Optional.empty(), AUTH_KEY, PASSWORD);
-
-    try (final YubiHsmSession session = YubiHsmSessionFactory.createYubiHsmSession(configuration)) {
+    try (Pkcs11Session pkcs11Session =
+        new Pkcs11Session(module, new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD))) {
+      final YubiHsm yubiHsm = new Pkcs11YubiHsm(pkcs11Session);
       assertThatExceptionOfType(YubiHsmException.class)
-          .isThrownBy(() -> session.fetchOpaqueData((short) 40, OpaqueDataFormat.HEX))
+          .isThrownBy(() -> yubiHsm.fetchOpaqueData((short) 40, OpaqueDataFormat.HEX))
           .withMessage("Opaque data not found");
     }
   }
 
   @Test
   public void errorIsReportedIfInvalidAuthKeyIsUsed() {
-    final Configuration configuration =
-        new Configuration(
-            PKCS_11_MODULE_PATH, CONNECTOR_URL, Optional.empty(), (short) 30, PASSWORD);
-
     assertThatExceptionOfType(YubiHsmException.class)
-        .isThrownBy(() -> YubiHsmSessionFactory.createYubiHsmSession(configuration))
+        .isThrownBy(
+            () -> new Pkcs11Session(module, new Pkcs11YubiHsmPin(INVALID_AUTH_KEY, PASSWORD)))
         .withMessage("Login Failed");
   }
 
   @Test
   public void errorIsReportedIfInvalidPasswordIsUsed() {
-    final Configuration configuration =
-        new Configuration(
-            PKCS_11_MODULE_PATH, CONNECTOR_URL, Optional.empty(), AUTH_KEY, "invalidpassword");
-
     assertThatExceptionOfType(YubiHsmException.class)
-        .isThrownBy(() -> YubiHsmSessionFactory.createYubiHsmSession(configuration))
+        .isThrownBy(() -> new Pkcs11Session(module, new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD + "1")))
         .withMessage("Login Failed");
   }
 
   @Test
   public void errorIsReportedIfInvalidModulePathIsUsed() {
-    final Configuration configuration =
-        new Configuration(
-            Path.of("/invalid"), CONNECTOR_URL, Optional.empty(), AUTH_KEY, "invalidpassword");
-
     assertThatExceptionOfType(YubiHsmException.class)
-        .isThrownBy(() -> YubiHsmSessionFactory.createYubiHsmSession(configuration))
+        .isThrownBy(() -> new Pkcs11Module(Path.of("/invalid"), ""))
         .withMessage("File /invalid does not exist");
-  }
-
-  @Test
-  public void errorIsReportedIfInvalidConnectorUrlIsUsed() {
-    final Configuration configuration =
-        new Configuration(
-            PKCS_11_MODULE_PATH, "http://localhost:11111", Optional.empty(), AUTH_KEY, PASSWORD);
-
-    assertThatExceptionOfType(YubiHsmException.class)
-        .isThrownBy(() -> YubiHsmSessionFactory.createYubiHsmSession(configuration))
-        .withMessage("Unable to obtain slot");
   }
 }

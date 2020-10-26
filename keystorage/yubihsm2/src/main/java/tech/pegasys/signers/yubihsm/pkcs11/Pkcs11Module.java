@@ -23,10 +23,20 @@ import iaik.pkcs.pkcs11.TokenException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-class Pkcs11ModuleFactory {
+public class Pkcs11Module implements AutoCloseable {
   private static final Logger LOG = LogManager.getLogger();
+  private final Module module;
 
-  public static Module initPkcs11Module(final Path pkcs11ModulePath, final String pkcs11Config) {
+  /**
+   * Create Pkcs11 Module.
+   *
+   * @see <a href="https://developers.yubico.com/YubiHSM2/Component_Reference/PKCS_11/">YubiHSM
+   *     Configuration Options</a>
+   * @param pkcs11ModulePath The path to pkcs11 module .so or .dylib
+   * @param pkcs11InitConfig The pkcs11 module's initialization configuration string in lieu of
+   *     configuration file
+   */
+  public Pkcs11Module(final Path pkcs11ModulePath, final String pkcs11InitConfig) {
     final Module module;
     try {
       module = Module.getInstance(pkcs11ModulePath.toString());
@@ -34,9 +44,9 @@ class Pkcs11ModuleFactory {
       throw new YubiHsmException(e.getMessage(), e);
     }
 
-    LOG.debug("Initializing PKCS11 module with conf: {}", pkcs11Config);
+    LOG.debug("Initializing PKCS11 module with conf: {}", pkcs11InitConfig);
     final DefaultInitializeArgs defaultInitializeArgs = new DefaultInitializeArgs();
-    defaultInitializeArgs.setReserved(pkcs11Config);
+    defaultInitializeArgs.setReserved(pkcs11InitConfig);
 
     try {
       module.initialize(defaultInitializeArgs);
@@ -45,6 +55,22 @@ class Pkcs11ModuleFactory {
       throw new YubiHsmException("Unable to initialize PKCS11 module " + e.getMessage(), e);
     }
 
+    this.module = module;
+  }
+
+  public Module getModule() {
     return module;
+  }
+
+  @Override
+  public void close() {
+    LOG.trace("Finalizing Module");
+    if (module != null) {
+      try {
+        module.finalize(null);
+      } catch (final TokenException e) {
+        LOG.warn("Unable to finalize module: " + e.getMessage());
+      }
+    }
   }
 }

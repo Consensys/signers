@@ -10,24 +10,16 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.yubihsm;
+package tech.pegasys.signers.yubihsm.pkcs11;
 
-import org.apache.tuweni.bytes.Bytes;
+public class Pkcs11YubiHsmPin {
+  private final char[] pin;
 
-public interface YubiHsmSession extends AutoCloseable {
+  public Pkcs11YubiHsmPin(final short authId, final String password) {
+    this.pin = String.format("%04X%s", authId, password).toCharArray();
+  }
 
-  /**
-   * Fetch key as opaque data from YubiHSM
-   *
-   * @param opaqueObjId Opaque object id
-   * @param opaqueDataFormat Specify format of stored data i.e. HEX or ASCII
-   * @return data as Bytes
-   * @throws YubiHsmException if unable to fetch data
-   */
-  Bytes fetchOpaqueData(short opaqueObjId, OpaqueDataFormat opaqueDataFormat)
-      throws YubiHsmException;
-
-  /** Logout from session and close all resources. */
-  @Override
-  void close();
+  public char[] getPin() {
+    return pin;
+  }
 }

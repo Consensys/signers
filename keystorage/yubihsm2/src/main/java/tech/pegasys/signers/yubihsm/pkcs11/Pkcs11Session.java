@@ -22,17 +22,25 @@ import iaik.pkcs.pkcs11.TokenException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-class Pkcs11SessionFactory {
+public class Pkcs11Session implements AutoCloseable {
   private static final Logger LOG = LogManager.getLogger();
 
-  public static Session loginSession(final Module module, final char[] pin) {
-    final Session session = openReadOnlySession(getToken(module));
+  private final Session session;
+
+  public Pkcs11Session(final Pkcs11Module module, final Pkcs11YubiHsmPin pin) {
+    final Session session = openReadOnlySession(getToken(module.getModule()));
+
     try {
-      session.login(Session.UserType.USER, pin);
+      session.login(Session.UserType.USER, pin.getPin());
     } catch (final TokenException e) {
       LOG.error("YubiHSM Login failed {}", e.getMessage());
+      closeSession(session);
       throw new YubiHsmException("Login Failed", e);
     }
+    this.session = session;
+  }
+
+  public Session getSession() {
     return session;
   }
 
@@ -64,6 +72,30 @@ class Pkcs11SessionFactory {
     } catch (final TokenException e) {
       LOG.error("Unable to open PKCS11 session {}", e.getMessage());
       throw new YubiHsmException("Unable to open PKCS11 session", e);
+    }
+  }
+
+  @Override
+  public void close() {
+    if (session != null) {
+      logoutSession(session);
+      closeSession(session);
+    }
+  }
+
+  private static void closeSession(final Session session) {
+    try {
+      session.closeSession();
+    } catch (final TokenException closeTokenException) {
+      LOG.warn("Unable to close session: " + closeTokenException.getMessage());
+    }
+  }
+
+  private static void logoutSession(final Session session) {
+    try {
+      session.logout();
+    } catch (final TokenException e) {
+      LOG.warn("Unable to logout session: " + e.getMessage());
     }
   }
 }
