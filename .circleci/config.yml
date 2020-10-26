@@ -146,12 +146,12 @@ workflows:
               only:
                 - master
     jobs:
-      - build:
+      - build
 #          context:
 #            - dockerhub-quorumengineering-ro
   default:
     jobs:
-      - build:
+      - build
 #          context:
 #            - dockerhub-quorumengineering-ro
       - publish:
@@ -164,4 +164,3 @@ workflows:
             - build
 #          context:
 #            - dockerhub-quorumengineering-rw
-
