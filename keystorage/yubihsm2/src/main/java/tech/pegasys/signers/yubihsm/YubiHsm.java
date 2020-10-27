@@ -10,23 +10,18 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.yubihsm2;
+package tech.pegasys.signers.yubihsm;
 
-public enum OutputFormat {
-  DEFAULT("default"),
-  BASE64("base64"),
-  BINARY("binary"),
-  PEM("PEM"),
-  HEX("hex"),
-  ASCII("ASCII");
+import org.apache.tuweni.bytes.Bytes;
 
-  private final String value;
+public interface YubiHsm {
 
-  OutputFormat(final String value) {
-    this.value = value;
-  }
-
-  public String getValue() {
-    return value;
-  }
+  /**
+   * Fetch key as opaque data from YubiHSM
+   *
+   * @param opaqueObjId Opaque object id
+   * @return data as Bytes
+   * @throws YubiHsmException if unable to fetch data
+   */
+  Bytes fetchOpaqueData(short opaqueObjId) throws YubiHsmException;
 }
