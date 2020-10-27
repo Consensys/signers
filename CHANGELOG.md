@@ -1,5 +1,12 @@
 #Changelog
 
+## 1.0.11
+### Features Added
+- YubiHSM2 as keystore using PKCS11 module. yubihsm-shell integration has been removed.
+
+### Bugs Fixed
+- N/A
+
 ## 1.0.10
 ### Features Added
 - F-Secure Interlock for Armory II as keystore
