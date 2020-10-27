@@ -36,7 +36,7 @@ public class ManualYubiHsmPKCS11Test {
   private static final Bytes expected =
       Bytes.fromHexString("0x5e8d5667ce78982a07242739ab03dc63c91e830c80a5b6adca777e3f216a405d");
   private static final Path PKCS_11_MODULE_PATH =
-      Path.of("/Users/user/yubihsm2-sdk/lib/pkcs11/yubihsm_pkcs11.dylib");
+      Path.of("/Users/usmansaleem/dev/yubihsm2-sdk/lib/pkcs11/yubihsm_pkcs11.dylib");
   private static final String PKCS11_INIT_CONFIG = "connector=yhusb:// debug";
 
   private static Pkcs11Module module;
@@ -44,7 +44,7 @@ public class ManualYubiHsmPKCS11Test {
 
   @BeforeAll
   static void initModule() {
-    module = new Pkcs11Module(PKCS_11_MODULE_PATH, PKCS11_INIT_CONFIG);
+    module = Pkcs11Module.createPkcs11Module(PKCS_11_MODULE_PATH, PKCS11_INIT_CONFIG);
   }
 
   @AfterAll
@@ -57,7 +57,7 @@ public class ManualYubiHsmPKCS11Test {
   @Test
   public void validKeysAreFetchedSuccessfully() {
     try (Pkcs11Session pkcs11Session =
-        new Pkcs11Session(module, new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD))) {
+        module.authenticateSession(new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD))) {
       YubiHsm yubiHsm = new Pkcs11YubiHsm(pkcs11Session);
       final Bytes key1 = yubiHsm.fetchOpaqueData((short) 30);
 
@@ -68,11 +68,11 @@ public class ManualYubiHsmPKCS11Test {
   @Test
   public void errorIsReportedIfOpaqueObjectIdDoesNotExist() {
     try (Pkcs11Session pkcs11Session =
-        new Pkcs11Session(module, new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD))) {
+        module.authenticateSession(new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD))) {
       final YubiHsm yubiHsm = new Pkcs11YubiHsm(pkcs11Session);
       assertThatExceptionOfType(YubiHsmException.class)
           .isThrownBy(() -> yubiHsm.fetchOpaqueData((short) 40))
-          .withMessage("Opaque data not found");
+          .withMessage("Data not found");
     }
   }
 
@@ -80,21 +80,22 @@ public class ManualYubiHsmPKCS11Test {
   public void errorIsReportedIfInvalidAuthKeyIsUsed() {
     assertThatExceptionOfType(YubiHsmException.class)
         .isThrownBy(
-            () -> new Pkcs11Session(module, new Pkcs11YubiHsmPin(INVALID_AUTH_KEY, PASSWORD)))
+            () -> module.authenticateSession(new Pkcs11YubiHsmPin(INVALID_AUTH_KEY, PASSWORD)))
         .withMessage("Login Failed");
   }
 
   @Test
   public void errorIsReportedIfInvalidPasswordIsUsed() {
     assertThatExceptionOfType(YubiHsmException.class)
-        .isThrownBy(() -> new Pkcs11Session(module, new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD + "1")))
+        .isThrownBy(
+            () -> module.authenticateSession(new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD + "1")))
         .withMessage("Login Failed");
   }
 
   @Test
   public void errorIsReportedIfInvalidModulePathIsUsed() {
     assertThatExceptionOfType(YubiHsmException.class)
-        .isThrownBy(() -> new Pkcs11Module(Path.of("/invalid"), ""))
+        .isThrownBy(() -> Pkcs11Module.createPkcs11Module(Path.of("/invalid"), ""))
         .withMessage("File /invalid does not exist");
   }
 }

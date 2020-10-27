@@ -12,6 +12,8 @@
  */
 package tech.pegasys.signers.yubihsm.pkcs11;
 
+import static tech.pegasys.signers.yubihsm.pkcs11.Pkcs11Session.closeSession;
+
 import tech.pegasys.signers.yubihsm.YubiHsmException;
 
 import java.io.IOException;
@@ -19,6 +21,9 @@ import java.nio.file.Path;
 
 import iaik.pkcs.pkcs11.DefaultInitializeArgs;
 import iaik.pkcs.pkcs11.Module;
+import iaik.pkcs.pkcs11.Session;
+import iaik.pkcs.pkcs11.Slot;
+import iaik.pkcs.pkcs11.Token;
 import iaik.pkcs.pkcs11.TokenException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,7 +41,10 @@ public class Pkcs11Module implements AutoCloseable {
    * @param pkcs11InitConfig The pkcs11 module's initialization configuration string in lieu of
    *     configuration file
    */
-  public Pkcs11Module(final Path pkcs11ModulePath, final String pkcs11InitConfig) {
+  public static Pkcs11Module createPkcs11Module(
+      final Path pkcs11ModulePath, final String pkcs11InitConfig) {
+    LOG.debug("Creating PKCS11 Module {} with init config {}", pkcs11ModulePath, pkcs11InitConfig);
+
     final Module module;
     try {
       module = Module.getInstance(pkcs11ModulePath.toString());
@@ -44,22 +52,69 @@ public class Pkcs11Module implements AutoCloseable {
       throw new YubiHsmException(e.getMessage(), e);
     }
 
-    LOG.debug("Initializing PKCS11 module with conf: {}", pkcs11InitConfig);
     final DefaultInitializeArgs defaultInitializeArgs = new DefaultInitializeArgs();
     defaultInitializeArgs.setReserved(pkcs11InitConfig);
-
     try {
       module.initialize(defaultInitializeArgs);
     } catch (final TokenException e) {
-      LOG.error("Unable to initialize PKCS11 module {}", e.getMessage());
       throw new YubiHsmException("Unable to initialize PKCS11 module " + e.getMessage(), e);
     }
 
+    return new Pkcs11Module(module);
+  }
+
+  private Pkcs11Module(final Module module) {
     this.module = module;
   }
 
-  public Module getModule() {
-    return module;
+  /**
+   * Create and authenticate session
+   *
+   * @param pin PKCS11 pin for YubiHSM
+   * @return Pkcs11Session
+   */
+  public Pkcs11Session authenticateSession(final Pkcs11YubiHsmPin pin) {
+    final Session session = openReadOnlySession(getToken(module));
+
+    try {
+      session.login(Session.UserType.USER, pin.getPin());
+    } catch (final TokenException e) {
+      LOG.error("YubiHSM Login failed {}", e.getMessage());
+      closeSession(session);
+      throw new YubiHsmException("Login Failed", e);
+    }
+    return new Pkcs11Session(session);
+  }
+
+  private static Token getToken(final Module module) {
+    final Slot[] slotList;
+    try {
+      slotList = module.getSlotList(Module.SlotRequirement.TOKEN_PRESENT);
+      if (slotList == null || slotList.length == 0) {
+        LOG.error("Empty PKCS11 slot list");
+        throw new YubiHsmException("Unable to obtain slot");
+      }
+    } catch (final TokenException e) {
+      LOG.error("Unable to obtain PKCS11 slot list {}", e.getMessage());
+      throw new YubiHsmException("Unable to obtain slot", e);
+    }
+
+    try {
+      return slotList[0].getToken();
+    } catch (TokenException e) {
+      LOG.error("Unable to get PKCS11 Token from first slot {}", e.getMessage());
+      throw new YubiHsmException("Unable to get Token from first slot", e);
+    }
+  }
+
+  private static Session openReadOnlySession(final Token token) {
+    try {
+      return token.openSession(
+          Token.SessionType.SERIAL_SESSION, Token.SessionReadWriteBehavior.RO_SESSION, null, null);
+    } catch (final TokenException e) {
+      LOG.error("Unable to open PKCS11 session {}", e.getMessage());
+      throw new YubiHsmException("Unable to open PKCS11 session", e);
+    }
   }
 
   @Override

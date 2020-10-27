@@ -14,64 +14,52 @@ package tech.pegasys.signers.yubihsm.pkcs11;
 
 import tech.pegasys.signers.yubihsm.YubiHsmException;
 
-import iaik.pkcs.pkcs11.Module;
 import iaik.pkcs.pkcs11.Session;
-import iaik.pkcs.pkcs11.Slot;
-import iaik.pkcs.pkcs11.Token;
 import iaik.pkcs.pkcs11.TokenException;
+import iaik.pkcs.pkcs11.objects.Attribute;
+import iaik.pkcs.pkcs11.objects.ByteArrayAttribute;
+import iaik.pkcs.pkcs11.objects.PKCS11Object;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/** Wrapper around PKCS11 session. */
 public class Pkcs11Session implements AutoCloseable {
   private static final Logger LOG = LogManager.getLogger();
 
   private final Session session;
 
-  public Pkcs11Session(final Pkcs11Module module, final Pkcs11YubiHsmPin pin) {
-    final Session session = openReadOnlySession(getToken(module.getModule()));
-
-    try {
-      session.login(Session.UserType.USER, pin.getPin());
-    } catch (final TokenException e) {
-      LOG.error("YubiHSM Login failed {}", e.getMessage());
-      closeSession(session);
-      throw new YubiHsmException("Login Failed", e);
-    }
+  Pkcs11Session(final Session session) {
     this.session = session;
   }
 
-  public Session getSession() {
-    return session;
+  void initFind(PKCS11Object searchTemplate) {
+    try {
+      session.findObjectsInit(searchTemplate);
+    } catch (final TokenException e) {
+      throw new YubiHsmException("Find Initialization failed", e);
+    }
   }
 
-  private static Token getToken(final Module module) {
-    final Slot[] slotList;
+  byte[] findData() {
     try {
-      slotList = module.getSlotList(Module.SlotRequirement.TOKEN_PRESENT);
-      if (slotList == null || slotList.length == 0) {
-        LOG.error("Empty PKCS11 slot list");
-        throw new YubiHsmException("Unable to obtain slot");
+      final PKCS11Object[] data = session.findObjects(1);
+      if (data == null || data.length == 0) {
+        throw new YubiHsmException("Data not found");
       }
-    } catch (final TokenException e) {
-      LOG.error("Unable to obtain PKCS11 slot list {}", e.getMessage());
-      throw new YubiHsmException("Unable to obtain slot", e);
-    }
 
-    try {
-      return slotList[0].getToken();
-    } catch (TokenException e) {
-      LOG.error("Unable to get PKCS11 Token from first slot {}", e.getMessage());
-      throw new YubiHsmException("Unable to get Token from first slot", e);
+      return ((ByteArrayAttribute) data[0].getAttributeTable().get(Attribute.VALUE))
+          .getByteArrayValue();
+    } catch (final TokenException e) {
+      throw new YubiHsmException("Data not found", e);
     }
   }
 
-  private static Session openReadOnlySession(final Token token) {
+  void finalizeFind() {
+    LOG.trace("Find Objects Final");
     try {
-      return token.openSession(
-          Token.SessionType.SERIAL_SESSION, Token.SessionReadWriteBehavior.RO_SESSION, null, null);
+      session.findObjectsFinal();
     } catch (final TokenException e) {
-      LOG.error("Unable to open PKCS11 session {}", e.getMessage());
-      throw new YubiHsmException("Unable to open PKCS11 session", e);
+      LOG.warn("PKCS11 Find finalize failed {}", e.getMessage());
     }
   }
 
@@ -83,7 +71,7 @@ public class Pkcs11Session implements AutoCloseable {
     }
   }
 
-  private static void closeSession(final Session session) {
+  static void closeSession(final Session session) {
     try {
       session.closeSession();
     } catch (final TokenException closeTokenException) {
@@ -91,7 +79,7 @@ public class Pkcs11Session implements AutoCloseable {
     }
   }
 
-  private static void logoutSession(final Session session) {
+  static void logoutSession(final Session session) {
     try {
       session.logout();
     } catch (final TokenException e) {

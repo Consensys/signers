@@ -15,10 +15,6 @@ package tech.pegasys.signers.yubihsm.pkcs11;
 import tech.pegasys.signers.yubihsm.YubiHsm;
 import tech.pegasys.signers.yubihsm.YubiHsmException;
 
-import iaik.pkcs.pkcs11.TokenException;
-import iaik.pkcs.pkcs11.objects.Attribute;
-import iaik.pkcs.pkcs11.objects.ByteArrayAttribute;
-import iaik.pkcs.pkcs11.objects.PKCS11Object;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
@@ -34,46 +30,12 @@ public class Pkcs11YubiHsm implements YubiHsm {
 
   @Override
   public synchronized Bytes fetchOpaqueData(final short opaqueObjId) throws YubiHsmException {
+    LOG.debug("Fetching data for Opaque id {}", opaqueObjId);
     try {
-      initFind(opaqueObjId);
-
-      return Bytes.wrap(findData());
-
+      session.initFind(new ExtendedData(opaqueObjId));
+      return Bytes.wrap(session.findData());
     } finally {
-      finalizeFind();
-    }
-  }
-
-  private void initFind(final short opaqueObjId) {
-    LOG.trace("Find Objects Init {}", opaqueObjId);
-    try {
-      session.getSession().findObjectsInit(new ExtendedData(opaqueObjId));
-    } catch (final TokenException e) {
-      LOG.warn("PKCS11 Find Initialization for {} failed: {}", opaqueObjId, e.getMessage());
-      throw new YubiHsmException("Find Initialization failed", e);
-    }
-  }
-
-  private byte[] findData() {
-    try {
-      final PKCS11Object[] data = session.getSession().findObjects(1);
-      if (data == null || data.length == 0) {
-        throw new YubiHsmException("Opaque data not found");
-      }
-
-      return ((ByteArrayAttribute) data[0].getAttributeTable().get(Attribute.VALUE))
-          .getByteArrayValue();
-    } catch (final TokenException e) {
-      throw new YubiHsmException("Opaque data not found", e);
-    }
-  }
-
-  private void finalizeFind() {
-    LOG.trace("Find Objects Final");
-    try {
-      session.getSession().findObjectsFinal();
-    } catch (final TokenException e) {
-      LOG.warn("PKCS11 Find finalize failed {}", e.getMessage());
+      session.finalizeFind();
     }
   }
 }
