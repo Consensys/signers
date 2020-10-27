@@ -40,6 +40,8 @@ public class Pkcs11Module implements AutoCloseable {
    * @param pkcs11ModulePath The path to pkcs11 module .so or .dylib
    * @param pkcs11InitConfig The pkcs11 module's initialization configuration string in lieu of
    *     configuration file
+   * @return A Pkcs11Module which can be used to create sessions (which in turn is used to extract
+   *     opaque data items).
    */
   public static Pkcs11Module createPkcs11Module(
       final Path pkcs11ModulePath, final String pkcs11InitConfig) {
@@ -73,8 +75,8 @@ public class Pkcs11Module implements AutoCloseable {
    * @param pin PKCS11 pin for YubiHSM
    * @return Pkcs11Session
    */
-  public Pkcs11Session authenticateSession(final Pkcs11YubiHsmPin pin) {
-    final Session session = openReadOnlySession(getToken(module));
+  public Pkcs11Session createSession(final Pkcs11YubiHsmPin pin) {
+    final Session session = openReadOnlySession();
 
     try {
       session.login(Session.UserType.USER, pin.getPin());
@@ -86,7 +88,18 @@ public class Pkcs11Module implements AutoCloseable {
     return new Pkcs11Session(session);
   }
 
-  private static Token getToken(final Module module) {
+  private Session openReadOnlySession() {
+    try {
+      final Token token = getToken();
+      return token.openSession(
+          Token.SessionType.SERIAL_SESSION, Token.SessionReadWriteBehavior.RO_SESSION, null, null);
+    } catch (final TokenException e) {
+      LOG.error("Unable to open PKCS11 session {}", e.getMessage());
+      throw new YubiHsmException("Unable to open PKCS11 session", e);
+    }
+  }
+
+  private Token getToken() {
     final Slot[] slotList;
     try {
       slotList = module.getSlotList(Module.SlotRequirement.TOKEN_PRESENT);
@@ -104,16 +117,6 @@ public class Pkcs11Module implements AutoCloseable {
     } catch (TokenException e) {
       LOG.error("Unable to get PKCS11 Token from first slot {}", e.getMessage());
       throw new YubiHsmException("Unable to get Token from first slot", e);
-    }
-  }
-
-  private static Session openReadOnlySession(final Token token) {
-    try {
-      return token.openSession(
-          Token.SessionType.SERIAL_SESSION, Token.SessionReadWriteBehavior.RO_SESSION, null, null);
-    } catch (final TokenException e) {
-      LOG.error("Unable to open PKCS11 session {}", e.getMessage());
-      throw new YubiHsmException("Unable to open PKCS11 session", e);
     }
   }
 

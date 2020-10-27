@@ -57,7 +57,7 @@ public class ManualYubiHsmPKCS11Test {
   @Test
   public void validKeysAreFetchedSuccessfully() {
     try (Pkcs11Session pkcs11Session =
-        module.authenticateSession(new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD))) {
+        module.createSession(new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD))) {
       YubiHsm yubiHsm = new Pkcs11YubiHsm(pkcs11Session);
       final Bytes key1 = yubiHsm.fetchOpaqueData((short) 30);
 
@@ -68,7 +68,7 @@ public class ManualYubiHsmPKCS11Test {
   @Test
   public void errorIsReportedIfOpaqueObjectIdDoesNotExist() {
     try (Pkcs11Session pkcs11Session =
-        module.authenticateSession(new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD))) {
+        module.createSession(new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD))) {
       final YubiHsm yubiHsm = new Pkcs11YubiHsm(pkcs11Session);
       assertThatExceptionOfType(YubiHsmException.class)
           .isThrownBy(() -> yubiHsm.fetchOpaqueData((short) 40))
@@ -79,16 +79,14 @@ public class ManualYubiHsmPKCS11Test {
   @Test
   public void errorIsReportedIfInvalidAuthKeyIsUsed() {
     assertThatExceptionOfType(YubiHsmException.class)
-        .isThrownBy(
-            () -> module.authenticateSession(new Pkcs11YubiHsmPin(INVALID_AUTH_KEY, PASSWORD)))
+        .isThrownBy(() -> module.createSession(new Pkcs11YubiHsmPin(INVALID_AUTH_KEY, PASSWORD)))
         .withMessage("Login Failed");
   }
 
   @Test
   public void errorIsReportedIfInvalidPasswordIsUsed() {
     assertThatExceptionOfType(YubiHsmException.class)
-        .isThrownBy(
-            () -> module.authenticateSession(new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD + "1")))
+        .isThrownBy(() -> module.createSession(new Pkcs11YubiHsmPin(AUTH_KEY, PASSWORD + "1")))
         .withMessage("Login Failed");
   }
 
