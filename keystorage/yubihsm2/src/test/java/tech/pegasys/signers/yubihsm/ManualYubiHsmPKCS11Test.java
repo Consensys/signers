@@ -36,7 +36,7 @@ public class ManualYubiHsmPKCS11Test {
   private static final Bytes expected =
       Bytes.fromHexString("0x5e8d5667ce78982a07242739ab03dc63c91e830c80a5b6adca777e3f216a405d");
   private static final Path PKCS_11_MODULE_PATH =
-      Path.of("/Users/usmansaleem/dev/yubihsm2-sdk/lib/pkcs11/yubihsm_pkcs11.dylib");
+      Path.of("/Users/dev/yubihsm2-sdk/lib/pkcs11/yubihsm_pkcs11.dylib");
   private static final String PKCS11_INIT_CONFIG = "connector=yhusb:// debug";
 
   private static Pkcs11Module module;
