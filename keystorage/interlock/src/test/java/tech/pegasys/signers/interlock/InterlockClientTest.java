@@ -58,7 +58,7 @@ public class InterlockClientTest {
   void successfullyFetchKey() throws URISyntaxException {
     try (final InterlockSession session =
         interlockSessionFactory.newSession(new URI("https://10.0.0.1"), "armory", "usbarmory")) {
-      final Bytes blsKey = session.fetchKey(Path.of("/bls/key1.txt"));
+      final Bytes blsKey = session.fetchKey("/bls/key1.txt");
       assertThat(blsKey).isEqualTo(EXPECTED);
     }
   }
@@ -85,7 +85,7 @@ public class InterlockClientTest {
               try (final InterlockSession session =
                   interlockSessionFactory.newSession(
                       new URI("https://10.0.0.1"), "armory", "usbarmory")) {
-                session.fetchKey(Path.of("/doesnotexist.txt"));
+                session.fetchKey("/doesnotexist.txt");
               }
             })
         .withMessage("Unable to download /doesnotexist.txt");

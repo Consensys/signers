@@ -1,8 +1,16 @@
 #Changelog
 
+## 1.10.12
+### Features Added
+- Change Interlock keystore API fetchKey argument type
+
+### Bugs fixed
+- NA
+
 ## 1.0.11
 ### Features Added
-- YubiHSM2 as keystore using PKCS11 module. yubihsm-shell integration has been removed.
+- YubiHSM2 as keystore using PKCS11 module. 
+- yubihsm-shell integration has been removed.
 
 ### Bugs Fixed
 - N/A
