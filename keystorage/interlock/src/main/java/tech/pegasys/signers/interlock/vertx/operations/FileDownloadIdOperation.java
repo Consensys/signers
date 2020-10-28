@@ -17,8 +17,6 @@ import static tech.pegasys.signers.interlock.model.ApiAuth.XSRF_TOKEN_HEADER;
 
 import tech.pegasys.signers.interlock.model.ApiAuth;
 
-import java.nio.file.Path;
-
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpHeaders;
@@ -27,10 +25,10 @@ import io.vertx.core.json.JsonObject;
 public class FileDownloadIdOperation extends AbstractOperation<String> {
   private final HttpClient httpClient;
   private final ApiAuth apiAuth;
-  private final Path keyPath;
+  private final String keyPath;
 
   public FileDownloadIdOperation(
-      final HttpClient httpClient, final ApiAuth apiAuth, final Path keyPath) {
+      final HttpClient httpClient, final ApiAuth apiAuth, final String keyPath) {
     this.httpClient = httpClient;
     this.apiAuth = apiAuth;
     this.keyPath = keyPath;
@@ -38,7 +36,7 @@ public class FileDownloadIdOperation extends AbstractOperation<String> {
 
   @Override
   protected void invoke() {
-    final String body = new JsonObject().put("path", keyPath.toString()).encode();
+    final String body = new JsonObject().put("path", keyPath).encode();
     httpClient
         .post("/api/file/download", this::handle)
         .exceptionHandler(this::handleException)

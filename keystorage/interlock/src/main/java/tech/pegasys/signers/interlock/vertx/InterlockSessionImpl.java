@@ -19,8 +19,6 @@ import tech.pegasys.signers.interlock.vertx.operations.FileDownloadIdOperation;
 import tech.pegasys.signers.interlock.vertx.operations.FileDownloadOperation;
 import tech.pegasys.signers.interlock.vertx.operations.LogoutOperation;
 
-import java.nio.file.Path;
-
 import io.vertx.core.http.HttpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,7 +36,7 @@ public class InterlockSessionImpl implements InterlockSession {
   }
 
   @Override
-  public Bytes fetchKey(final Path keyPath) throws InterlockClientException {
+  public Bytes fetchKey(final String keyPath) throws InterlockClientException {
     LOG.trace("Fetching key from {}.", keyPath);
     try {
       final String downloadId =
