@@ -38,18 +38,18 @@ public class KeyStoreData {
   public KeyStoreData(
       @JsonProperty(value = "crypto", required = true) final Crypto crypto,
       @JsonProperty(value = "pubkey", required = true) final Bytes pubkey,
-      @JsonProperty(value = "path", required = true) final String path,
-      @JsonProperty(value = "uuid", required = true) final UUID uuid,
-      @JsonProperty(value = "version", required = true) final Integer version) {
+      @JsonProperty(value = "version", required = true) final Integer version,
+      @JsonProperty(value = "path", required = false) final String path,
+      @JsonProperty(value = "uuid", required = false) final UUID uuid) {
     this.crypto = crypto;
     this.pubkey = pubkey;
+    this.version = version;
     this.path = path;
     this.uuid = uuid;
-    this.version = version;
   }
 
   public KeyStoreData(final Crypto crypto, final Bytes pubkey, final String path) {
-    this(crypto, pubkey, path, UUID.randomUUID(), KEYSTORE_VERSION);
+    this(crypto, pubkey, KEYSTORE_VERSION, path, UUID.randomUUID());
   }
 
   public Crypto getCrypto() {
