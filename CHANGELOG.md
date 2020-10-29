@@ -1,5 +1,12 @@
 #Changelog
 
+## Next Release
+### Features Added
+- BLS keystore file (EIP-2335) parsing - make path and UUID fields optional
+
+### Bugs fixes
+- NA
+ 
 ## 1.10.12
 ### Features Added
 - Change Interlock keystore API fetchKey argument type
