@@ -1,6 +1,6 @@
 #Changelog
 
-## Next Release
+## 1.0.13
 ### Features Added
 - BLS keystore file (EIP-2335) parsing - make path and UUID fields optional
 
