@@ -20,10 +20,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import com.azure.core.credential.TokenCredential;
 import com.azure.core.exception.ResourceNotFoundException;
 import com.azure.core.http.rest.PagedIterable;
-import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
+import com.azure.identity.ManagedIdentityCredentialBuilder;
 import com.azure.security.keyvault.keys.KeyClient;
 import com.azure.security.keyvault.keys.KeyClientBuilder;
 import com.azure.security.keyvault.keys.cryptography.CryptographyClient;
@@ -40,34 +41,43 @@ public class AzureKeyVault {
 
   private static final Logger LOG = LogManager.getLogger();
 
-  private final ClientSecretCredential clientSecretCredential;
+  private final TokenCredential tokenCredential;
   private final SecretClient secretClient;
   private final KeyClient keyClient;
 
   private static final String AZURE_URL_PATTERN = "https://%s.vault.azure.net";
 
-  public AzureKeyVault(
+  public static AzureKeyVault createUsingClientSecretCredentials(
       final String clientId,
       final String clientSecret,
       final String tenantId,
       final String vaultName) {
-    clientSecretCredential =
+    final TokenCredential tokenCredential =
         new ClientSecretCredentialBuilder()
             .clientId(clientId)
             .clientSecret(clientSecret)
             .tenantId(tenantId)
             .build();
 
+    return new AzureKeyVault(tokenCredential, vaultName);
+  }
+
+  public static AzureKeyVault createUsingManagedIdentity(
+      final Optional<String> clientId, final String vaultName) {
+    final ManagedIdentityCredentialBuilder managedIdentityCredentialBuilder =
+        new ManagedIdentityCredentialBuilder();
+    clientId.ifPresent(managedIdentityCredentialBuilder::clientId);
+    return new AzureKeyVault(managedIdentityCredentialBuilder.build(), vaultName);
+  }
+
+  private AzureKeyVault(final TokenCredential tokenCredential, final String vaultName) {
+    this.tokenCredential = tokenCredential;
     final String vaultUrl = constructAzureKeyVaultUrl(vaultName);
 
     secretClient =
-        new SecretClientBuilder()
-            .vaultUrl(vaultUrl)
-            .credential(clientSecretCredential)
-            .buildClient();
+        new SecretClientBuilder().vaultUrl(vaultUrl).credential(tokenCredential).buildClient();
 
-    keyClient =
-        new KeyClientBuilder().vaultUrl(vaultUrl).credential(clientSecretCredential).buildClient();
+    keyClient = new KeyClientBuilder().vaultUrl(vaultUrl).credential(tokenCredential).buildClient();
   }
 
   public Optional<String> fetchSecret(final String secretName) {
@@ -83,12 +93,12 @@ public class AzureKeyVault {
     final String keyId = key.getId();
 
     return new CryptographyClientBuilder()
-        .credential(clientSecretCredential)
+        .credential(tokenCredential)
         .keyIdentifier(keyId)
         .buildClient();
   }
 
-  public static String constructAzureKeyVaultUrl(final String keyVaultName) {
+  private static String constructAzureKeyVaultUrl(final String keyVaultName) {
     return String.format(AZURE_URL_PATTERN, keyVaultName);
   }
 
