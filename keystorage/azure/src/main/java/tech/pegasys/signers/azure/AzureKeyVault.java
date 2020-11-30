@@ -98,7 +98,7 @@ public class AzureKeyVault {
         .buildClient();
   }
 
-  private static String constructAzureKeyVaultUrl(final String keyVaultName) {
+  public static String constructAzureKeyVaultUrl(final String keyVaultName) {
     return String.format(AZURE_URL_PATTERN, keyVaultName);
   }
 
