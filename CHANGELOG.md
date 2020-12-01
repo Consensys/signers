@@ -1,5 +1,12 @@
 #Changelog
 
+## 1.0.14
+### Features Added
+- Managed Identity credentials support in Azure Key Vault
+
+### Bugs fixes
+- NA
+
 ## 1.0.13
 ### Features Added
 - BLS keystore file (EIP-2335) parsing - make path and UUID fields optional
