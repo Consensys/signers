@@ -13,6 +13,7 @@
 package tech.pegasys.signers.secp256k1.azure;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static tech.pegasys.signers.azure.AzureKeyVault.createUsingClientSecretCredentials;
 
 import tech.pegasys.signers.azure.AzureKeyVault;
 import tech.pegasys.signers.secp256k1.api.Signer;
@@ -47,7 +48,7 @@ public class AzureKeyVaultSignerFactory {
     final AzureKeyVault vault;
     try {
       vault =
-          new AzureKeyVault(
+          createUsingClientSecretCredentials(
               config.getClientId(),
               config.getClientSecret(),
               config.getTenantId(),
