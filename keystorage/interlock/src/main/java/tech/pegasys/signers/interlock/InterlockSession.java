@@ -12,8 +12,6 @@
  */
 package tech.pegasys.signers.interlock;
 
-import java.nio.file.Path;
-
 import org.apache.tuweni.bytes.Bytes;
 
 public interface InterlockSession extends AutoCloseable {
@@ -26,7 +24,7 @@ public interface InterlockSession extends AutoCloseable {
    * @return org.apache.tuweni.bytes.Bytes representing raw private key.
    * @throws InterlockClientException In case of an error while fetching key
    */
-  Bytes fetchKey(Path keyPath) throws InterlockClientException;
+  Bytes fetchKey(String keyPath) throws InterlockClientException;
 
   /** Logout from Interlock Session */
   @Override

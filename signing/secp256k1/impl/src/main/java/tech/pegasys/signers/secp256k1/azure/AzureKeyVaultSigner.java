@@ -12,6 +12,8 @@
  */
 package tech.pegasys.signers.secp256k1.azure;
 
+import static tech.pegasys.signers.azure.AzureKeyVault.createUsingClientSecretCredentials;
+
 import tech.pegasys.signers.azure.AzureKeyVault;
 import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
@@ -56,7 +58,7 @@ public class AzureKeyVaultSigner implements Signer {
     final AzureKeyVault vault;
     try {
       vault =
-          new AzureKeyVault(
+          createUsingClientSecretCredentials(
               config.getClientId(),
               config.getClientSecret(),
               config.getTenantId(),

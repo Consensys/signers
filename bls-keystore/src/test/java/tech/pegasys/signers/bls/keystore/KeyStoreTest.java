@@ -58,6 +58,8 @@ class KeyStoreTest {
   private static final String SCRYPT_KEYSTORE_RESOURCE = "scryptTestVector.json";
   private static final String SCRYPT_EXTRA_FIELD_KEYSTORE_RESOURCE =
       "scryptExtraFieldTestVector.json";
+  private static final String SCRYPT_MISSING_UUID_PATH_KEYSTORE_RESOURCE =
+      "scryptTestVectorWithMissingPathAndUUID.json";
   private static final String PBKDF2_KEYSTORE_RESOURCE = "pbkdf2TestVector.json";
   private static final String MISSING_SECTION_KEYSTORE_RESOURCE =
       "missingKdfSectionTestVector.json";
@@ -94,6 +96,11 @@ class KeyStoreTest {
   @Test
   void ableToLoadKeystoreWithUnknownFieldsAndDecryptKey() {
     loadKeyStoreAndDecryptKey(SCRYPT_EXTRA_FIELD_KEYSTORE_RESOURCE);
+  }
+
+  @Test
+  void ableToLoadKeystoreWithMissingUUIDAndPathFieldsAndDecryptKey() {
+    loadKeyStoreAndDecryptKey(SCRYPT_MISSING_UUID_PATH_KEYSTORE_RESOURCE);
   }
 
   @Test
