@@ -1,5 +1,10 @@
 #Changelog
 
+## 1.0.15
+### Features Added
+- Publish artifacts to Cloudsmith
+- Move to tag based release
+
 ## 1.0.14
 ### Features Added
 - Managed Identity credentials support in Azure Key Vault
