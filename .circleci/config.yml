@@ -151,10 +151,15 @@ workflows:
   default:
     jobs:
       - build:
+          filters:
+            tags: &filters-release-tags
+              only: /^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?/
           context:
             - dockerhub-quorumengineering-ro
       - publish:
           filters:
+            tags:
+              <<: *filters-release-tags
             branches:
               only:
                 - master
@@ -162,5 +167,6 @@ workflows:
           requires:
             - build
           context:
+            - quorum-gradle
             - dockerhub-quorumengineering-rw
 
