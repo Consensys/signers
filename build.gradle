@@ -18,19 +18,22 @@ import java.text.SimpleDateFormat
 plugins {
   id 'java-test-fixtures'
   id 'com.diffplug.gradle.spotless' version '3.27.1'
-  id 'com.jfrog.bintray' version '1.8.4'
   id 'com.github.ben-manes.versions' version '0.27.0'
   id 'com.github.hierynomus.license' version '0.15.0'
   id 'io.spring.dependency-management' version '1.0.9.RELEASE'
   id 'me.champeau.gradle.jmh' version '0.5.0' apply false
   id 'net.ltgt.errorprone' version '1.1.1'
-  id 'net.researchgate.release' version '2.8.1'
+  id 'org.ajoberstar.grgit' version '4.1.0'
 }
 
 if (!JavaVersion.current().java11Compatible) {
   throw new GradleException("Java 11 or later is required to build Signers.\n" +
   "  Detected version ${JavaVersion.current()}")
 }
+
+rootProject.version = calculatePublishVersion()
+def specificVersion = calculateVersion()
+def isDevelopBuild = rootProject.version.contains('develop')
 
 def cloudsmithUser = project.hasProperty('cloudsmithUser') ? project.property('cloudsmithUser') : System.getenv('CLOUDSMITH_USER')
 def cloudsmithKey = project.hasProperty('cloudsmithApiKey') ? project.property('cloudsmithApiKey') : System.getenv('CLOUDSMITH_API_KEY')
@@ -423,19 +426,6 @@ task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
   }
 }
 
-//configurations { annotationProcessor }
-
-// Prevent errorprone-checks being dependent upon errorprone-checks!
-// However, ensure all subprojects comply with the custom rules.
-/*
- configure(subprojects.findAll {it.name != 'errorprone-checks'}) {
- dependencies { annotationProcessor project(":errorprone-checks") }
- tasks.withType(JavaCompile) {
- options.annotationProcessorPath = configurations.annotationProcessor
- }
- }
- */
-
 // http://label-schema.org/rc1/
 // using the RFC3339 format "2016-04-12T23:20:50.52Z"
 def buildTime() {
@@ -444,14 +434,45 @@ def buildTime() {
   return df.format(new Date())
 }
 
-// Takes the version, and if -SNAPSHOT is part of it replaces SNAPSHOT
-// with the git commit version.
+// Calculate the version that this build would be published under (if it is published)
+// If this exact commit is tagged, use the tag
+// If this is on a release-* branch, use the most recent tag appended with +develop (e.g. 0.1.1-RC1+develop)
+// Otherwise, use develop
+def calculatePublishVersion() {
+  if (!grgit) {
+    return 'UNKNOWN'
+  }
+  def specificVersion = calculateVersion()
+  def isReleaseBranch = grgit.branch.current().name.startsWith('release-')
+  if (specificVersion.contains('+')) {
+    return isReleaseBranch ? "${specificVersion.substring(0, specificVersion.indexOf('+'))}+develop" : "develop"
+  }
+  return specificVersion
+}
+
+// Calculate the version that `product --version` will report (among other places)
+// If this exact commit is tagged, use the tag
+// Otherwise use git describe --tags and replace the - after the tag with a +
 def calculateVersion() {
-  String version = rootProject.version
-  if (version.endsWith("-SNAPSHOT")) {
-    version = version.replace("-SNAPSHOT", "-dev-" + getCheckedOutGitCommitHash())
+  if (!grgit) {
+    return 'UNKNOWN'
+  }
+  String version = grgit.describe(tags: true)
+  if (version == null) {
+    return 'UNKNOWN'
+  }
+  def versionPattern = ~/^(?<lastVersion>.*)-(?<devVersion>[0-9]+-g[a-z0-9]+)$/
+  def matcher = version =~ versionPattern
+  if (matcher.find()) {
+    return "${matcher.group("lastVersion")}+${matcher.group("devVersion")}"
   }
   return version
+}
+
+task printVersion() {
+  doFirst {
+    print "Specific version: ${specificVersion}  Publish version: ${project.version}"
+  }
 }
 
 def calculateJarName(Project project) {
@@ -465,57 +486,4 @@ def calculateJarName(Project project) {
     parent = parent.parent
   }
   return jarName
-}
-
-def getCheckedOutGitCommitHash() {
-  def gitFolder = "$projectDir/.git/"
-  if (!file(gitFolder).isDirectory()) {
-    // We are in a submodule.  The file's contents are `gitdir: <gitFolder>\n`.
-    // Read the file, cut off the front, and trim the whitespace.
-    gitFolder = file(gitFolder).text.substring(8).trim() + "/"
-  }
-  def takeFromHash = 8
-  /*
-   * '.git/HEAD' contains either
-   *      in case of detached head: the currently checked out commit hash
-   *      otherwise: a reference to a file containing the current commit hash
-   */
-  def head = new File(gitFolder + "HEAD").text.split(":") // .git/HEAD
-  def isCommit = head.length == 1 // e5a7c79edabbf7dd39888442df081b1c9d8e88fd
-
-  if(isCommit) return head[0].trim().take(takeFromHash) // e5a7c79edabb
-
-  def refHead = new File(gitFolder + head[1].trim()) // .git/refs/heads/master
-  refHead.text.trim().take takeFromHash
-}
-
-apply plugin: 'net.researchgate.release'
-
-task releaseIntegrationTest(type: Test){
-  for(TaskContainer taskList : subprojects.tasks){
-    def subProjectIntegrationTask = taskList.findByName('integrationTest')
-
-    if (subProjectIntegrationTask != null) {
-      dependsOn subProjectIntegrationTask
-    }
-  }
-}
-
-task releaseAcceptanceTest(type: Test, dependsOn : ':acceptance-tests:acceptanceTest') {}
-
-release {
-  preTagCommitMessage = '[Gradle Release Plugin] - pre tag commit: '
-  tagCommitMessage = '[Gradle Release Plugin] - creating tag: '
-  newVersionCommitMessage = '[Gradle Release Plugin] - new version commit: '
-  buildTasks = [
-    'build',
-    'releaseIntegrationTest',
-    'releaseAcceptanceTest',
-    'checkLicenses',
-    'javadoc'
-  ]
-
-  git {
-    requireBranch = project.hasProperty('release.branch') ? project.property('release.branch') : 'master'
-  }
 }
