@@ -32,23 +32,8 @@ if (!JavaVersion.current().java11Compatible) {
   "  Detected version ${JavaVersion.current()}")
 }
 
-def bintrayUser = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
-def bintrayKey = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_KEY')
-def bintrayPackage = bintray.pkg {
-  repo = 'pegasys-repo'
-  name = 'signers'
-  userOrg = 'consensys'
-  licenses = ['Apache-2.0']
-  websiteUrl = 'https://github.com/PegaSysEng/signers'
-  issueTrackerUrl = 'https://github.com/PegaSysEng/signers/issues'
-  vcsUrl = 'https://github.com/PegaSysEng/signers.git'
-
-  version {
-    name = project.version
-    released  = new Date()
-  }
-}
-
+def cloudsmithUser = project.hasProperty('cloudsmithUser') ? project.property('cloudsmithUser') : System.getenv('CLOUDSMITH_USER')
+def cloudsmithKey = project.hasProperty('cloudsmithApiKey') ? project.property('cloudsmithApiKey') : System.getenv('CLOUDSMITH_API_KEY')
 
 group = 'tech.pegasys.signers'
 
@@ -117,6 +102,7 @@ allprojects {
   repositories {
     jcenter()
     mavenCentral()
+    maven { url "https://artifacts.consensys.net/public/maven/maven/" }
     maven { url  "https://consensys.bintray.com/pegasys-repo" }
   }
 
@@ -250,10 +236,20 @@ task deploy() {}
 subprojects {
 
   if (file('src/main/java').directory || file('src/testFixtures').directory) {
-    apply plugin: 'com.jfrog.bintray'
     apply plugin: 'maven-publish'
 
     publishing {
+      repositories {
+        maven {
+          name = "cloudsmith"
+          url = "https://api-g.cloudsmith.io/maven/consensys/maven/"
+          credentials {
+            username = cloudsmithUser
+            password = cloudsmithKey
+          }
+        }
+      }
+
       publications {
         mavenJava(MavenPublication) {
           artifactId calculateJarName(project)
@@ -268,7 +264,7 @@ subprojects {
           }
           pom {
             name = "Signers - ${project.name}"
-            url = 'http://github.com/PegaSysEng/signers'
+            url = 'http://github.com/ConsenSys/signers'
             licenses {
               license {
                 name = 'The Apache License, Version 2.0'
@@ -276,25 +272,13 @@ subprojects {
               }
             }
             scm {
-              connection = 'scm:git:git://github.com/PegaSysEng/signers.git'
-              developerConnection = 'scm:git:ssh://github.com/PegaSysEng/signers.git'
-              url = 'https://github.com/PegaSysEng/signers'
+              connection = 'scm:git:git://github.com/ConsenSys/signers.git'
+              developerConnection = 'scm:git:ssh://github.com/ConsenSys/signers.git'
+              url = 'https://github.com/ConsenSys/signers'
             }
           }
         }
       }
-    }
-
-    bintray {
-      user = bintrayUser
-      key = bintrayKey
-
-      publications = ['mavenJava']
-      override = version.endsWith('SNAPSHOT')
-
-      publish = true
-
-      pkg = bintrayPackage
     }
   }
 
@@ -535,25 +519,3 @@ release {
     requireBranch = project.hasProperty('release.branch') ? project.property('release.branch') : 'master'
   }
 }
-
-apply plugin: 'com.jfrog.bintray'
-
-bintray {
-  user = bintrayUser
-  key = bintrayKey
-
-  filesSpec {
-    from distTar.destinationDirectory
-    from distZip.destinationDirectory
-    into '.'
-  }
-
-  publish = true
-  override = version.endsWith('SNAPSHOT')
-
-  pkg = bintrayPackage
-}
-
-afterReleaseBuild.dependsOn bintrayUpload
-bintrayUpload.mustRunAfter(distTar)
-bintrayUpload.mustRunAfter(distZip)
