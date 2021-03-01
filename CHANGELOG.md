@@ -1,5 +1,10 @@
 #Changelog
 
+## 1.0.15.1
+### Features Added
+- No code changes from 1.0.15
+- Upgrade gradle version
+
 ## 1.0.15
 ### Features Added
 - Publish artifacts to Cloudsmith
