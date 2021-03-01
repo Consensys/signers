@@ -1,9 +1,10 @@
 #Changelog
 
-## 1.0.15.1
+## 1.0.16
 ### Features Added
 - No code changes from 1.0.15
 - Upgrade gradle version
+- test-fixtures jars are handled by cloudsmith
 
 ## 1.0.15
 ### Features Added
