@@ -1,5 +1,10 @@
 #Changelog
 
+## 1.0.16
+### Features Added
+- Upgrade gradle version
+- test-fixtures jars are handled by cloudsmith
+
 ## 1.0.15
 ### Features Added
 - Publish artifacts to Cloudsmith
