@@ -167,6 +167,6 @@ workflows:
           requires:
             - build
           context:
-            - quorum-gradle
+            - cloudsmith-protocols
             - dockerhub-quorumengineering-rw
 
