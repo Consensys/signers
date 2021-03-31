@@ -147,6 +147,9 @@ public class AzureKeyVaultTest {
               }
               return new SimpleEntry<>(name, value);
             });
+    final Optional<SimpleEntry<String, String>> testKeyEntry =
+        entries.stream().filter(e -> e.getKey().equals("TEST-KEY")).findAny();
+    assertThat(testKeyEntry).isEmpty();
 
     final Optional<SimpleEntry<String, String>> myBlsEntry =
         entries.stream().filter(e -> e.getKey().equals("MyBls")).findAny();
