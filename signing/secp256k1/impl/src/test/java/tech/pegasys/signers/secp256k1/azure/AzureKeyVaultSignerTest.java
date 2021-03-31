@@ -38,8 +38,9 @@ public class AzureKeyVaultSignerTest {
   private static final String tenantId = System.getenv("AZURE_TENANT_ID");
 
   public static final String PUBLIC_KEY_HEX_STRING =
-      "09b02f8a5fddd222ade4ea4528faefc399623af3f736be3c44f03e2df22fb792f3931a4d9573d333ca74343305762a753388c3422a86d98b713fc91c1ea04842";
+      "964f00253459f1f43c7a7720a0db09a328d4ee6f18838015023135d7fc921f1448de34d05de7a1f72a7b5c9f6c76931d7ab33d0f0846ccce5452063bd20f5809";
   private final Bytes publicKeyBytes = Bytes.fromHexString(PUBLIC_KEY_HEX_STRING);
+  private static final String KEY_NAME = "TestKey2";
 
   @BeforeAll
   static void preChecks() {
@@ -51,7 +52,7 @@ public class AzureKeyVaultSignerTest {
   @Test
   public void azureSignerCanSignTwice() {
     final AzureConfig config =
-        new AzureConfig(keyVaultName, "TestKey", "", clientId, clientSecret, tenantId);
+        new AzureConfig(keyVaultName, KEY_NAME, "", clientId, clientSecret, tenantId);
 
     final AzureKeyVaultSignerFactory factory = new AzureKeyVaultSignerFactory();
     final Signer signer = factory.createSigner(config);
@@ -64,7 +65,7 @@ public class AzureKeyVaultSignerTest {
   @Test
   void azureWithoutHashingDoesntHashData() throws SignatureException {
     final AzureConfig config =
-        new AzureConfig(keyVaultName, "TestKey", "", clientId, clientSecret, tenantId);
+        new AzureConfig(keyVaultName, KEY_NAME, "", clientId, clientSecret, tenantId);
 
     final AzureKeyVaultSigner nonHashingSigner =
         new AzureKeyVaultSigner(config, publicKeyBytes, false);
