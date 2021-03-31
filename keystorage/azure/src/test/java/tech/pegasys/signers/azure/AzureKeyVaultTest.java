@@ -18,7 +18,6 @@ import static tech.pegasys.signers.azure.AzureKeyVault.createUsingClientSecretCr
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
-import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assumptions;
@@ -30,6 +29,7 @@ public class AzureKeyVaultTest {
   private static final String CLIENT_SECRET = System.getenv("AZURE_CLIENT_SECRET");
   private static final String TENANT_ID = System.getenv("AZURE_TENANT_ID");
   private static final String VAULT_NAME = System.getenv("AZURE_KEY_VAULT_NAME");
+
   private static final String SECRET_NAME = "TEST-KEY";
   private static final String EXPECTED_KEY =
       "3ee2224386c82ffea477e2adf28a2929f5c349165a4196158c7f3a2ecca40f35";
@@ -100,9 +100,15 @@ public class AzureKeyVaultTest {
 
     Collection<SimpleEntry<String, String>> entries = azureKeyVault.mapSecrets(SimpleEntry::new);
 
-    assertThat(entries).hasSize(2);
-    assertThat(entries.stream().map(Entry::getKey)).containsOnly("MyBls", "TEST-KEY");
-    assertThat(entries.stream().map(Entry::getValue)).containsOnly(EXPECTED_KEY, "BlsKey");
+    final Optional<SimpleEntry<String, String>> myBlsEntry =
+        entries.stream().filter(e -> e.getKey().equals("MyBls")).findAny();
+    assertThat(myBlsEntry).isPresent();
+    assertThat(myBlsEntry.get().getValue()).isEqualTo("BlsKey");
+
+    final Optional<SimpleEntry<String, String>> testKeyEntry =
+        entries.stream().filter(e -> e.getKey().equals("TEST-KEY")).findAny();
+    assertThat(testKeyEntry).isPresent();
+    assertThat(testKeyEntry.get().getValue()).isEqualTo(EXPECTED_KEY);
   }
 
   @Test
@@ -119,9 +125,14 @@ public class AzureKeyVaultTest {
               return new SimpleEntry<>(name, value);
             });
 
-    assertThat(entries).hasSize(1);
-    assertThat(entries.stream().map(Entry::getKey)).containsOnly("TEST-KEY");
-    assertThat(entries.stream().map(Entry::getValue)).containsOnly(EXPECTED_KEY);
+    final Optional<SimpleEntry<String, String>> testKeyEntry =
+        entries.stream().filter(e -> e.getKey().equals("TEST-KEY")).findAny();
+    assertThat(testKeyEntry).isPresent();
+    assertThat(testKeyEntry.get().getValue()).isEqualTo(EXPECTED_KEY);
+
+    final Optional<SimpleEntry<String, String>> myBlsEntry =
+        entries.stream().filter(e -> e.getKey().equals("MyBls")).findAny();
+    assertThat(myBlsEntry).isEmpty();
   }
 
   @Test
@@ -138,8 +149,9 @@ public class AzureKeyVaultTest {
               return new SimpleEntry<>(name, value);
             });
 
-    assertThat(entries).hasSize(1);
-    assertThat(entries.stream().map(Entry::getKey)).containsOnly("MyBls");
-    assertThat(entries.stream().map(Entry::getValue)).containsOnly("BlsKey");
+    final Optional<SimpleEntry<String, String>> myBlsEntry =
+        entries.stream().filter(e -> e.getKey().equals("MyBls")).findAny();
+    assertThat(myBlsEntry).isPresent();
+    assertThat(myBlsEntry.get().getValue()).isEqualTo("BlsKey");
   }
 }
