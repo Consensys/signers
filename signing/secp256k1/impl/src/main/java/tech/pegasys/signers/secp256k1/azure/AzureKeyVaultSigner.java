@@ -44,7 +44,7 @@ public class AzureKeyVaultSigner implements Signer {
   private final AzureConfig config;
   private final ECPublicKey publicKey;
   private final SignatureAlgorithm signingAlgo = SignatureAlgorithm.ES256K;
-  private final boolean needsToHash;
+  private final boolean needsToHash; // Apply Hash.sha3(data) before signing
 
   public AzureKeyVaultSigner(
       final AzureConfig config, final Bytes publicKey, final boolean needsToHash) {

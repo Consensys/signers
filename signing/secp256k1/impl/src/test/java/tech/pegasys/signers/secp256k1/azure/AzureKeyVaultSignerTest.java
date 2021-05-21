@@ -15,13 +15,13 @@ package tech.pegasys.signers.secp256k1.azure;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
 
 import java.math.BigInteger;
 import java.security.SignatureException;
 
-import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -36,10 +36,6 @@ public class AzureKeyVaultSignerTest {
   private static final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
   private static final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
   private static final String tenantId = System.getenv("AZURE_TENANT_ID");
-
-  public static final String PUBLIC_KEY_HEX_STRING =
-      "964f00253459f1f43c7a7720a0db09a328d4ee6f18838015023135d7fc921f1448de34d05de7a1f72a7b5c9f6c76931d7ab33d0f0846ccce5452063bd20f5809";
-  private final Bytes publicKeyBytes = Bytes.fromHexString(PUBLIC_KEY_HEX_STRING);
   private static final String KEY_NAME = "TestKey2";
 
   @BeforeAll
@@ -67,24 +63,25 @@ public class AzureKeyVaultSignerTest {
     final AzureConfig config =
         new AzureConfig(keyVaultName, KEY_NAME, "", clientId, clientSecret, tenantId);
 
-    final AzureKeyVaultSigner nonHashingSigner =
-        new AzureKeyVaultSigner(config, publicKeyBytes, false);
+    final Signer azureNonHashedDataSigner =
+        new AzureKeyVaultSignerFactory(false).createSigner(config);
+    final BigInteger publicKey =
+        Numeric.toBigInt(EthPublicKeyUtils.toByteArray(azureNonHashedDataSigner.getPublicKey()));
 
     final byte[] dataToSign = "Hello World".getBytes(UTF_8);
-    final byte[] preHashedData = Hash.sha3(dataToSign);
+    final byte[] hashedData = Hash.sha3(dataToSign); // manual hash before sending to remote signing
 
-    final Signature signature = nonHashingSigner.sign(preHashedData);
+    final Signature azureSignature = azureNonHashedDataSigner.sign(hashedData);
 
     // Determine if Web3j thinks the signature comes from the public key used (really proves
-    // that the preHashedData isn't hashed a second time).
+    // that the hashedData isn't hashed a second time).
     final SignatureData sigData =
         new SignatureData(
-            signature.getV().toByteArray(),
-            Numeric.toBytesPadded(signature.getR(), 32),
-            Numeric.toBytesPadded(signature.getS(), 32));
+            azureSignature.getV().toByteArray(),
+            Numeric.toBytesPadded(azureSignature.getR(), 32),
+            Numeric.toBytesPadded(azureSignature.getS(), 32));
 
-    final BigInteger recoveredPublicKey = Sign.signedMessageHashToKey(preHashedData, sigData);
-
-    assertThat(recoveredPublicKey).isEqualTo(new BigInteger(publicKeyBytes.toArrayUnsafe()));
+    final BigInteger recoveredPublicKey = Sign.signedMessageHashToKey(hashedData, sigData);
+    assertThat(recoveredPublicKey).isEqualTo(publicKey);
   }
 }
