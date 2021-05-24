@@ -25,6 +25,8 @@ import java.security.SignatureException;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
 import org.web3j.crypto.Sign.SignatureData;
@@ -36,7 +38,10 @@ public class AzureKeyVaultSignerTest {
   private static final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
   private static final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
   private static final String tenantId = System.getenv("AZURE_TENANT_ID");
+  // uses curve name P-256K
   private static final String KEY_NAME = "TestKey2";
+  // uses deprecated curve name SECP256K1
+  private static final String DEPRECATED_KEY_NAME = "TestKey";
 
   @BeforeAll
   static void preChecks() {
@@ -58,10 +63,11 @@ public class AzureKeyVaultSignerTest {
     signer.sign(dataToHash);
   }
 
-  @Test
-  void azureWithoutHashingDoesntHashData() throws SignatureException {
+  @ParameterizedTest
+  @ValueSource(strings = {KEY_NAME, DEPRECATED_KEY_NAME})
+  void azureWithoutHashingDoesntHashData(final String keyName) throws SignatureException {
     final AzureConfig config =
-        new AzureConfig(keyVaultName, KEY_NAME, "", clientId, clientSecret, tenantId);
+        new AzureConfig(keyVaultName, keyName, "", clientId, clientSecret, tenantId);
 
     final Signer azureNonHashedDataSigner =
         new AzureKeyVaultSignerFactory(false).createSigner(config);
@@ -71,15 +77,15 @@ public class AzureKeyVaultSignerTest {
     final byte[] dataToSign = "Hello World".getBytes(UTF_8);
     final byte[] hashedData = Hash.sha3(dataToSign); // manual hash before sending to remote signing
 
-    final Signature azureSignature = azureNonHashedDataSigner.sign(hashedData);
+    final Signature signature = azureNonHashedDataSigner.sign(hashedData);
 
     // Determine if Web3j thinks the signature comes from the public key used (really proves
     // that the hashedData isn't hashed a second time).
     final SignatureData sigData =
         new SignatureData(
-            azureSignature.getV().toByteArray(),
-            Numeric.toBytesPadded(azureSignature.getR(), 32),
-            Numeric.toBytesPadded(azureSignature.getS(), 32));
+            signature.getV().toByteArray(),
+            Numeric.toBytesPadded(signature.getR(), 32),
+            Numeric.toBytesPadded(signature.getS(), 32));
 
     final BigInteger recoveredPublicKey = Sign.signedMessageHashToKey(hashedData, sigData);
     assertThat(recoveredPublicKey).isEqualTo(publicKey);

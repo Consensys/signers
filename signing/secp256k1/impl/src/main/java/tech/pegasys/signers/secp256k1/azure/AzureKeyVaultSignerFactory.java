@@ -30,6 +30,7 @@ public class AzureKeyVaultSignerFactory {
   public static final String INACCESSIBLE_KEY_ERROR = "Failed to authenticate to vault.";
   public static final String INVALID_KEY_PARAMETERS_ERROR =
       "Keyvault does not contain key with specified parameters";
+  public static final String INVALID_CURVE_NAME = "Remote key has invalid curve name";
   private static final Logger LOG = LogManager.getLogger();
 
   private final boolean needsToHash;
@@ -66,8 +67,14 @@ public class AzureKeyVaultSignerFactory {
       throw new SignerInitializationException(INVALID_KEY_PARAMETERS_ERROR, e);
     }
     final JsonWebKey jsonWebKey = cryptoClient.getKey().getKey();
+    final String curveName = jsonWebKey.getCurveName().toString();
+    if (!curveName.equals("SECP256K1") && !curveName.equals("P-256K")) {
+      LOG.error("Unsupported curve name: {}. Expecting P-256K", curveName);
+      throw new SignerInitializationException(INVALID_CURVE_NAME);
+    }
     final Bytes rawPublicKey =
         Bytes.concatenate(Bytes.wrap(jsonWebKey.getX()), Bytes.wrap(jsonWebKey.getY()));
-    return new AzureKeyVaultSigner(config, rawPublicKey, needsToHash);
+    return new AzureKeyVaultSigner(
+        config, rawPublicKey, needsToHash, curveName.equals("SECP256K1"));
   }
 }
