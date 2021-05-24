@@ -18,10 +18,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
 import java.math.BigInteger;
 import java.security.SignatureException;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,7 @@ public class AzureKeyVaultSignerTest {
   private static final String KEY_NAME = "TestKey2";
   // uses deprecated curve name SECP256K1
   private static final String DEPRECATED_KEY_NAME = "TestKey";
+  private static final String UNSUPPORTED_CURVE_KEY_NAME = "TestKeyP521";
 
   @BeforeAll
   static void preChecks() {
@@ -89,5 +92,16 @@ public class AzureKeyVaultSignerTest {
 
     final BigInteger recoveredPublicKey = Sign.signedMessageHashToKey(hashedData, sigData);
     assertThat(recoveredPublicKey).isEqualTo(publicKey);
+  }
+
+  @Test
+  public void azureKeyWithUnsupportedCurveThrowsError() {
+    final AzureConfig config =
+        new AzureConfig(
+            keyVaultName, UNSUPPORTED_CURVE_KEY_NAME, "", clientId, clientSecret, tenantId);
+
+    final AzureKeyVaultSignerFactory factory = new AzureKeyVaultSignerFactory();
+    Assertions.assertThatExceptionOfType(SignerInitializationException.class)
+        .isThrownBy(() -> factory.createSigner(config));
   }
 }
