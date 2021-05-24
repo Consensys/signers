@@ -19,6 +19,8 @@ import tech.pegasys.signers.azure.AzureKeyVault;
 import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
+import java.util.Set;
+
 import com.azure.security.keyvault.keys.cryptography.CryptographyClient;
 import com.azure.security.keyvault.keys.models.JsonWebKey;
 import org.apache.logging.log4j.LogManager;
@@ -30,6 +32,9 @@ public class AzureKeyVaultSignerFactory {
   public static final String INACCESSIBLE_KEY_ERROR = "Failed to authenticate to vault.";
   public static final String INVALID_KEY_PARAMETERS_ERROR =
       "Keyvault does not contain key with specified parameters";
+  public static final String UNSUPPORTED_CURVE_NAME = "Remote key has unsupported curve name";
+  private static final String DEPRECATED_CURVE_NAME = "SECP256K1";
+  private static final Set<String> SUPPORTED_CURVE_NAMES = Set.of(DEPRECATED_CURVE_NAME, "P-256K");
   private static final Logger LOG = LogManager.getLogger();
 
   private final boolean needsToHash;
@@ -66,8 +71,15 @@ public class AzureKeyVaultSignerFactory {
       throw new SignerInitializationException(INVALID_KEY_PARAMETERS_ERROR, e);
     }
     final JsonWebKey jsonWebKey = cryptoClient.getKey().getKey();
+    final String curveName = jsonWebKey.getCurveName().toString();
+    if (!SUPPORTED_CURVE_NAMES.contains(curveName)) {
+      LOG.error(
+          "Unsupported curve name: {}. Expecting one of {}.", curveName, SUPPORTED_CURVE_NAMES);
+      throw new SignerInitializationException(UNSUPPORTED_CURVE_NAME);
+    }
     final Bytes rawPublicKey =
         Bytes.concatenate(Bytes.wrap(jsonWebKey.getX()), Bytes.wrap(jsonWebKey.getY()));
-    return new AzureKeyVaultSigner(config, rawPublicKey, needsToHash);
+    final boolean useDeprecatedCurveName = DEPRECATED_CURVE_NAME.equals(curveName);
+    return new AzureKeyVaultSigner(config, rawPublicKey, needsToHash, useDeprecatedCurveName);
   }
 }

@@ -43,14 +43,21 @@ public class AzureKeyVaultSigner implements Signer {
 
   private final AzureConfig config;
   private final ECPublicKey publicKey;
-  private final SignatureAlgorithm signingAlgo = SignatureAlgorithm.fromString("ECDSA256");
-  private final boolean needsToHash;
+  private final SignatureAlgorithm signingAlgo;
+  private final boolean needsToHash; // Apply Hash.sha3(data) before signing
 
-  public AzureKeyVaultSigner(
-      final AzureConfig config, final Bytes publicKey, final boolean needsToHash) {
+  AzureKeyVaultSigner(
+      final AzureConfig config,
+      final Bytes publicKey,
+      final boolean needsToHash,
+      final boolean useDeprecatedSignatureAlgorithm) {
     this.config = config;
     this.publicKey = EthPublicKeyUtils.createPublicKey(publicKey);
     this.needsToHash = needsToHash;
+    this.signingAlgo =
+        useDeprecatedSignatureAlgorithm
+            ? SignatureAlgorithm.fromString("ECDSA256")
+            : SignatureAlgorithm.ES256K;
   }
 
   @Override

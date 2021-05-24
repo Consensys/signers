@@ -14,32 +14,37 @@ package tech.pegasys.signers.secp256k1.azure;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory.UNSUPPORTED_CURVE_NAME;
 
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 
 import java.math.BigInteger;
 import java.security.SignatureException;
 
-import org.apache.tuweni.bytes.Bytes;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
 import org.web3j.crypto.Sign.SignatureData;
 import org.web3j.utils.Numeric;
 
 public class AzureKeyVaultSignerTest {
-
   private static final String clientId = System.getenv("AZURE_CLIENT_ID");
   private static final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
   private static final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
   private static final String tenantId = System.getenv("AZURE_TENANT_ID");
-
-  public static final String PUBLIC_KEY_HEX_STRING =
-      "09b02f8a5fddd222ade4ea4528faefc399623af3f736be3c44f03e2df22fb792f3931a4d9573d333ca74343305762a753388c3422a86d98b713fc91c1ea04842";
-  private final Bytes publicKeyBytes = Bytes.fromHexString(PUBLIC_KEY_HEX_STRING);
+  // uses curve name P-256K
+  private static final String KEY_NAME = "TestKey2";
+  // uses deprecated curve name SECP256K1
+  private static final String DEPRECATED_KEY_NAME = "TestKey";
+  private static final String UNSUPPORTED_CURVE_KEY_NAME = "TestKeyP521";
 
   @BeforeAll
   static void preChecks() {
@@ -51,7 +56,7 @@ public class AzureKeyVaultSignerTest {
   @Test
   public void azureSignerCanSignTwice() {
     final AzureConfig config =
-        new AzureConfig(keyVaultName, "TestKey", "", clientId, clientSecret, tenantId);
+        new AzureConfig(keyVaultName, KEY_NAME, "", clientId, clientSecret, tenantId);
 
     final AzureKeyVaultSignerFactory factory = new AzureKeyVaultSignerFactory();
     final Signer signer = factory.createSigner(config);
@@ -61,29 +66,43 @@ public class AzureKeyVaultSignerTest {
     signer.sign(dataToHash);
   }
 
-  @Test
-  void azureWithoutHashingDoesntHashData() throws SignatureException {
+  @ParameterizedTest
+  @ValueSource(strings = {KEY_NAME, DEPRECATED_KEY_NAME})
+  void azureWithoutHashingDoesntHashData(final String keyName) throws SignatureException {
     final AzureConfig config =
-        new AzureConfig(keyVaultName, "TestKey", "", clientId, clientSecret, tenantId);
+        new AzureConfig(keyVaultName, keyName, "", clientId, clientSecret, tenantId);
 
-    final AzureKeyVaultSigner nonHashingSigner =
-        new AzureKeyVaultSigner(config, publicKeyBytes, false);
+    final Signer azureNonHashedDataSigner =
+        new AzureKeyVaultSignerFactory(false).createSigner(config);
+    final BigInteger publicKey =
+        Numeric.toBigInt(EthPublicKeyUtils.toByteArray(azureNonHashedDataSigner.getPublicKey()));
 
     final byte[] dataToSign = "Hello World".getBytes(UTF_8);
-    final byte[] preHashedData = Hash.sha3(dataToSign);
+    final byte[] hashedData = Hash.sha3(dataToSign); // manual hash before sending to remote signing
 
-    final Signature signature = nonHashingSigner.sign(preHashedData);
+    final Signature signature = azureNonHashedDataSigner.sign(hashedData);
 
     // Determine if Web3j thinks the signature comes from the public key used (really proves
-    // that the preHashedData isn't hashed a second time).
+    // that the hashedData isn't hashed a second time).
     final SignatureData sigData =
         new SignatureData(
             signature.getV().toByteArray(),
             Numeric.toBytesPadded(signature.getR(), 32),
             Numeric.toBytesPadded(signature.getS(), 32));
 
-    final BigInteger recoveredPublicKey = Sign.signedMessageHashToKey(preHashedData, sigData);
+    final BigInteger recoveredPublicKey = Sign.signedMessageHashToKey(hashedData, sigData);
+    assertThat(recoveredPublicKey).isEqualTo(publicKey);
+  }
 
-    assertThat(recoveredPublicKey).isEqualTo(new BigInteger(publicKeyBytes.toArrayUnsafe()));
+  @Test
+  public void azureKeyWithUnsupportedCurveThrowsError() {
+    final AzureConfig config =
+        new AzureConfig(
+            keyVaultName, UNSUPPORTED_CURVE_KEY_NAME, "", clientId, clientSecret, tenantId);
+
+    final AzureKeyVaultSignerFactory factory = new AzureKeyVaultSignerFactory();
+    Assertions.assertThatExceptionOfType(SignerInitializationException.class)
+        .isThrownBy(() -> factory.createSigner(config))
+        .withMessage(UNSUPPORTED_CURVE_NAME);
   }
 }
