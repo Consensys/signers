@@ -1,5 +1,10 @@
 #Changelog
 
+## 1.0.17
+### Features Added
+- Azure remote signing - add support for keys using curve name P-256K and signature algorithm name ES256K. Curve name 
+  SECP256K and signature algorithm name ECDSA256 are deprecated by Azure.
+
 ## 1.0.16
 ### Features Added
 - Upgrade gradle version
