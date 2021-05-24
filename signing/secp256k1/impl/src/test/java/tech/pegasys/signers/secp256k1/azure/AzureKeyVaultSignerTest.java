@@ -14,7 +14,7 @@ package tech.pegasys.signers.secp256k1.azure;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory.INVALID_CURVE_NAME;
+import static tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory.UNSUPPORTED_CURVE_NAME;
 
 import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
@@ -103,6 +103,6 @@ public class AzureKeyVaultSignerTest {
     final AzureKeyVaultSignerFactory factory = new AzureKeyVaultSignerFactory();
     Assertions.assertThatExceptionOfType(SignerInitializationException.class)
         .isThrownBy(() -> factory.createSigner(config))
-        .withMessage(INVALID_CURVE_NAME);
+        .withMessage(UNSUPPORTED_CURVE_NAME);
   }
 }
