@@ -14,7 +14,6 @@ package tech.pegasys.signers.secp256k1.common;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -41,19 +40,17 @@ class PasswordFileUtilTest {
     assertThat(PasswordFileUtil.readPasswordFromFile(passwordFile)).isEqualTo("   ");
   }
 
-  @Test
-  void emptyFileThrowsException(@TempDir final Path tempDir) throws IOException {
-    final Path passwordFile = Files.write(tempDir.resolve("password.txt"), new byte[0]);
-    assertThatExceptionOfType(SignerInitializationException.class)
-        .isThrownBy(() -> PasswordFileUtil.readPasswordFromFile(passwordFile))
-        .withMessage("Cannot read password from empty file: %s", passwordFile);
+  @ParameterizedTest
+  @ValueSource(strings = {"", "\n"})
+  void canReadPasswordFromEmptyStringFile(final String content, @TempDir final Path tempDir)
+      throws IOException {
+    final Path passwordFile = Files.write(tempDir.resolve("password.txt"), content.getBytes(UTF_8));
+    assertThat(PasswordFileUtil.readPasswordFromFile(passwordFile)).isEqualTo("");
   }
 
   @Test
-  void fileWithEolOnlyThrowsException(@TempDir final Path tempDir) throws IOException {
-    final Path passwordFile = Files.write(tempDir.resolve("password.txt"), "\n".getBytes(UTF_8));
-    assertThatExceptionOfType(SignerInitializationException.class)
-        .isThrownBy(() -> PasswordFileUtil.readPasswordFromFile(passwordFile))
-        .withMessage("Cannot read password from empty file: %s", passwordFile);
+  void canReadPasswordFromEmptyFile(@TempDir final Path tempDir) throws IOException {
+    final Path passwordFile = Files.write(tempDir.resolve("password.txt"), new byte[0]);
+    assertThat(PasswordFileUtil.readPasswordFromFile(passwordFile)).isEqualTo("");
   }
 }
