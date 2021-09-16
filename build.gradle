@@ -17,7 +17,7 @@ import java.text.SimpleDateFormat
 
 plugins {
   id 'java-test-fixtures'
-  id 'com.diffplug.gradle.spotless' version '3.27.1'
+  id "com.diffplug.spotless" version "5.15.0"
   id 'com.github.ben-manes.versions' version '0.27.0'
   id 'com.github.hierynomus.license' version '0.15.0'
   id 'io.spring.dependency-management' version '1.0.9.RELEASE'
@@ -103,15 +103,13 @@ allprojects {
   targetCompatibility = 11
 
   repositories {
-    jcenter()
     mavenCentral()
     maven { url "https://artifacts.consensys.net/public/maven/maven/" }
-    maven { url  "https://consensys.bintray.com/pegasys-repo" }
   }
 
   dependencies { errorprone("com.google.errorprone:error_prone_core") }
 
-  apply plugin: 'com.diffplug.gradle.spotless'
+  apply plugin: 'com.diffplug.spotless'
   spotless {
     java {
       // This path needs to be relative to each project
