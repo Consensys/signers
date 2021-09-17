@@ -17,7 +17,7 @@ import java.text.SimpleDateFormat
 
 plugins {
   id 'java-test-fixtures'
-  id "com.diffplug.spotless" version "5.15.0"
+  id 'com.diffplug.spotless' version '5.15.0'
   id 'com.github.ben-manes.versions' version '0.27.0'
   id 'com.github.hierynomus.license' version '0.15.0'
   id 'io.spring.dependency-management' version '1.0.9.RELEASE'
