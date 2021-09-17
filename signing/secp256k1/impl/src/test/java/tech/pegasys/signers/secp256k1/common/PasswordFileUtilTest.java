@@ -47,10 +47,4 @@ class PasswordFileUtilTest {
     final Path passwordFile = Files.write(tempDir.resolve("password.txt"), content.getBytes(UTF_8));
     assertThat(PasswordFileUtil.readPasswordFromFile(passwordFile)).isEqualTo("");
   }
-
-  @Test
-  void canReadPasswordFromEmptyFile(@TempDir final Path tempDir) throws IOException {
-    final Path passwordFile = Files.write(tempDir.resolve("password.txt"), new byte[0]);
-    assertThat(PasswordFileUtil.readPasswordFromFile(passwordFile)).isEqualTo("");
-  }
 }
