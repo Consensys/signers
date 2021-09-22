@@ -99,6 +99,7 @@ downloadLicenses {
                   license('New BSD License', 'http://www.opensource.org/licenses/bsd-license.php')
           ],
           (bsd3Clause): [
+                  'BSD-3-Clause',
                   'BSD 3-Clause',
                   'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)',
                   license('BSD 3-clause', 'http://opensource.org/licenses/BSD-3-Clause'),
@@ -162,7 +163,7 @@ downloadLicenses {
           (group('signers.signing')): apache,
           (group('signers.signing.secp256k1')): apache,
           (group('org.xipki.iaik')): iaik,
-
+          (group('io.netty')): apache,
   ]
 
 }

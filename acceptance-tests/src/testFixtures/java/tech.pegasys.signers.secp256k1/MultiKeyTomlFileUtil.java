@@ -37,7 +37,7 @@ public class MultiKeyTomlFileUtil {
             .withQuotedString("type", "azure-signer")
             .withQuotedString("key-vault-name", keyVaultName)
             .withQuotedString("key-name", "TestKey")
-            .withQuotedString("key-version", "7c01fe58d68148bba5824ce418241092")
+            .withQuotedString("key-version", "")
             .withQuotedString("client-id", clientId)
             .withQuotedString("client-secret", clientSecret)
             .withQuotedString("tenant-id", tenantId)

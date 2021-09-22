@@ -28,8 +28,6 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
 import org.web3j.crypto.Sign.SignatureData;
@@ -41,9 +39,7 @@ public class AzureKeyVaultSignerTest {
   private static final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
   private static final String tenantId = System.getenv("AZURE_TENANT_ID");
   // uses curve name P-256K
-  private static final String KEY_NAME = "TestKey2";
-  // uses deprecated curve name SECP256K1
-  private static final String DEPRECATED_KEY_NAME = "TestKey";
+  private static final String KEY_NAME = "TestKey";
   private static final String UNSUPPORTED_CURVE_KEY_NAME = "TestKeyP521";
 
   @BeforeAll
@@ -66,11 +62,10 @@ public class AzureKeyVaultSignerTest {
     signer.sign(dataToHash);
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {KEY_NAME, DEPRECATED_KEY_NAME})
-  void azureWithoutHashingDoesntHashData(final String keyName) throws SignatureException {
+  @Test
+  void azureWithoutHashingDoesntHashData() throws SignatureException {
     final AzureConfig config =
-        new AzureConfig(keyVaultName, keyName, "", clientId, clientSecret, tenantId);
+        new AzureConfig(keyVaultName, KEY_NAME, "", clientId, clientSecret, tenantId);
 
     final Signer azureNonHashedDataSigner =
         new AzureKeyVaultSignerFactory(false).createSigner(config);
