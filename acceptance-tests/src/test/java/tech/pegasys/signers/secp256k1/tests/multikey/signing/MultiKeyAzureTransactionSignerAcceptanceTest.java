@@ -28,6 +28,8 @@ public class MultiKeyAzureTransactionSignerAcceptanceTest
   static final String clientSecret = System.getenv("AZURE_CLIENT_SECRET");
   static final String keyVaultName = System.getenv("AZURE_KEY_VAULT_NAME");
   static final String tenantId = System.getenv("AZURE_TENANT_ID");
+  private static final String AZURE_PUBLIC_KEY_HEX_STRING =
+      "964f00253459f1f43c7a7720a0db09a328d4ee6f18838015023135d7fc921f1448de34d05de7a1f72a7b5c9f6c76931d7ab33d0f0846ccce5452063bd20f5809";
 
   @BeforeAll
   static void preChecks() {
@@ -39,12 +41,12 @@ public class MultiKeyAzureTransactionSignerAcceptanceTest
   @Test
   public void azureLoadedFromMultiKeyCanSign(@TempDir Path tomlDirectory) {
     createAzureTomlFileAt(
-        tomlDirectory.resolve(PUBLIC_KEY_HEX_STRING + ".toml"),
+        tomlDirectory.resolve(AZURE_PUBLIC_KEY_HEX_STRING + ".toml"),
         clientId,
         clientSecret,
         keyVaultName,
         tenantId);
     setup(tomlDirectory);
-    verifySignature();
+    verifySignature(AZURE_PUBLIC_KEY_HEX_STRING);
   }
 }
