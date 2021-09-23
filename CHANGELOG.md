@@ -1,5 +1,9 @@
 #Changelog
 
+## 1.0.18
+### Breaking Changes
+- Upgrade to Azure Key Vault 4.3.3 removes support for previously deprecated SECP256K1 curve.
+
 ## 1.0.17
 ### Features Added
 - Azure remote signing - add support for keys using curve name P-256K and signature algorithm name ES256K. Curve name 
