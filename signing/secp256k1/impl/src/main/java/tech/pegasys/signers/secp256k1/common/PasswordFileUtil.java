@@ -16,13 +16,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import com.google.common.io.Files;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class PasswordFileUtil {
-  private static final Logger LOG = LogManager.getLogger();
 
   /**
    * Read password from the first line of specified file
@@ -33,11 +31,6 @@ public class PasswordFileUtil {
    * @throws SignerInitializationException If password file is empty
    */
   public static String readPasswordFromFile(final Path path) throws IOException {
-    final String password = Files.asCharSource(path.toFile(), UTF_8).readFirstLine();
-    if (password == null || password.isEmpty()) {
-      LOG.error("Cannot read password from empty file: " + path);
-      throw new SignerInitializationException("Cannot read password from empty file: " + path);
-    }
-    return password;
+    return Optional.ofNullable(Files.asCharSource(path.toFile(), UTF_8).readFirstLine()).orElse("");
   }
 }

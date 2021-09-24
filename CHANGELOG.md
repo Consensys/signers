@@ -1,5 +1,9 @@
 #Changelog
 
+## 1.0.19
+### Features Added
+- Allow empty password files to be read when creating a Signer
+
 ## 1.0.18
 ### Breaking Changes
 - Upgrade to Azure Key Vault 4.3.3 removes support for previously deprecated SECP256K1 curve.
