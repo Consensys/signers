@@ -46,10 +46,10 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
 
   private final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader;
   private final HashicorpSignerFactory hashicorpSignerFactory;
-  private final FileSelector<ECPublicKey> configFileSelector;
+  private final FileSelector<ECPublicKey, String> configFileSelector;
 
   public static MultiKeySignerProvider create(
-      final Path rootDir, final FileSelector<ECPublicKey> configFileSelector) {
+      final Path rootDir, final FileSelector<ECPublicKey, String> configFileSelector) {
     final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader =
         new SigningMetadataTomlConfigLoader(rootDir);
 
@@ -62,7 +62,7 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   public MultiKeySignerProvider(
       final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader,
       final HashicorpSignerFactory hashicorpSignerFactory,
-      final FileSelector<ECPublicKey> configFileSelector) {
+      final FileSelector<ECPublicKey, String> configFileSelector) {
     this.signingMetadataTomlConfigLoader = signingMetadataTomlConfigLoader;
     this.hashicorpSignerFactory = hashicorpSignerFactory;
     this.configFileSelector = configFileSelector;
@@ -85,6 +85,15 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
       }
     }
     return Optional.empty();
+  }
+
+  @Override
+  public Optional<Signer> getSigner(String address) {
+    final Optional<Signer> signer =
+        signingMetadataTomlConfigLoader
+            .loadMetadata(configFileSelector.getSingleConfigFileFilter(address))
+            .map(metadataFile -> metadataFile.createSigner(this));
+    return signer;
   }
 
   @Override

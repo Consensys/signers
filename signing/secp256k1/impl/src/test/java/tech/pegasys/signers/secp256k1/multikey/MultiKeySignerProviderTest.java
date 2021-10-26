@@ -55,7 +55,7 @@ class MultiKeySignerProviderTest {
   private final SigningMetadataTomlConfigLoader loader =
       mock(SigningMetadataTomlConfigLoader.class);
 
-  @Mock private FileSelector<ECPublicKey> fileSelector;
+  @Mock private FileSelector<ECPublicKey, String> fileSelector;
   private MultiKeySignerProvider signerFactory;
   private FileBasedSigningMetadataFile metadataFile;
   private final String KEY_FILENAME = "k.key";

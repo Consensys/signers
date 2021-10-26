@@ -20,9 +20,11 @@ A set of rules regarding how key files are to be selected.
 Should be overridden by the calling application to define their naming
 convention.
  */
-public interface FileSelector<T> {
+public interface FileSelector<T, U> {
 
   Filter<Path> getAllConfigFilesFilter();
 
   Filter<Path> getSpecificConfigFileFilter(T selectionCriterion);
+
+  Filter<Path> getSingleConfigFileFilter(U selectionCriteria);
 }

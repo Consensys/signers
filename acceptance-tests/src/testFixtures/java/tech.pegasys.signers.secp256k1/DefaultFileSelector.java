@@ -18,7 +18,7 @@ import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.Path;
 import java.security.interfaces.ECPublicKey;
 
-public class DefaultFileSelector implements FileSelector<ECPublicKey> {
+public class DefaultFileSelector implements FileSelector<ECPublicKey, String> {
 
   @Override
   public Filter<Path> getAllConfigFilesFilter() {
@@ -31,6 +31,21 @@ public class DefaultFileSelector implements FileSelector<ECPublicKey> {
       final String filename =
           EthPublicKeyUtils.toHexString(publicKey).substring(2); // remove 0x prefix
       return entry.getFileName().toString().equals(filename + ".toml");
+    };
+  }
+
+  @Override
+  public Filter<Path> getSingleConfigFileFilter(final String address) {
+    // remove 0x if part of address
+    return entry -> {
+      final String fileName;
+      if (address.toUpperCase().startsWith("0X")) {
+        fileName = address.substring(2);
+      } else {
+        fileName = address;
+      }
+
+      return entry.getFileName().toString().equals(fileName + ".toml");
     };
   }
 }
