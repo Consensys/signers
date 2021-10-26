@@ -88,12 +88,12 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   }
 
   @Override
-  public Optional<Signer> getSigner(String address) {
-    final Optional<Signer> signer =
-        signingMetadataTomlConfigLoader
-            .loadMetadata(configFileSelector.getSingleConfigFileFilter(address))
-            .map(metadataFile -> metadataFile.createSigner(this));
-    return signer;
+  public Optional<Signer> getSigner(final String address) {
+    return signingMetadataTomlConfigLoader
+        .loadMetadata(configFileSelector.getSingleConfigFileFilter(address))
+        .map(metadataFile -> metadataFile.createSigner(this));
+
+    // TODO: Generate address from public key of Signer and warn ??
   }
 
   @Override
