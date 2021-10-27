@@ -246,13 +246,15 @@ task deploy() {}
 licenseReport {
   outputDir = "${buildDir}/reports/licenses"
   excludes = [
-          'com.fasterxml.jackson:jackson-bom'
+    'com.fasterxml.jackson:jackson-bom'
   ]
   allowedLicensesFile = new File("${rootDir}/gradle/license-report-config/allowed-licenses.json")
   filters = [
-          new LicenseBundleNormalizer(["bundlePath": new File("${rootDir}/gradle/license-report-config/license-normalizer.json"), "createDefaultTransformationRules": true])
+    new LicenseBundleNormalizer(["bundlePath": new File("${rootDir}/gradle/license-report-config/license-normalizer.json"), "createDefaultTransformationRules": true])
   ]
-  renderers = [new GroupedLicenseHtmlRenderer()]
+  renderers = [
+    new GroupedLicenseHtmlRenderer()
+  ]
 }
 
 subprojects {
