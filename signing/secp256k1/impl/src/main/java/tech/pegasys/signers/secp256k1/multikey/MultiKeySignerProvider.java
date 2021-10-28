@@ -75,7 +75,7 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
     if (publicKey == null) {
       return Optional.empty();
     }
-    
+
     final Optional<Signer> signer =
         signingMetadataTomlConfigLoader
             .loadMetadata(configFileSelector.getSpecificConfigFileFilter(publicKey))
