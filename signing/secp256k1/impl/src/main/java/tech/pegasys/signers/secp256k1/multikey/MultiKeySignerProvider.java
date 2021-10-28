@@ -72,6 +72,10 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
 
   @Override
   public Optional<Signer> getSigner(final ECPublicKey publicKey) {
+    if (publicKey == null) {
+      return Optional.empty();
+    }
+    
     final Optional<Signer> signer =
         signingMetadataTomlConfigLoader
             .loadMetadata(configFileSelector.getSpecificConfigFileFilter(publicKey))
