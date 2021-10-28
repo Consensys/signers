@@ -12,6 +12,7 @@
  */
 package tech.pegasys.signers.secp256k1.multikey;
 
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.FileSelector;
 import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.api.SignerProvider;
@@ -39,6 +40,7 @@ import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.Keys;
 
 public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactory {
 
@@ -89,11 +91,34 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
 
   @Override
   public Optional<Signer> getSigner(final String address) {
-    return signingMetadataTomlConfigLoader
-        .loadMetadata(configFileSelector.getSingleConfigFileFilter(address))
-        .map(metadataFile -> metadataFile.createSigner(this));
+    if (address == null) {
+      return Optional.empty();
+    }
 
-    // TODO: Generate address from public key of Signer and warn ??
+    final Optional<Signer> signer =
+        signingMetadataTomlConfigLoader
+            .loadMetadata(configFileSelector.getSingleConfigFileFilter(address))
+            .map(metadataFile -> metadataFile.createSigner(this));
+
+    signer.ifPresent(
+        value -> {
+          final ECPublicKey publicKey = value.getPublicKey();
+          final String addressFromSigner =
+              Keys.getAddress(EthPublicKeyUtils.toHexString(publicKey));
+
+          if (!remove0xPrefix(address).equalsIgnoreCase(remove0xPrefix(addressFromSigner))) {
+            LOG.warn(
+                "The address obtained from Signer {} is different than the address in configuration file name {}",
+                addressFromSigner,
+                address);
+          }
+        });
+
+    return signer;
+  }
+
+  private String remove0xPrefix(final String address) {
+    return address.toLowerCase().startsWith("0x") ? address.substring(2) : address;
   }
 
   @Override
