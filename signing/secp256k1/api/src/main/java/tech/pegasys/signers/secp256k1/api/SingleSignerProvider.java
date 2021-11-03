@@ -38,6 +38,11 @@ public class SingleSignerProvider implements SignerProvider {
   }
 
   @Override
+  public Optional<Signer> getSigner(final String fileName) {
+    return Optional.empty(); // not applicable for single signer provider
+  }
+
+  @Override
   public Set<ECPublicKey> availablePublicKeys() {
     return signer.getPublicKey() != null ? Set.of(signer.getPublicKey()) : Collections.emptySet();
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 ConsenSys AG.
+ * Copyright 2021 ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -10,16 +10,16 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.secp256k1.api;
+package tech.pegasys.signers.secp256k1.api.util;
 
-import java.nio.file.DirectoryStream.Filter;
-import java.nio.file.Path;
+import java.util.Locale;
 
-/*
-A set of rules regarding how key files are to be selected.
-Should be overridden by the calling application to define their naming
-convention.
- */
-public interface FileSelector<T> {
-  Filter<Path> getConfigFilesFilter(T selectionCriteria);
+public class AddressUtil {
+  public static String remove0xPrefix(final String address) {
+    if (address == null) {
+      return null;
+    }
+
+    return address.toLowerCase(Locale.US).startsWith("0x") ? address.substring(2) : address;
+  }
 }

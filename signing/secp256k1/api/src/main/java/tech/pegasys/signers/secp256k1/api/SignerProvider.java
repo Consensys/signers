@@ -20,10 +20,7 @@ public interface SignerProvider {
 
   Optional<Signer> getSigner(ECPublicKey publicKey);
 
-  default Optional<Signer> getSigner(String address) {
-    // not applicable for Single Signer Provider mode
-    throw new UnsupportedOperationException("getSigner by address not supported");
-  }
+  Optional<Signer> getSigner(String fileName);
 
   Set<ECPublicKey> availablePublicKeys();
 
