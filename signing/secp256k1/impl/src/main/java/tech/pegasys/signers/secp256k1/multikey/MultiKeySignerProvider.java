@@ -119,7 +119,7 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   public Set<ECPublicKey> availablePublicKeys() {
     return signingMetadataTomlConfigLoader
         .loadAvailableSigningMetadataTomlConfigs(allConfigFilesSelector.getConfigFilesFilter(null))
-        .stream()
+        .parallelStream()
         .map(this::createSigner)
         .filter(Objects::nonNull)
         .map(Signer::getPublicKey)
