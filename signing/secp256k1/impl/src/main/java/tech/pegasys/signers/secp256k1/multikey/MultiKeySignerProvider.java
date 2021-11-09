@@ -12,6 +12,7 @@
  */
 package tech.pegasys.signers.secp256k1.multikey;
 
+import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.FileSelector;
 import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.api.SignerIdentifier;
@@ -94,8 +95,8 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
       } else {
         LOG.warn(
             "Signer loaded from file with public key ({}) does not validate with the supplied identifier ({})",
-            signerIdentifier.toStringIdentifier(),
-            signer.get().getPublicKey());
+            EthPublicKeyUtils.toHexString(signer.get().getPublicKey()),
+            signerIdentifier.toStringIdentifier());
       }
     }
     return Optional.empty();
