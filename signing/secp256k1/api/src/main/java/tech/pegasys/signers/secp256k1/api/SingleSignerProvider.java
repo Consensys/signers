@@ -34,7 +34,7 @@ public class SingleSignerProvider implements SignerProvider {
     if (signerIdentifier == null) {
       return Optional.empty();
     }
-    
+
     return signerIdentifier.validate(signer.getPublicKey())
         ? Optional.of(signer)
         : Optional.empty();
