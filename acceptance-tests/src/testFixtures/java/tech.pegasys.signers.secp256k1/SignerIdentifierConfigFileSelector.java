@@ -12,21 +12,18 @@
  */
 package tech.pegasys.signers.secp256k1;
 
-import static tech.pegasys.signers.secp256k1.api.util.AddressUtil.remove0xPrefix;
-
 import tech.pegasys.signers.secp256k1.api.FileSelector;
+import tech.pegasys.signers.secp256k1.api.SignerIdentifier;
 
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
-import java.security.interfaces.ECPublicKey;
 
-public class DefaultPublicKeyConfigFileSelector implements FileSelector<ECPublicKey> {
+public class SignerIdentifierConfigFileSelector implements FileSelector<SignerIdentifier> {
 
   @Override
-  public DirectoryStream.Filter<Path> getConfigFilesFilter(final ECPublicKey selectionCriteria) {
-    return entry -> {
-      final String filename = remove0xPrefix(EthPublicKeyUtils.toHexString(selectionCriteria));
-      return entry.getFileName().toString().equals(filename + ".toml");
-    };
+  public DirectoryStream.Filter<Path> getConfigFilesFilter(
+      final SignerIdentifier signerIdentifier) {
+    return entry ->
+        entry.getFileName().toString().equals(signerIdentifier.toStringIdentifier() + ".toml");
   }
 }

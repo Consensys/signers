@@ -14,6 +14,7 @@ package tech.pegasys.signers.secp256k1.multikey;
 
 import tech.pegasys.signers.secp256k1.api.FileSelector;
 import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.api.SignerIdentifier;
 import tech.pegasys.signers.secp256k1.api.SignerProvider;
 import tech.pegasys.signers.secp256k1.azure.AzureConfig;
 import tech.pegasys.signers.secp256k1.azure.AzureKeyVaultSignerFactory;
@@ -33,6 +34,7 @@ import java.security.interfaces.ECPublicKey;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import io.vertx.core.Vertx;
@@ -47,14 +49,12 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   private final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader;
   private final HashicorpSignerFactory hashicorpSignerFactory;
   private final FileSelector<Void> allConfigFilesSelector;
-  private final FileSelector<ECPublicKey> publicKeyTomlConfigFileSelector;
-  private final FileSelector<String> fileNameConfigFileSelector;
+  private final FileSelector<SignerIdentifier> signerIdentifierConfigFileSelector;
 
   public static MultiKeySignerProvider create(
       final Path rootDir,
       final FileSelector<Void> allConfigFilesSelector,
-      final FileSelector<ECPublicKey> publicKeyTomlConfigFileSelector,
-      final FileSelector<String> fileNameConfigFileSelector) {
+      final FileSelector<SignerIdentifier> signerIdentifierConfigFileSelector) {
     final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader =
         new SigningMetadataTomlConfigLoader(rootDir);
 
@@ -64,40 +64,37 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
         signingMetadataTomlConfigLoader,
         hashicorpSignerFactory,
         allConfigFilesSelector,
-        publicKeyTomlConfigFileSelector,
-        fileNameConfigFileSelector);
+        signerIdentifierConfigFileSelector);
   }
 
   public MultiKeySignerProvider(
       final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader,
       final HashicorpSignerFactory hashicorpSignerFactory,
       final FileSelector<Void> allConfigFilesSelector,
-      final FileSelector<ECPublicKey> publicKeyTomlConfigFileSelector,
-      final FileSelector<String> fileNameConfigFileSelector) {
+      final FileSelector<SignerIdentifier> signerIdentifierConfigFileSelector) {
     this.signingMetadataTomlConfigLoader = signingMetadataTomlConfigLoader;
     this.hashicorpSignerFactory = hashicorpSignerFactory;
     this.allConfigFilesSelector = allConfigFilesSelector;
-    this.publicKeyTomlConfigFileSelector = publicKeyTomlConfigFileSelector;
-    this.fileNameConfigFileSelector = fileNameConfigFileSelector;
+    this.signerIdentifierConfigFileSelector = signerIdentifierConfigFileSelector;
   }
 
   @Override
-  public Optional<Signer> getSigner(final ECPublicKey publicKey) {
-    if (publicKey == null) {
+  public Optional<Signer> getSigner(final SignerIdentifier signerIdentifier) {
+    if (signerIdentifier == null) {
       return Optional.empty();
     }
 
     final Optional<Signer> signer =
         signingMetadataTomlConfigLoader
-            .loadMetadata(publicKeyTomlConfigFileSelector.getConfigFilesFilter(publicKey))
+            .loadMetadata(signerIdentifierConfigFileSelector.getConfigFilesFilter(signerIdentifier))
             .map(metadataFile -> metadataFile.createSigner(this));
     if (signer.isPresent()) {
-      if (signer.get().getPublicKey().getW().equals(publicKey.getW())) {
+      if (signerIdentifier.validate(signer.get().getPublicKey())) {
         return signer;
       } else {
         LOG.warn(
-            "Content of file matching {}, contains a different public key ({})",
-            publicKey,
+            "Signer loaded from file with public key ({}) does not validate with the supplied identifier ({})",
+            signerIdentifier.toStringIdentifier(),
             signer.get().getPublicKey());
       }
     }
@@ -105,33 +102,25 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
   }
 
   @Override
-  public Optional<Signer> getSigner(final String fileName) {
-    if (fileName == null) {
-      return Optional.empty();
-    }
-
-    return signingMetadataTomlConfigLoader
-        .loadMetadata(fileNameConfigFileSelector.getConfigFilesFilter(fileName))
-        .map(metadataFile -> metadataFile.createSigner(this));
-  }
-
-  @Override
-  public Set<ECPublicKey> availablePublicKeys() {
+  public Set<ECPublicKey> availablePublicKeys(
+      final Function<ECPublicKey, SignerIdentifier> identifierFunction) {
     return signingMetadataTomlConfigLoader
         .loadAvailableSigningMetadataTomlConfigs(allConfigFilesSelector.getConfigFilesFilter(null))
         .parallelStream()
-        .map(this::createSigner)
+        .map(metaFile -> createSigner(metaFile, identifierFunction))
         .filter(Objects::nonNull)
         .map(Signer::getPublicKey)
         .collect(Collectors.toSet());
   }
 
-  private Signer createSigner(final SigningMetadataFile metadataFile) {
+  private Signer createSigner(
+      final SigningMetadataFile metadataFile,
+      Function<ECPublicKey, SignerIdentifier> identifierFunction) {
     final Signer signer = metadataFile.createSigner(this);
     try {
       if ((signer != null)
-          && publicKeyTomlConfigFileSelector
-              .getConfigFilesFilter(signer.getPublicKey())
+          && signerIdentifierConfigFileSelector
+              .getConfigFilesFilter(identifierFunction.apply(signer.getPublicKey()))
               .accept(Path.of(metadataFile.getFilename()))) {
         return signer;
       }

@@ -10,16 +10,12 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.secp256k1;
+package tech.pegasys.signers.secp256k1.api;
 
-import tech.pegasys.signers.secp256k1.api.FileSelector;
+import java.security.interfaces.ECPublicKey;
 
-import java.nio.file.DirectoryStream;
-import java.nio.file.Path;
+public interface SignerIdentifier {
+  String toStringIdentifier();
 
-public class DefaultTomlConfigFilesSelector implements FileSelector<Void> {
-  @Override
-  public DirectoryStream.Filter<Path> getConfigFilesFilter(final Void selectionCriteria) {
-    return entry -> entry.getFileName().toString().endsWith("toml");
-  }
+  boolean validate(ECPublicKey publicKey);
 }

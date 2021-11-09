@@ -17,9 +17,9 @@ import tech.pegasys.signers.secp256k1.api.FileSelector;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 
-public class DefaultFilenameConfigFileSelector implements FileSelector<String> {
+public class AllTomlConfigFilesSelector implements FileSelector<Void> {
   @Override
-  public DirectoryStream.Filter<Path> getConfigFilesFilter(final String fileName) {
-    return entry -> entry.getFileName().toString().equals(fileName + ".toml");
+  public DirectoryStream.Filter<Path> getConfigFilesFilter(final Void selectionCriteria) {
+    return entry -> entry.getFileName().toString().endsWith("toml");
   }
 }
