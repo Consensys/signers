@@ -31,6 +31,10 @@ public class SingleSignerProvider implements SignerProvider {
 
   @Override
   public Optional<Signer> getSigner(final SignerIdentifier signerIdentifier) {
+    if (signerIdentifier == null) {
+      return Optional.empty();
+    }
+    
     return signerIdentifier.validate(signer.getPublicKey())
         ? Optional.of(signer)
         : Optional.empty();
