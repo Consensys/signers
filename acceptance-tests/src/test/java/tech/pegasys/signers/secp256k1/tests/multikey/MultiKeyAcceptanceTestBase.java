@@ -12,7 +12,8 @@
  */
 package tech.pegasys.signers.secp256k1.tests.multikey;
 
-import tech.pegasys.signers.secp256k1.DefaultFileSelector;
+import tech.pegasys.signers.secp256k1.AllTomlConfigFilesSelector;
+import tech.pegasys.signers.secp256k1.SignerIdentifierConfigFileSelector;
 import tech.pegasys.signers.secp256k1.multikey.MultiKeySignerProvider;
 
 import java.nio.file.Path;
@@ -22,6 +23,10 @@ public class MultiKeyAcceptanceTestBase {
   protected MultiKeySignerProvider signerProvider;
 
   protected void setup(final Path tomlDirectory) {
-    this.signerProvider = MultiKeySignerProvider.create(tomlDirectory, new DefaultFileSelector());
+    this.signerProvider =
+        MultiKeySignerProvider.create(
+            tomlDirectory,
+            new AllTomlConfigFilesSelector(),
+            new SignerIdentifierConfigFileSelector());
   }
 }

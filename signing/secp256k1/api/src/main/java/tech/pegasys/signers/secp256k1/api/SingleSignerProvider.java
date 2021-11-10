@@ -16,6 +16,7 @@ import java.security.interfaces.ECPublicKey;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 public class SingleSignerProvider implements SignerProvider {
 
@@ -29,16 +30,19 @@ public class SingleSignerProvider implements SignerProvider {
   }
 
   @Override
-  public Optional<Signer> getSigner(final ECPublicKey publicKey) {
-    if ((signer.getPublicKey() != null) && signer.getPublicKey().getW().equals(publicKey.getW())) {
-      return Optional.of(signer);
-    } else {
+  public Optional<Signer> getSigner(final SignerIdentifier signerIdentifier) {
+    if (signerIdentifier == null) {
       return Optional.empty();
     }
+
+    return signerIdentifier.validate(signer.getPublicKey())
+        ? Optional.of(signer)
+        : Optional.empty();
   }
 
   @Override
-  public Set<ECPublicKey> availablePublicKeys() {
+  public Set<ECPublicKey> availablePublicKeys(
+      final Function<ECPublicKey, SignerIdentifier> identifierFunction) {
     return signer.getPublicKey() != null ? Set.of(signer.getPublicKey()) : Collections.emptySet();
   }
 }

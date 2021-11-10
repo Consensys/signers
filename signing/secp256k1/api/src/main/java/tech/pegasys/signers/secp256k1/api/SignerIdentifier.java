@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 ConsenSys AG.
+ * Copyright 2021 ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,14 +12,10 @@
  */
 package tech.pegasys.signers.secp256k1.api;
 
-import java.nio.file.DirectoryStream.Filter;
-import java.nio.file.Path;
+import java.security.interfaces.ECPublicKey;
 
-/*
-A set of rules regarding how key files are to be selected.
-Should be overridden by the calling application to define their naming
-convention.
- */
-public interface FileSelector<T> {
-  Filter<Path> getConfigFilesFilter(T selectionCriteria);
+public interface SignerIdentifier {
+  String toStringIdentifier();
+
+  boolean validate(ECPublicKey publicKey);
 }

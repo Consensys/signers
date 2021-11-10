@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 ConsenSys AG.
+ * Copyright 2021 ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -13,24 +13,17 @@
 package tech.pegasys.signers.secp256k1;
 
 import tech.pegasys.signers.secp256k1.api.FileSelector;
+import tech.pegasys.signers.secp256k1.api.SignerIdentifier;
 
-import java.nio.file.DirectoryStream.Filter;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
-import java.security.interfaces.ECPublicKey;
 
-public class DefaultFileSelector implements FileSelector<ECPublicKey> {
-
-  @Override
-  public Filter<Path> getAllConfigFilesFilter() {
-    return entry -> entry.getFileName().toString().endsWith("toml");
-  }
+public class SignerIdentifierConfigFileSelector implements FileSelector<SignerIdentifier> {
 
   @Override
-  public Filter<Path> getSpecificConfigFileFilter(final ECPublicKey publicKey) {
-    return entry -> {
-      final String filename =
-          EthPublicKeyUtils.toHexString(publicKey).substring(2); // remove 0x prefix
-      return entry.getFileName().toString().equals(filename + ".toml");
-    };
+  public DirectoryStream.Filter<Path> getConfigFilesFilter(
+      final SignerIdentifier signerIdentifier) {
+    return entry ->
+        entry.getFileName().toString().equals(signerIdentifier.toStringIdentifier() + ".toml");
   }
 }

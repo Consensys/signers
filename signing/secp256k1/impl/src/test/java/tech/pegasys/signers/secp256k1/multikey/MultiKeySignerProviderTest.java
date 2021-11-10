@@ -26,6 +26,8 @@ import static tech.pegasys.signers.secp256k1.multikey.MetadataFileFixture.copyMe
 import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.FileSelector;
 import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.api.SignerIdentifier;
+import tech.pegasys.signers.secp256k1.common.PublicKeySignerIdentifier;
 import tech.pegasys.signers.secp256k1.filebased.FileSignerConfig;
 import tech.pegasys.signers.secp256k1.multikey.metadata.FileBasedSigningMetadataFile;
 import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
@@ -33,7 +35,6 @@ import tech.pegasys.signers.secp256k1.multikey.metadata.SigningMetadataFile;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.interfaces.ECPublicKey;
 import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
@@ -55,7 +56,9 @@ class MultiKeySignerProviderTest {
   private final SigningMetadataTomlConfigLoader loader =
       mock(SigningMetadataTomlConfigLoader.class);
 
-  @Mock private FileSelector<ECPublicKey> fileSelector;
+  @Mock private FileSelector<SignerIdentifier> publicKeyFileSelector;
+  @Mock private FileSelector<Void> tomlFileSelector;
+
   private MultiKeySignerProvider signerFactory;
   private FileBasedSigningMetadataFile metadataFile;
   private final String KEY_FILENAME = "k.key";
@@ -85,34 +88,38 @@ class MultiKeySignerProviderTest {
     } catch (Exception e) {
       fail("Error copying metadata files", e);
     }
-    signerFactory = new MultiKeySignerProvider(loader, null, fileSelector);
+    signerFactory =
+        new MultiKeySignerProvider(loader, null, tomlFileSelector, publicKeyFileSelector);
   }
 
   @Test
   void getSignerForAvailableMetadataReturnsSigner() {
     when(loader.loadMetadata(any())).thenReturn(Optional.of(metadataFile));
 
-    final Optional<Signer> signer =
-        signerFactory.getSigner(
+    final PublicKeySignerIdentifier signerIdentifier =
+        new PublicKeySignerIdentifier(
             EthPublicKeyUtils.createPublicKey(Bytes.fromHexString(LOWER_CASE_PUBLIC_KEY)));
+    final Optional<Signer> signer = signerFactory.getSigner(signerIdentifier);
     assertThat(signer).isNotEmpty();
     assertThat(EthPublicKeyUtils.toHexString(signer.get().getPublicKey()))
         .isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
 
-    final ArgumentCaptor<ECPublicKey> publicKeyCaptor = ArgumentCaptor.forClass(ECPublicKey.class);
-    verify(fileSelector).getSpecificConfigFileFilter(publicKeyCaptor.capture());
+    final ArgumentCaptor<SignerIdentifier> captor =
+        ArgumentCaptor.forClass(PublicKeySignerIdentifier.class);
+    verify(publicKeyFileSelector).getConfigFilesFilter(captor.capture());
 
-    assertThat(EthPublicKeyUtils.toHexString(publicKeyCaptor.getValue()))
-        .isEqualTo("0x" + LOWER_CASE_PUBLIC_KEY);
+    assertThat(captor.getValue().toStringIdentifier()).isEqualTo(LOWER_CASE_PUBLIC_KEY);
   }
 
   @Test
   void getAddresses() {
     final ImmutableList<SigningMetadataFile> files = ImmutableList.of(metadataFile);
     when(loader.loadAvailableSigningMetadataTomlConfigs(any())).thenReturn(files);
-    when(fileSelector.getSpecificConfigFileFilter(any())).thenReturn(entry -> true);
-    assertThat(signerFactory.availablePublicKeys().size()).isOne();
-    assertThat(signerFactory.availablePublicKeys().stream().map(EthPublicKeyUtils::toHexString))
+    when(publicKeyFileSelector.getConfigFilesFilter(any())).thenReturn(entry -> true);
+    assertThat(signerFactory.availablePublicKeys(PublicKeySignerIdentifier::new).size()).isOne();
+    assertThat(
+            signerFactory.availablePublicKeys(PublicKeySignerIdentifier::new).stream()
+                .map(EthPublicKeyUtils::toHexString))
         .containsExactly("0x" + LOWER_CASE_PUBLIC_KEY);
   }
 
@@ -147,9 +154,10 @@ class MultiKeySignerProviderTest {
 
     when(loader.loadMetadata(any())).thenReturn(Optional.of(capitalisedMetadata));
 
-    final Optional<Signer> signer =
-        signerFactory.getSigner(
+    final PublicKeySignerIdentifier signerIdentifier =
+        new PublicKeySignerIdentifier(
             EthPublicKeyUtils.createPublicKey(Bytes.fromHexString("A".repeat(128))));
+    final Optional<Signer> signer = signerFactory.getSigner(signerIdentifier);
 
     assertThat(signer).isEmpty();
   }

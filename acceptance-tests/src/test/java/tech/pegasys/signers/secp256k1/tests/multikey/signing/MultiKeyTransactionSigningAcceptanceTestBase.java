@@ -21,6 +21,7 @@ import static org.web3j.utils.Numeric.toBytesPadded;
 import tech.pegasys.signers.secp256k1.EthPublicKeyUtils;
 import tech.pegasys.signers.secp256k1.api.Signature;
 import tech.pegasys.signers.secp256k1.api.Signer;
+import tech.pegasys.signers.secp256k1.common.PublicKeySignerIdentifier;
 import tech.pegasys.signers.secp256k1.tests.multikey.MultiKeyAcceptanceTestBase;
 
 import java.math.BigInteger;
@@ -44,7 +45,7 @@ public class MultiKeyTransactionSigningAcceptanceTestBase extends MultiKeyAccept
 
   void verifySignature(String publicKeyHex) {
     ECPublicKey pubKey = EthPublicKeyUtils.createPublicKey(Bytes.fromHexString(publicKeyHex));
-    final Optional<Signer> signer = signerProvider.getSigner(pubKey);
+    final Optional<Signer> signer = signerProvider.getSigner(new PublicKeySignerIdentifier(pubKey));
     assertThat(signer).isNotEmpty();
 
     final Signature signature = signer.get().sign(DATA_TO_SIGN);
