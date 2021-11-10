@@ -1,5 +1,9 @@
 #Changelog
 
+## 1.0.20
+### Features Added
+- SignerProvider to use SignerIdentifier instead of ECPublicKey to obtain Signers.
+
 ## 1.0.19
 ### Features Added
 - Allow empty password files to be read when creating a Signer
