@@ -67,9 +67,11 @@ dependencyManagement {
 
     dependency 'org.mock-server:mockserver-netty:5.6.1'
 
-    dependency 'org.mockito:mockito-core:3.2.4'
-    dependency 'org.mockito:mockito-inline:3.2.4'
-    dependency 'org.mockito:mockito-junit-jupiter:3.2.4'
+    dependencySet(group: 'org.mockito', version: '4.0.0') {
+      entry 'mockito-core'
+      entry 'mockito-inline'
+      entry 'mockito-junit-jupiter'
+    }
 
     dependency 'org.web3j:core:4.5.14'
 
