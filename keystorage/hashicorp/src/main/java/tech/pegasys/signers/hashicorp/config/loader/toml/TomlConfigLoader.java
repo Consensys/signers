@@ -42,22 +42,21 @@ public class TomlConfigLoader {
   public static final String PROP_HASHICORP_TLS_TS_PASSWORD = "tlsTrustStorePassword";
 
   /**
-  Expected TOML Format in file
-  <code>
-  [Hashicorp Vault Options]
-  serverHost = <String>
-  serverPort = <int>
-  timeout = <int> (milliseconds)
-  tlsEnabled = <Boolean> (true if required TLS to be used, false otherwise, default to true
-  tlsTrustStoreType = <String> (enum of "JKS", "PKCS", "PEM)
-  tlsTrustStorePath = <String> (path to the trust store file)
-  tlsTrustStorePassword = <String> (the password required to access the truststore)
-
-  keyPath = <String> (the http endpoint path)
-  keyName = <String> (name of key being loaded)
-  token = <String> (security token added into request header)
-  </code>
-  */
+   * Expected TOML Format in file <code>
+   * [Hashicorp Vault Options]
+   * serverHost = <String>
+   * serverPort = <int>
+   * timeout = <int> (milliseconds)
+   * tlsEnabled = <Boolean> (true if required TLS to be used, false otherwise, default to true
+   * tlsTrustStoreType = <String> (enum of "JKS", "PKCS", "PEM)
+   * tlsTrustStorePath = <String> (path to the trust store file)
+   * tlsTrustStorePassword = <String> (the password required to access the truststore)
+   *
+   * keyPath = <String> (the http endpoint path)
+   * keyName = <String> (name of key being loaded)
+   * token = <String> (security token added into request header)
+   * </code>
+   */
   private final Path fileToParse;
 
   public TomlConfigLoader(final Path fileToParse) {
