@@ -234,7 +234,7 @@ allprojects {
   }
 
   javadoc {
-    options.addStringOption('Xdoclint:all', '-quiet')
+    options.addStringOption('Xdoclint:all,-missing', '-quiet')
     options.addStringOption('Xwerror', '-html5')
     options.encoding = 'UTF-8'
   }
