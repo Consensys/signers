@@ -27,6 +27,18 @@ import java.util.stream.Collectors;
 import org.apache.tuweni.toml.TomlParseResult;
 import org.apache.tuweni.toml.TomlTable;
 
+/**
+ * Expected TOML Format in file
+ *
+ * <p>[Hashicorp Vault Options]> serverHost = <String> serverPort = <int> timeout = <int>
+ * (milliseconds) tlsEnabled = <Boolean> (true if required TLS to be used, false otherwise, default
+ * to true tlsTrustStoreType = <String> (enum of "JKS", "PKCS", "PEM) tlsTrustStorePath = <String>
+ * (path to the trust store file) tlsTrustStorePassword = <String> (the password required to access
+ * the truststore)
+ *
+ * <p>keyPath = <String> (the http endpoint path) keyName = <String> (name of key being loaded)
+ * token = <String> (security token added into request header)
+ */
 public class TomlConfigLoader {
 
   public static final String PROP_HASHICORP_SERVER_PORT = "serverPort";
@@ -40,23 +52,6 @@ public class TomlConfigLoader {
   public static final String PROP_HASHICORP_TLS_TS_TYPE = "tlsTrustStoreType";
   public static final String PROP_HASHICORP_TLS_TS_PATH = "tlsTrustStorePath";
   public static final String PROP_HASHICORP_TLS_TS_PASSWORD = "tlsTrustStorePassword";
-
-  /*
-  Expected TOML Format in file
-
-  [Hashicorp Vault Options]>
-  serverHost = <String>
-  serverPort = <int>
-  timeout = <int> (milliseconds)
-  tlsEnabled = <Boolean> (true if required TLS to be used, false otherwise, default to true
-  tlsTrustStoreType = <String> (enum of "JKS", "PKCS", "PEM)
-  tlsTrustStorePath = <String> (path to the trust store file)
-  tlsTrustStorePassword = <String> (the password required to access the truststore)
-
-  keyPath = <String> (the http endpoint path)
-  keyName = <String> (name of key being loaded)
-  token = <String> (security token added into request header)
-   */
 
   private final Path fileToParse;
 

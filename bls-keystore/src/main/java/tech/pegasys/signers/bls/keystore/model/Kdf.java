@@ -17,7 +17,6 @@ import tech.pegasys.signers.bls.keystore.KeyStoreValidationException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.base.MoreObjects;
 
@@ -35,8 +34,8 @@ public class Kdf {
               include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
               property = "function")
           @JsonSubTypes({
-            @Type(value = SCryptParam.class, name = "scrypt"),
-            @Type(value = Pbkdf2Param.class, name = "pbkdf2")
+            @JsonSubTypes.Type(value = SCryptParam.class, name = "scrypt"),
+            @JsonSubTypes.Type(value = Pbkdf2Param.class, name = "pbkdf2")
           })
           final KdfParam param,
       @JsonProperty(value = "message", required = true) final String message) {
