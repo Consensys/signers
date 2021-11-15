@@ -32,6 +32,7 @@ import java.util.Formatter;
 import java.util.Locale;
 import java.util.Optional;
 
+@SuppressWarnings("InlineFormatString")
 public class HashicorpConfigUtil {
 
   private static final String TOML_STRING_FORMAT = "%s=\"%s\"\n";

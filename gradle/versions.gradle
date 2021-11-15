@@ -15,8 +15,12 @@ dependencyManagement {
   dependencies {
     dependency 'com.fasterxml.jackson.core:jackson-databind:2.12.5'
 
-    dependency 'com.google.errorprone:error_prone_core:2.3.4'
-
+    dependencySet(group: 'com.google.errorprone', version: '2.7.1') {
+      entry 'error_prone_annotation'
+      entry 'error_prone_check_api'
+      entry 'error_prone_core'
+      entry 'error_prone_test_helpers'
+    }
     dependency 'com.google.guava:guava:28.2-jre'
 
     dependency 'com.azure:azure-security-keyvault-secrets:4.3.3'
@@ -63,9 +67,11 @@ dependencyManagement {
 
     dependency 'org.mock-server:mockserver-netty:5.6.1'
 
-    dependency 'org.mockito:mockito-core:3.2.4'
-    dependency 'org.mockito:mockito-inline:3.2.4'
-    dependency 'org.mockito:mockito-junit-jupiter:3.2.4'
+    dependencySet(group: 'org.mockito', version: '4.0.0') {
+      entry 'mockito-core'
+      entry 'mockito-inline'
+      entry 'mockito-junit-jupiter'
+    }
 
     dependency 'org.web3j:core:4.5.14'
 

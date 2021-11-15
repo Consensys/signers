@@ -45,8 +45,6 @@ public class AzureKeyVault {
   private final SecretClient secretClient;
   private final KeyClient keyClient;
 
-  private static final String AZURE_URL_PATTERN = "https://%s.vault.azure.net";
-
   public static AzureKeyVault createUsingClientSecretCredentials(
       final String clientId,
       final String clientSecret,
@@ -99,7 +97,7 @@ public class AzureKeyVault {
   }
 
   public static String constructAzureKeyVaultUrl(final String keyVaultName) {
-    return String.format(AZURE_URL_PATTERN, keyVaultName);
+    return String.format("https://%s.vault.azure.net", keyVaultName);
   }
 
   public List<String> getAvailableSecrets() {
