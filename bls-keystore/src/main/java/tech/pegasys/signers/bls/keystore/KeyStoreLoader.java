@@ -40,6 +40,22 @@ public class KeyStoreLoader {
           .registerModule(new KeyStoreBytesModule())
           .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+  public static KeyStoreData loadFromString(final String keystoreString) {
+    try {
+      final KeyStoreData keyStoreData = OBJECT_MAPPER.readValue(keystoreString, KeyStoreData.class);
+      keyStoreData.validate();
+      return keyStoreData;
+    } catch (final JsonParseException e) {
+      throw new KeyStoreValidationException("Invalid KeyStore: " + e.getMessage(), e);
+    } catch (final JsonMappingException e) {
+      throw convertToKeyStoreValidationException(e);
+    } catch (final IOException e) {
+      LOG.error("Unexpected IO error while reading KeyStore: " + e.getMessage());
+      throw new KeyStoreValidationException(
+          "Unexpected IO error while reading KeyStore: " + e.getMessage(), e);
+    }
+  }
+
   public static KeyStoreData loadFromFile(final Path keystoreFile)
       throws KeyStoreValidationException {
     checkNotNull(keystoreFile, "KeyStore path cannot be null");
