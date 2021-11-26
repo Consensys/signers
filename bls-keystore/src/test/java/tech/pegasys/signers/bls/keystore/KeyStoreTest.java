@@ -69,12 +69,11 @@ class KeyStoreTest {
       "unsupportedChecksumFunction.json";
   private static final String UNSUPPORTED_CIPHER_FUNCTION_JSON = "unsupportedCipherFunction.json";
   private static final String UNSUPPORTED_KDF_FUNCTION_JSON = "unsupportedKdfFunction.json";
-  private static final String UNSUPPORTED_PKKDF2_PRF_FUNCTION_JSON = "unsupportedPBKDF2Prf.json";
+  private static final String UNSUPPORTED_PBKDF2_PRF_FUNCTION_JSON = "unsupportedPBKDF2Prf.json";
   private static final String UNSUPPORTED_DKLEN_FUNCTION_JSON = "unsupportedDkLen.json";
   private static final Cipher CIPHER = new Cipher(AES_IV_PARAM);
 
-  @SuppressWarnings("UnusedMethod")
-  private static Stream<Arguments> encryptWithKdfAndCipherArguments() {
+  public static Stream<Arguments> encryptWithKdfAndCipherArguments() {
     // KdfParam, expected checksum, expected encrypted cipher message
     return Stream.of(
         Arguments.of(
@@ -87,6 +86,38 @@ class KeyStoreTest {
             Bytes.fromHexString("8a9f5d9912ed7e75ea794bc5a89bca5f193721d30868ade6f73043c6ea6febf1"),
             Bytes.fromHexString(
                 "cee03fde2af33149775b7223e7845e4fb2c8ae1792e5f99fe9ecf474cc8c16ad")));
+  }
+
+  public static Stream<Arguments> resourceLoaderErrorConditions() {
+    return Stream.of(
+        Arguments.of(
+            "Invalid json",
+            MISSING_SECTION_KEYSTORE_RESOURCE,
+            "Invalid KeyStore: Missing property 'params' for external type id 'function'"),
+        Arguments.of(
+            "Unsupported version",
+            UNSUPPORTED_VERSION_JSON_RESOURCE,
+            "The KeyStore version 3 is not supported"),
+        Arguments.of(
+            "Unsupported checksum fn",
+            UNSUPPORTED_CHECKSUM_FUNCTION_JSON,
+            "Checksum function [sha128] is not supported."),
+        Arguments.of(
+            "Unsupported cipher fn",
+            UNSUPPORTED_CIPHER_FUNCTION_JSON,
+            "Cipher function [aes-256-ctr] is not supported."),
+        Arguments.of(
+            "Unsupported kdf fn",
+            UNSUPPORTED_KDF_FUNCTION_JSON,
+            "Kdf function [pbkdf3] is not supported."),
+        Arguments.of(
+            "Unsupported pbkdf2 fn",
+            UNSUPPORTED_PBKDF2_PRF_FUNCTION_JSON,
+            "PBKDF2 pseudorandom function (prf) [hmac-sha512] is not supported."),
+        Arguments.of(
+            "Unsupported dklen fn",
+            UNSUPPORTED_DKLEN_FUNCTION_JSON,
+            "Generated key length parameter dklen must be >= 32."));
   }
 
   @Test
@@ -153,104 +184,22 @@ class KeyStoreTest {
     assertThat(keyStoreData.getUuid()).isNotNull();
   }
 
-  @Test
-  void invalidJsonLoadingThrowsException() {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("resourceLoaderErrorConditions")
+  void shouldErrorLoadingFromFile(
+      final String description, final String resource, final String messageStartsWith) {
     assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeyStoreFromResource(MISSING_SECTION_KEYSTORE_RESOURCE))
-        .withMessageStartingWith(
-            "Invalid KeyStore: Missing property 'params' for external type id 'function'");
+        .isThrownBy(() -> loadKeyStoreFromResource(resource))
+        .withMessageStartingWith(messageStartsWith);
   }
 
-  @Test
-  void invalidJsonStringLoadingThrowsException() {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("resourceLoaderErrorConditions")
+  void shouldErrorLoadingFromString(
+      final String description, final String resource, final String messageStartsWith) {
     assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeystoreFromString(MISSING_SECTION_KEYSTORE_RESOURCE))
-        .withMessageStartingWith(
-            "Invalid KeyStore: Missing property 'params' for external type id 'function'");
-  }
-
-  @Test
-  void unsupportedVersionThrowsException() {
-    assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeyStoreFromResource(UNSUPPORTED_VERSION_JSON_RESOURCE))
-        .withMessage("The KeyStore version 3 is not supported");
-  }
-
-  @Test
-  void unsupportedVersionInResourceStringThrowsException() {
-    assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeystoreFromString(UNSUPPORTED_VERSION_JSON_RESOURCE))
-        .withMessage("The KeyStore version 3 is not supported");
-  }
-
-  @Test
-  void unsupportedChecksumFunctionThrowsException() {
-    assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeyStoreFromResource(UNSUPPORTED_CHECKSUM_FUNCTION_JSON))
-        .withMessage("Checksum function [sha128] is not supported.");
-  }
-
-  @Test
-  void unsupportedChecksumFunctionInStringInputThrowsException() {
-    assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeystoreFromString(UNSUPPORTED_CHECKSUM_FUNCTION_JSON))
-        .withMessage("Checksum function [sha128] is not supported.");
-  }
-
-  @Test
-  void unsupportedCipherFunctionThrowsException() {
-    assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeyStoreFromResource(UNSUPPORTED_CIPHER_FUNCTION_JSON))
-        .withMessage("Cipher function [aes-256-ctr] is not supported.");
-  }
-
-  @Test
-  void unsupportedCipherFunctionInStringInputThrowsException() {
-    assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeystoreFromString(UNSUPPORTED_CIPHER_FUNCTION_JSON))
-        .withMessage("Cipher function [aes-256-ctr] is not supported.");
-  }
-
-  @Test
-  void unsupportedKdfFunctionThrowsException() {
-    assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeyStoreFromResource(UNSUPPORTED_KDF_FUNCTION_JSON))
-        .withMessage("Kdf function [pbkdf3] is not supported.");
-  }
-
-  @Test
-  void unsupportedKdfFunctionInStringInputThrowsException() {
-    assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeystoreFromString(UNSUPPORTED_KDF_FUNCTION_JSON))
-        .withMessage("Kdf function [pbkdf3] is not supported.");
-  }
-
-  @Test
-  void unsupportedPBKDF2PrfFunctionThrowsException() {
-    assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeyStoreFromResource(UNSUPPORTED_PKKDF2_PRF_FUNCTION_JSON))
-        .withMessage("PBKDF2 pseudorandom function (prf) [hmac-sha512] is not supported.");
-  }
-
-  @Test
-  void unsupportedPBKDF2PrfFunctionInStringInputThrowsException() {
-    assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeystoreFromString(UNSUPPORTED_PKKDF2_PRF_FUNCTION_JSON))
-        .withMessage("PBKDF2 pseudorandom function (prf) [hmac-sha512] is not supported.");
-  }
-
-  @Test
-  void unsupportedDkLenThrowsException() {
-    assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeyStoreFromResource(UNSUPPORTED_DKLEN_FUNCTION_JSON))
-        .withMessage("Generated key length parameter dklen must be >= 32.");
-  }
-
-  @Test
-  void unsupportedDkLenInStringInputThrowsException() {
-    assertThatExceptionOfType(KeyStoreValidationException.class)
-        .isThrownBy(() -> loadKeystoreFromString(UNSUPPORTED_DKLEN_FUNCTION_JSON))
-        .withMessage("Generated key length parameter dklen must be >= 32.");
+        .isThrownBy(() -> loadKeystoreFromString(resource))
+        .withMessageStartingWith(messageStartsWith);
   }
 
   @Test
