@@ -26,6 +26,7 @@ import tech.pegasys.signers.bls.keystore.model.SCryptParam;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.io.Resources;
@@ -114,6 +115,11 @@ class KeyStoreTest {
   }
 
   @Test
+  void shouldLoadKeystoreDataFromStringInput() throws IOException {
+    loadKeystoreFromString(SCRYPT_KEYSTORE_RESOURCE);
+  }
+
+  @Test
   void loadPBKDF2KeyStoreAndTestInvalidPassword() {
     invalidPasswordValidation(PBKDF2_KEYSTORE_RESOURCE);
   }
@@ -156,9 +162,24 @@ class KeyStoreTest {
   }
 
   @Test
+  void invalidJsonStringLoadingThrowsException() {
+    assertThatExceptionOfType(KeyStoreValidationException.class)
+        .isThrownBy(() -> loadKeystoreFromString(MISSING_SECTION_KEYSTORE_RESOURCE))
+        .withMessageStartingWith(
+            "Invalid KeyStore: Missing property 'params' for external type id 'function'");
+  }
+
+  @Test
   void unsupportedVersionThrowsException() {
     assertThatExceptionOfType(KeyStoreValidationException.class)
         .isThrownBy(() -> loadKeyStoreFromResource(UNSUPPORTED_VERSION_JSON_RESOURCE))
+        .withMessage("The KeyStore version 3 is not supported");
+  }
+
+  @Test
+  void unsupportedVersionInResourceStringThrowsException() {
+    assertThatExceptionOfType(KeyStoreValidationException.class)
+        .isThrownBy(() -> loadKeystoreFromString(UNSUPPORTED_VERSION_JSON_RESOURCE))
         .withMessage("The KeyStore version 3 is not supported");
   }
 
@@ -170,9 +191,23 @@ class KeyStoreTest {
   }
 
   @Test
+  void unsupportedChecksumFunctionInStringInputThrowsException() {
+    assertThatExceptionOfType(KeyStoreValidationException.class)
+        .isThrownBy(() -> loadKeystoreFromString(UNSUPPORTED_CHECKSUM_FUNCTION_JSON))
+        .withMessage("Checksum function [sha128] is not supported.");
+  }
+
+  @Test
   void unsupportedCipherFunctionThrowsException() {
     assertThatExceptionOfType(KeyStoreValidationException.class)
         .isThrownBy(() -> loadKeyStoreFromResource(UNSUPPORTED_CIPHER_FUNCTION_JSON))
+        .withMessage("Cipher function [aes-256-ctr] is not supported.");
+  }
+
+  @Test
+  void unsupportedCipherFunctionInStringInputThrowsException() {
+    assertThatExceptionOfType(KeyStoreValidationException.class)
+        .isThrownBy(() -> loadKeystoreFromString(UNSUPPORTED_CIPHER_FUNCTION_JSON))
         .withMessage("Cipher function [aes-256-ctr] is not supported.");
   }
 
@@ -184,6 +219,13 @@ class KeyStoreTest {
   }
 
   @Test
+  void unsupportedKdfFunctionInStringInputThrowsException() {
+    assertThatExceptionOfType(KeyStoreValidationException.class)
+        .isThrownBy(() -> loadKeystoreFromString(UNSUPPORTED_KDF_FUNCTION_JSON))
+        .withMessage("Kdf function [pbkdf3] is not supported.");
+  }
+
+  @Test
   void unsupportedPBKDF2PrfFunctionThrowsException() {
     assertThatExceptionOfType(KeyStoreValidationException.class)
         .isThrownBy(() -> loadKeyStoreFromResource(UNSUPPORTED_PKKDF2_PRF_FUNCTION_JSON))
@@ -191,9 +233,23 @@ class KeyStoreTest {
   }
 
   @Test
+  void unsupportedPBKDF2PrfFunctionInStringInputThrowsException() {
+    assertThatExceptionOfType(KeyStoreValidationException.class)
+        .isThrownBy(() -> loadKeystoreFromString(UNSUPPORTED_PKKDF2_PRF_FUNCTION_JSON))
+        .withMessage("PBKDF2 pseudorandom function (prf) [hmac-sha512] is not supported.");
+  }
+
+  @Test
   void unsupportedDkLenThrowsException() {
     assertThatExceptionOfType(KeyStoreValidationException.class)
         .isThrownBy(() -> loadKeyStoreFromResource(UNSUPPORTED_DKLEN_FUNCTION_JSON))
+        .withMessage("Generated key length parameter dklen must be >= 32.");
+  }
+
+  @Test
+  void unsupportedDkLenInStringInputThrowsException() {
+    assertThatExceptionOfType(KeyStoreValidationException.class)
+        .isThrownBy(() -> loadKeystoreFromString(UNSUPPORTED_DKLEN_FUNCTION_JSON))
         .withMessage("Generated key length parameter dklen must be >= 32.");
   }
 
@@ -232,5 +288,12 @@ class KeyStoreTest {
     assertThat(loadedKeyStore.getUuid()).isEqualByComparingTo(keyStoreData.getUuid());
     assertThat(loadedKeyStore.getCrypto().getChecksum().getMessage())
         .isEqualTo(keyStoreData.getCrypto().getChecksum().getMessage());
+  }
+
+  KeyStoreData loadKeystoreFromString(final String resourceFileName) throws IOException {
+    final Path testKeyStorePath = Path.of(Resources.getResource(resourceFileName).getPath());
+    final String keystoreString =
+        Files.readAllLines(testKeyStorePath).stream().collect(Collectors.joining());
+    return KeyStoreLoader.loadFromString(keystoreString);
   }
 }
