@@ -1,5 +1,9 @@
 #Changelog
 
+## 1.0.21
+### Features Added
+- Allow BLS key store data to be loaded from string.
+
 ## 1.0.20
 ### Features Added
 - SignerProvider to use SignerIdentifier instead of ECPublicKey to obtain Signers.
