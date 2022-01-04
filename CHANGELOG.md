@@ -1,8 +1,10 @@
 #Changelog
 
-## 1.0.22-24
-### Bug Fixed
-- Updated log4j library versions
+## 1.0.24
+### Bugs Fixed
+- Updated to log4j 2.17.1. Resolves two potential vulnerabilities which are only exploitable when using custom log4j configurations that are either writable by untrusted users or log data from the `ThreadContext`.
+
+---
 
 ## 1.0.21
 ### Features Added
