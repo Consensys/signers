@@ -1,5 +1,9 @@
 #Changelog
 
+## 1.0.22-24
+### Bug Fixed
+- Updated log4j library veresions
+
 ## 1.0.21
 ### Features Added
 - Allow BLS key store data to be loaded from string.
