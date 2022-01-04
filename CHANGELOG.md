@@ -2,7 +2,7 @@
 
 ## 1.0.22-24
 ### Bug Fixed
-- Updated log4j library veresions
+- Updated log4j library versions
 
 ## 1.0.21
 ### Features Added
