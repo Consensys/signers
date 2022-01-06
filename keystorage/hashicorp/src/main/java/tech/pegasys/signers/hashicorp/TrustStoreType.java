@@ -19,6 +19,7 @@ public enum TrustStoreType {
   JKS(true),
   PKCS12(true),
   WHITELIST(false),
+  ALLOWLIST(false),
   PEM(false);
 
   private boolean passwordRequired;

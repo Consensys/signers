@@ -1,5 +1,10 @@
 # Changelog
+## 1.0.25
+### Features Added
+- Update Tuweni libraries to 2.0.0
+- Add ALLOWLIST as Hashicorp TrustStore type.
 
+---
 ## 1.0.24
 ### Bugs Fixed
 - Updated to log4j 2.17.1. Resolves two potential vulnerabilities which are only exploitable when using custom log4j configurations that are either writable by untrusted users or log data from the `ThreadContext`.
