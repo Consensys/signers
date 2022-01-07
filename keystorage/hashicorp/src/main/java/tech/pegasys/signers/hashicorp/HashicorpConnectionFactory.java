@@ -97,10 +97,11 @@ public class HashicorpConnectionFactory {
             new PemTrustOptions().addCertPath(tlsOptions.getTrustStorePath().toString()));
         break;
       case WHITELIST:
+      case ALLOWLIST:
         // Tuweni throws an NPE if the trustStorePath has no directory prefix, thus requiring
         // the use of absolutePath.
         httpClientOptions.setTrustOptions(
-            VertxTrustOptions.whitelistServers(
+            VertxTrustOptions.allowlistServers(
                 tlsOptions.getTrustStorePath().toAbsolutePath(), false));
         break;
     }
