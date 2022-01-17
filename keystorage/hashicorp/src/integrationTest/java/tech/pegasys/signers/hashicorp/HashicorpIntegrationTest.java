@@ -23,7 +23,6 @@ import tech.pegasys.signers.hashicorp.config.loader.toml.TomlConfigLoader;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.security.KeyStore;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.HttpsURLConnection;
 
