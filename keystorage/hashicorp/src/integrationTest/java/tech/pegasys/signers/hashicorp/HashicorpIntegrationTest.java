@@ -14,8 +14,6 @@ package tech.pegasys.signers.hashicorp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockserver.configuration.ConfigurationProperties.javaKeyStoreFilePath;
-import static org.mockserver.configuration.ConfigurationProperties.javaKeyStorePassword;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static tech.pegasys.signers.hashicorp.util.HashicorpConfigUtil.createConfigFile;
@@ -25,12 +23,15 @@ import tech.pegasys.signers.hashicorp.config.loader.toml.TomlConfigLoader;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.security.KeyStore;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.HttpsURLConnection;
 
 import io.vertx.core.Vertx;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockserver.integration.ClientAndServer;
+import org.mockserver.logging.MockServerLogger;
 import org.mockserver.socket.tls.KeyStoreFactory;
 
 class HashicorpIntegrationTest {
@@ -83,7 +84,9 @@ class HashicorpIntegrationTest {
   @Test
   void hashicorpVaultReturnsEncryptionKeyOverTls() throws IOException {
 
-    KeyStoreFactory.keyStoreFactory().loadOrCreateKeyStore();
+    KeyStoreFactory keyStoreFactory = new KeyStoreFactory(new MockServerLogger());
+    keyStoreFactory.loadOrCreateKeyStore();
+    HttpsURLConnection.setDefaultSSLSocketFactory(keyStoreFactory.sslContext().getSocketFactory());
 
     final ClientAndServer clientAndServer = new ClientAndServer(0);
     clientAndServer
@@ -103,8 +106,8 @@ class HashicorpIntegrationTest {
             TIMEOUT_MILLISECONDS,
             true,
             "JKS",
-            javaKeyStoreFilePath(),
-            javaKeyStorePassword());
+            keyStoreFactory.keyStoreFileName,
+            KeyStoreFactory.KEY_STORE_PASSWORD);
 
     final HashicorpKeyConfig keyConfig = TomlConfigLoader.fromToml(configFile, null);
     final HashicorpConnection connection = factory.create(keyConfig.getConnectionParams());
