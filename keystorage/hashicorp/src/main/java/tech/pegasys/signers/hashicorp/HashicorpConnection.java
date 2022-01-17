@@ -53,12 +53,20 @@ public class HashicorpConnection {
     final CompletableFuture<Map<String, String>> futureResponse = new CompletableFuture<>();
 
     httpClient
-        .request(GET, key.getKeyPath(), response -> responseHandler(futureResponse, response))
-        .putHeader("X-Vault-Token", key.getToken())
-        .setChunked(false)
-        .exceptionHandler(futureResponse::completeExceptionally)
-        .setTimeout(requestTimeoutMs)
-        .end();
+        .request(GET, key.getKeyPath())
+        .onSuccess(
+            request -> {
+              request
+                  .response()
+                  .onSuccess(response -> responseHandler(futureResponse, response))
+                  .onFailure(futureResponse::completeExceptionally);
+              request.putHeader("X-Vault-Token", key.getToken());
+              request.setChunked(false);
+              request.exceptionHandler(futureResponse::completeExceptionally);
+              request.setTimeout(requestTimeoutMs);
+              request.end();
+            })
+        .onFailure(futureResponse::completeExceptionally);
 
     try {
       return futureResponse.get();

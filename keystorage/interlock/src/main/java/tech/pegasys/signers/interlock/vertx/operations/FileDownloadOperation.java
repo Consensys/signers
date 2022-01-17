@@ -13,6 +13,7 @@
 package tech.pegasys.signers.interlock.vertx.operations;
 
 import static io.vertx.core.http.HttpHeaders.COOKIE;
+import static io.vertx.core.http.HttpMethod.GET;
 
 import tech.pegasys.signers.interlock.model.ApiAuth;
 
@@ -38,10 +39,15 @@ public class FileDownloadOperation extends AbstractOperation<String> {
   @Override
   protected void invoke() {
     httpClient
-        .get("/api/file/download?" + downloadIdQueryParam(downloadId), this::handle)
-        .exceptionHandler(this::handleException)
-        .putHeader(COOKIE.toString(), apiAuth.getCookies())
-        .end();
+        .request(GET, "/api/file/download?" + downloadIdQueryParam(downloadId))
+        .onSuccess(
+            request -> {
+              request.response().onSuccess(this::handle).onFailure(this::handleException);
+              request.exceptionHandler(this::handleException);
+              request.putHeader(COOKIE.toString(), apiAuth.getCookies());
+              request.end();
+            })
+        .onFailure(this::handleException);
   }
 
   @Override

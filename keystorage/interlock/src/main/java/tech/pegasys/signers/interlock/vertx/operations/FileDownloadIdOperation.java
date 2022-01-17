@@ -12,14 +12,15 @@
  */
 package tech.pegasys.signers.interlock.vertx.operations;
 
+import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 import static io.vertx.core.http.HttpHeaders.COOKIE;
+import static io.vertx.core.http.HttpMethod.POST;
 import static tech.pegasys.signers.interlock.model.ApiAuth.XSRF_TOKEN_HEADER;
 
 import tech.pegasys.signers.interlock.model.ApiAuth;
 
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 
 public class FileDownloadIdOperation extends AbstractOperation<String> {
@@ -38,12 +39,17 @@ public class FileDownloadIdOperation extends AbstractOperation<String> {
   protected void invoke() {
     final String body = new JsonObject().put("path", keyPath).encode();
     httpClient
-        .post("/api/file/download", this::handle)
-        .exceptionHandler(this::handleException)
-        .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-        .putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken())
-        .putHeader(COOKIE.toString(), apiAuth.getCookies())
-        .end(body);
+        .request(POST, "/api/file/download")
+        .onSuccess(
+            request -> {
+              request.response().onSuccess(this::handle).onFailure(this::handleException);
+              request.exceptionHandler(this::handleException);
+              request.putHeader(CONTENT_TYPE, "application/json");
+              request.putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken());
+              request.putHeader(COOKIE.toString(), apiAuth.getCookies());
+              request.end(body);
+            })
+        .onFailure(this::handleException);
   }
 
   @Override

@@ -12,6 +12,9 @@
  */
 package tech.pegasys.signers.interlock.vertx.operations;
 
+import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
+import static io.vertx.core.http.HttpMethod.POST;
+
 import tech.pegasys.signers.interlock.model.ApiAuth;
 
 import java.util.List;
@@ -41,10 +44,15 @@ public class LoginOperation extends AbstractOperation<ApiAuth> {
             .put("dispose", false)
             .encode();
     httpClient
-        .post("/api/auth/login", this::handle)
-        .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-        .exceptionHandler(this::handleException)
-        .end(body);
+        .request(POST, "/api/auth/login")
+        .onSuccess(
+            request -> {
+              request.response().onSuccess(this::handle).onFailure(this::handleException);
+              request.exceptionHandler(this::handleException);
+              request.putHeader(CONTENT_TYPE, "application/json");
+              request.end(body);
+            })
+        .onFailure(this::handleException);
   }
 
   @Override

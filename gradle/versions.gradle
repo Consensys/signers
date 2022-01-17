@@ -33,7 +33,7 @@ dependencyManagement {
 
     dependency 'io.rest-assured:rest-assured:4.2.0'
 
-    dependencySet(group: 'io.vertx', version: '3.9.9') {
+    dependencySet(group: 'io.vertx', version: '4.2.3') {
       entry 'vertx-codegen'
       entry 'vertx-core'
       entry 'vertx-unit'
