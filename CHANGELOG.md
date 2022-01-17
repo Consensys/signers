@@ -1,4 +1,10 @@
 # Changelog
+## 2.0.0
+### Features Added
+- Update various dependencies. 
+- Adding Vertx 4 which makes signers backward incompatible. 
+
+---
 ## 1.0.25
 ### Features Added
 - Update Tuweni libraries to 2.0.0
