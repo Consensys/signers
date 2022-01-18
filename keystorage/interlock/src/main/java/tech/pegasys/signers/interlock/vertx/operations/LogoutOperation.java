@@ -13,6 +13,7 @@
 package tech.pegasys.signers.interlock.vertx.operations;
 
 import static io.vertx.core.http.HttpHeaders.COOKIE;
+import static io.vertx.core.http.HttpMethod.POST;
 import static tech.pegasys.signers.interlock.model.ApiAuth.XSRF_TOKEN_HEADER;
 
 import tech.pegasys.signers.interlock.model.ApiAuth;
@@ -31,10 +32,15 @@ public class LogoutOperation extends AbstractOperation<Void> {
   @Override
   protected void invoke() {
     httpClient
-        .post("/api/auth/logout", this::handle)
-        .exceptionHandler(this::handleException)
-        .putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken())
-        .putHeader(COOKIE.toString(), apiAuth.getCookies())
-        .end();
+        .request(POST, "/api/auth/logout")
+        .onSuccess(
+            request -> {
+              request.response().onSuccess(this::handle).onFailure(this::handleException);
+              request.exceptionHandler(this::handleException);
+              request.putHeader(XSRF_TOKEN_HEADER, apiAuth.getToken());
+              request.putHeader(COOKIE.toString(), apiAuth.getCookies());
+              request.end();
+            })
+        .onFailure(this::handleException);
   }
 }
