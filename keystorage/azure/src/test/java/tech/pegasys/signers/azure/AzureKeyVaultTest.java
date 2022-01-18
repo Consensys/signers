@@ -25,10 +25,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class AzureKeyVaultTest {
-  private static final String CLIENT_ID = System.getenv("AZURE_CLIENT_ID");
-  private static final String CLIENT_SECRET = System.getenv("AZURE_CLIENT_SECRET");
-  private static final String TENANT_ID = System.getenv("AZURE_TENANT_ID");
-  private static final String VAULT_NAME = System.getenv("AZURE_KEY_VAULT_NAME");
+  private static final String CLIENT_ID = "47efee5c-8079-4b48-96a7-31bb4f2e9ae2"; //System.getenv("AZURE_CLIENT_ID");
+  private static final String CLIENT_SECRET = "0DgK4V_YA84RPk7.f_1op0-em_a46wSe.Z";//System.getenv("AZURE_CLIENT_SECRET");
+  private static final String TENANT_ID = "17255fb0-373b-4a1a-bd47-d211ab86df81";//System.getenv("AZURE_TENANT_ID");
+  private static final String VAULT_NAME = "EthSignerTestKey";//System.getenv("AZURE_KEY_VAULT_NAME");
   private static final String SECRET_NAME = "TEST-KEY";
   private static final String EXPECTED_KEY =
       "3ee2224386c82ffea477e2adf28a2929f5c349165a4196158c7f3a2ecca40f35";
