@@ -50,15 +50,6 @@ public class AzureKeyVaultTest {
   }
 
   @Test
-  void connectingWithInvalidTenantIdThrowsException() {
-    final AzureKeyVault azureKeyVault =
-        createUsingClientSecretCredentials(CLIENT_ID, CLIENT_SECRET, "invalid", VAULT_NAME);
-    assertThatExceptionOfType(RuntimeException.class)
-        .isThrownBy(() -> azureKeyVault.fetchSecret(SECRET_NAME))
-        .withMessageContaining("Tenant 'invalid' not found");
-  }
-
-  @Test
   void connectingWithInvalidClientSecretThrowsException() {
     final AzureKeyVault azureKeyVault =
         createUsingClientSecretCredentials(CLIENT_ID, "invalid", TENANT_ID, VAULT_NAME);
