@@ -50,15 +50,6 @@ public class AzureKeyVaultTest {
   }
 
   @Test
-  void connectingWithInvalidTenantIdDoesNotThrowException() {
-    // the following behavior works with latest azure-identity libraries
-    final AzureKeyVault azureKeyVault =
-        createUsingClientSecretCredentials(CLIENT_ID, CLIENT_SECRET, "invalid", VAULT_NAME);
-    Optional<String> hexKey = azureKeyVault.fetchSecret(SECRET_NAME);
-    assertThat(hexKey).isNotEmpty().get().isEqualTo(EXPECTED_KEY);
-  }
-
-  @Test
   void connectingWithInvalidClientSecretThrowsException() {
     final AzureKeyVault azureKeyVault =
         createUsingClientSecretCredentials(CLIENT_ID, "invalid", TENANT_ID, VAULT_NAME);
