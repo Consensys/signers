@@ -18,7 +18,6 @@ public class AwsSecretsManager {
     SecretsManagerClient secretsClient = SecretsManagerClient.builder()
       .credentialsProvider(awsCredentialsProvider)
       .region(region)
-      .region(region)
       .build();
 
     return secretsClient;
