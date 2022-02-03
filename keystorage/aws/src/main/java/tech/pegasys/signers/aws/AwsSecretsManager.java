@@ -1,7 +1,6 @@
 package tech.pegasys.signers.aws;
 
 import io.vertx.core.json.JsonObject;
-import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
@@ -13,10 +12,9 @@ public class AwsSecretsManager {
   private String secretName;
   private String keyStoreValue;
 
-  public static SecretsManagerClient createSecretsManagerClient(AwsCredentialsProvider awsCredentialsProvider, Region region){
+  public static SecretsManagerClient createSecretsManagerClient(Region region){
 
     SecretsManagerClient secretsClient = SecretsManagerClient.builder()
-      .credentialsProvider(awsCredentialsProvider)
       .region(region)
       .build();
 
