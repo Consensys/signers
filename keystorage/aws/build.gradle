@@ -1,19 +1,51 @@
-plugins {
-    id 'java'
+/*
+ * Copyright 2020 ConsenSys AG.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+
+apply plugin: 'java-library'
+apply plugin: 'java-test-fixtures'
+
+jar {
+  archiveBaseName = calculateJarName(project)
+  manifest {
+    attributes(
+      'Specification-Title': archiveBaseName.get(),
+      'Specification-Version': rootProject.version,
+      'Implementation-Title': archiveBaseName.get(),
+      'Implementation-Version': calculateVersion()
+    )
+  }
 }
 
-group 'tech.pegasys.signers'
-version 'develop'
-
-repositories {
-    mavenCentral()
+testFixturesJar {
+  archiveBaseName = calculateJarName(project)
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-}
 
-test {
-    useJUnitPlatform()
+  implementation platform('software.amazon.awssdk:bom:2.15.0')
+
+  implementation 'io.vertx:vertx-core'
+  implementation 'software.amazon.awssdk:secretsmanager'
+  implementation 'org.apache.logging.log4j:log4j-api'
+
+  runtimeOnly 'org.apache.logging.log4j:log4j-core'
+  runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl'
+
+  testImplementation 'org.assertj:assertj-core'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params'
+  testImplementation 'org.mockito:mockito-core'
+
+  errorprone("com.google.errorprone:error_prone_core")
 }
