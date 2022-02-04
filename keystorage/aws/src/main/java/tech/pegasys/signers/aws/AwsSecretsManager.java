@@ -13,44 +13,42 @@ public class AwsSecretsManager {
   private String keyStoreValue;
 
   public static SecretsManagerClient createSecretsManagerClient(Region region){
-
-    SecretsManagerClient secretsClient = SecretsManagerClient.builder()
+    return SecretsManagerClient.builder()
       .region(region)
       .build();
-
-    return secretsClient;
-
   }
 
   public static String requestSecretValue(SecretsManagerClient secretsManagerClient, String secretName){
-    try {
-      GetSecretValueRequest getSecretValueRequest = GetSecretValueRequest.builder()
-        .secretId(secretName)
-        .build();
+    GetSecretValueRequest getSecretValueRequest = GetSecretValueRequest.builder()
+      .secretId(secretName)
+      .build();
 
-      GetSecretValueResponse valueResponse = secretsManagerClient.getSecretValue(getSecretValueRequest);
+    GetSecretValueResponse valueResponse = secretsManagerClient.getSecretValue(getSecretValueRequest);
+    return valueResponse.secretString();
 
-      return valueResponse.secretString();
-    }
-    catch (SecretsManagerException e){
-      System.err.println(e.awsErrorDetails().errorMessage());
-      System.exit(1);
-    }
-    return null;
   }
 
-  public static String extractKeyStoreValue(String secretValue){
+  public static String extractKeyStoreValue(String secretValue, String secretKey){
     JsonObject secretValueJson = new JsonObject(secretValue);
-    String keyStoreValue = secretValueJson.getString("keystore");
+    String keyStoreValue = secretValueJson.getString(secretKey);
     return keyStoreValue;
   }
 
+  public String getSecretName() { return this.secretName; }
   public String getKeyStoreValue() { return this.keyStoreValue; }
+  public static String getKeyStoreValue(SecretsManagerClient secretsManagerClient, String secretName, String secretKey) {
+    try {
+      String secretValue = requestSecretValue(secretsManagerClient, secretName);
+      return extractKeyStoreValue(secretValue, secretKey);
+    }
+    catch (SecretsManagerException e){
+      throw new RuntimeException(e.awsErrorDetails().errorMessage());
+    }
+  }
 
-  public AwsSecretsManager(SecretsManagerClient secretsManagerClient, String secretName){
+  public AwsSecretsManager(SecretsManagerClient secretsManagerClient, String secretName, String secretKey){
     this.secretName = secretName;
-    String secretValue = requestSecretValue(secretsManagerClient, secretName);
-    this.keyStoreValue = extractKeyStoreValue(secretValue);
+    this.keyStoreValue = getKeyStoreValue(secretsManagerClient, secretName, secretKey);
   }
 
 }
