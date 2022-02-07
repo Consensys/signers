@@ -21,4 +21,3 @@ include 'keystorage:aws'
 include 'acceptance-tests'
 include 'signing:secp256k1:api'
 include 'signing:secp256k1:impl'
-
