@@ -22,7 +22,7 @@ jar {
       'Specification-Version': rootProject.version,
       'Implementation-Title': archiveBaseName.get(),
       'Implementation-Version': calculateVersion()
-    )
+      )
   }
 }
 
@@ -35,6 +35,7 @@ dependencies {
   implementation platform('software.amazon.awssdk:bom:2.15.0')
 
   implementation 'io.vertx:vertx-core'
+  implementation 'software.amazon.awssdk:auth'
   implementation 'software.amazon.awssdk:secretsmanager'
   implementation 'org.apache.logging.log4j:log4j-api'
 

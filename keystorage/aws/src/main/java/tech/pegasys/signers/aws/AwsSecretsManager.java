@@ -12,59 +12,64 @@
  */
 package tech.pegasys.signers.aws;
 
+import java.util.Optional;
+
 import io.vertx.core.json.JsonObject;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
-import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
 
 public class AwsSecretsManager {
 
-  private String secretName;
-  private String keyStoreValue;
+  private final SecretsManagerClient secretsManagerClient;
 
-  public static SecretsManagerClient createSecretsManagerClient(Region region) {
-    return SecretsManagerClient.builder().region(region).build();
+  private AwsSecretsManager(SecretsManagerClient secretsManagerClient) {
+    this.secretsManagerClient = secretsManagerClient;
   }
 
-  public static String requestSecretValue(
-      SecretsManagerClient secretsManagerClient, String secretName) {
-    GetSecretValueRequest getSecretValueRequest =
+  public static AwsSecretsManager createAwsSecretsManager(
+      final String accessKeyId, final String secretAccessKey, final String region) {
+    final AwsBasicCredentials awsBasicCredentials =
+        AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+    final StaticCredentialsProvider credentialsProvider =
+        StaticCredentialsProvider.create(awsBasicCredentials);
+
+    final SecretsManagerClient secretsManagerClient =
+        SecretsManagerClient.builder()
+            .credentialsProvider(credentialsProvider)
+            .region(Region.of(region))
+            .build();
+
+    return new AwsSecretsManager(secretsManagerClient);
+  }
+
+  public static AwsSecretsManager createAwsSecretsManager(final String region) {
+    final SecretsManagerClient secretsManagerClient =
+        SecretsManagerClient.builder().region(Region.of(region)).build();
+
+    return new AwsSecretsManager(secretsManagerClient);
+  }
+
+  public Optional<String> fetchSecret(final String secretName) {
+    final GetSecretValueRequest getSecretValueRequest =
         GetSecretValueRequest.builder().secretId(secretName).build();
 
-    GetSecretValueResponse valueResponse =
+    final GetSecretValueResponse valueResponse =
         secretsManagerClient.getSecretValue(getSecretValueRequest);
-    return valueResponse.secretString();
+
+    return Optional.of(valueResponse.secretString());
   }
 
-  public static String extractKeyStoreValue(String secretValue, String secretKey) {
-    JsonObject secretValueJson = new JsonObject(secretValue);
-    String keyStoreValue = secretValueJson.getString(secretKey);
-    return keyStoreValue;
+  public Optional<String> fetchSecretValue(final String secretName, final String secretKey) {
+    final Optional<String> secret = fetchSecret(secretName);
+    return secret.map(secretValue -> extractValueFromSecret(secretValue, secretKey));
   }
 
-  public String getSecretName() {
-    return this.secretName;
-  }
-
-  public String getKeyStoreValue() {
-    return this.keyStoreValue;
-  }
-
-  public static String getKeyStoreValue(
-      SecretsManagerClient secretsManagerClient, String secretName, String secretKey) {
-    try {
-      String secretValue = requestSecretValue(secretsManagerClient, secretName);
-      return extractKeyStoreValue(secretValue, secretKey);
-    } catch (SecretsManagerException e) {
-      throw new RuntimeException(e.awsErrorDetails().errorMessage());
-    }
-  }
-
-  public AwsSecretsManager(
-      SecretsManagerClient secretsManagerClient, String secretName, String secretKey) {
-    this.secretName = secretName;
-    this.keyStoreValue = getKeyStoreValue(secretsManagerClient, secretName, secretKey);
+  private String extractValueFromSecret(final String secretValue, final String secretKey) {
+    final JsonObject secretValueJson = new JsonObject(secretValue);
+    return secretValueJson.getString(secretKey);
   }
 }
