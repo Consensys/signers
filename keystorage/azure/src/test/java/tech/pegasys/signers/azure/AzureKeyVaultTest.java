@@ -12,17 +12,17 @@
  */
 package tech.pegasys.signers.azure;
 
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static tech.pegasys.signers.azure.AzureKeyVault.createUsingClientSecretCredentials;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static tech.pegasys.signers.azure.AzureKeyVault.createUsingClientSecretCredentials;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class AzureKeyVaultTest {
   private static final String CLIENT_ID = System.getenv("AZURE_CLIENT_ID");
