@@ -12,8 +12,6 @@
  */
 package tech.pegasys.signers.aws;
 
-import java.util.Optional;
-
 import io.vertx.core.json.JsonObject;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -21,6 +19,9 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
+
+import java.util.Optional;
 
 public class AwsSecretsManager {
 
@@ -54,13 +55,15 @@ public class AwsSecretsManager {
   }
 
   public Optional<String> fetchSecret(final String secretName) {
-    final GetSecretValueRequest getSecretValueRequest =
-        GetSecretValueRequest.builder().secretId(secretName).build();
-
-    final GetSecretValueResponse valueResponse =
-        secretsManagerClient.getSecretValue(getSecretValueRequest);
-
-    return Optional.of(valueResponse.secretString());
+    try {
+      final GetSecretValueRequest getSecretValueRequest =
+          GetSecretValueRequest.builder().secretId(secretName).build();
+      final GetSecretValueResponse valueResponse =
+          secretsManagerClient.getSecretValue(getSecretValueRequest);
+      return Optional.of(valueResponse.secretString());
+    } catch (SecretsManagerException e) {
+      throw new RuntimeException(e.awsErrorDetails().errorMessage());
+    }
   }
 
   public Optional<String> fetchSecretValue(final String secretName, final String secretKey) {

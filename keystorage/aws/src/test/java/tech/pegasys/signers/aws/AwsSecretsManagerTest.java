@@ -19,6 +19,7 @@ import org.junit.jupiter.api.TestInstance;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AwsSecretsManagerTest {
@@ -52,5 +53,18 @@ class AwsSecretsManagerTest {
   void fetchSecretValueWithExplicitManager() {
     Optional<String> secret = awsSecretsManagerExplicit.fetchSecretValue(SECRET_NAME, SECRET_KEY);
     assertThat(secret).hasValue(EXPECTED_KEYSTORE);
+  }
+
+  @Test
+  void fetchingNonExistentSecretThrowsException() {
+    assertThatExceptionOfType(RuntimeException.class)
+        .isThrownBy(() -> awsSecretsManagerDefault.fetchSecret("empty"))
+        .withMessageContaining("Secrets Manager can't find the specified secret.");
+  }
+
+  @Test
+  void fetchingNonExistentSecretValueReturnsNull() {
+    Optional<String> secret = awsSecretsManagerDefault.fetchSecretValue(SECRET_NAME, "empty");
+    assertThat(secret).isEmpty();
   }
 }
