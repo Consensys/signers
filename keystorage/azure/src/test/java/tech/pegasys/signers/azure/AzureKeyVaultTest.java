@@ -55,7 +55,7 @@ public class AzureKeyVaultTest {
         createUsingClientSecretCredentials(CLIENT_ID, "invalid", TENANT_ID, VAULT_NAME);
     assertThatExceptionOfType(RuntimeException.class)
         .isThrownBy(() -> azureKeyVault.fetchSecret(SECRET_NAME))
-        .withMessageContaining("Invalid client secret");
+        .withMessageContaining("Invalid client secret is provided");
   }
 
   @Test
