@@ -32,8 +32,6 @@ testFixturesJar {
 
 dependencies {
 
-  implementation platform('software.amazon.awssdk:bom:2.17.125')
-
   implementation 'io.vertx:vertx-core'
   implementation 'software.amazon.awssdk:auth'
   implementation 'software.amazon.awssdk:secretsmanager'

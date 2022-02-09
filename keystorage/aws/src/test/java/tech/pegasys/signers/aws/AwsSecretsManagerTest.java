@@ -14,6 +14,7 @@ package tech.pegasys.signers.aws;
 
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -50,6 +51,12 @@ class AwsSecretsManagerTest {
     this.awsSecretsManagerExplicit =
         AwsSecretsManager.createAwsSecretsManager(
             AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION);
+  }
+
+  @AfterAll
+  void close() {
+    this.awsSecretsManagerDefault.close();
+    this.awsSecretsManagerExplicit.close();
   }
 
   @Test
