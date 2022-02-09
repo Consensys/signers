@@ -12,8 +12,6 @@
  */
 package tech.pegasys.signers.aws;
 
-import java.util.Optional;
-
 import io.vertx.core.json.JsonObject;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -22,6 +20,8 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
+
+import java.util.Optional;
 
 public class AwsSecretsManager {
 
