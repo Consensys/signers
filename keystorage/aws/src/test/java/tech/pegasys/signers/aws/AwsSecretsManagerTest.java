@@ -12,13 +12,20 @@
  */
 package tech.pegasys.signers.aws;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
+import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -26,49 +33,94 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AwsSecretsManagerTest {
 
-  private static final String SECRET_NAME =
-      "arn:aws:secretsmanager:us-east-2:504983140689:secret:web3signer-testsecret-K7aIgv";
-  private static final String SECRET_KEY = "keystore";
-  private static final String EXPECTED_KEYSTORE =
-      "{\"crypto\": {\"kdf\": {\"function\": \"scrypt\", \"params\": {\"dklen\": 32, \"n\": 262144, \"r\": 8, \"p\": 1, \"salt\": \"3d9b30b612f4f5e9423dc43c0490396798a179d35dd58d48dc1f5d6d42b07ab6\"}, \"message\": \"\"}, \"checksum\": {\"function\": \"sha256\", \"params\": {}, \"message\": \"c762b7453eab3332cda31d9dee1894cf541373617e591a8e7ab8f14f5830f723\"}, \"cipher\": {\"function\": \"aes-128-ctr\", \"params\": {\"iv\": \"095f79f6bb5daab60355ab6aa894b3c8\"}, \"message\": \"4ca342a769ec1c00d6a6d69e18cdf821f42849d4431da7df827b01ba162ed763\"}}, \"description\": \"\", \"pubkey\": \"8fb7c68f3291b8db46ef86a8b9544cad7052dd7cf817862063d1f151f3c443cd3907830b09a86fe0513f0e863beccf25\", \"path\": \"m/12381/3600/0/0/0\", \"uuid\": \"88fc9701-8670-4378-a3ba-00be25c1330c\", \"version\": 4}";
+  private final String RW_AWS_ACCESS_KEY_ID = System.getenv("RW_AWS_ACCESS_KEY_ID");
+  private final String RW_AWS_SECRET_ACCESS_KEY = System.getenv("RW_AWS_SECRET_ACCESS_KEY");
 
-  private final String AWS_ACCESS_KEY_ID = System.getenv("AWS_ACCESS_KEY_ID");
-  private final String AWS_SECRET_ACCESS_KEY = System.getenv("AWS_SECRET_ACCESS_KEY");
+  private final String RO_AWS_ACCESS_KEY_ID = System.getenv("RO_AWS_ACCESS_KEY_ID");
+  private final String RO_AWS_SECRET_ACCESS_KEY = System.getenv("RO_AWS_SECRET_ACCESS_KEY");
   private final String AWS_REGION = "us-east-2";
+
   private AwsSecretsManager awsSecretsManagerDefault;
   private AwsSecretsManager awsSecretsManagerExplicit;
+  private SecretsManagerClient secretsManagerClient;
+  private String secretName;
+
+  private static final String SECRET_VALUE =
+      "{\"crypto\": {\"kdf\": {\"function\": \"scrypt\", \"params\": {\"dklen\": 32, \"n\": 262144, \"r\": 8, \"p\": 1, \"salt\": \"3d9b30b612f4f5e9423dc43c0490396798a179d35dd58d48dc1f5d6d42b07ab6\"}, \"message\": \"\"}, \"checksum\": {\"function\": \"sha256\", \"params\": {}, \"message\": \"c762b7453eab3332cda31d9dee1894cf541373617e591a8e7ab8f14f5830f723\"}, \"cipher\": {\"function\": \"aes-128-ctr\", \"params\": {\"iv\": \"095f79f6bb5daab60355ab6aa894b3c8\"}, \"message\": \"4ca342a769ec1c00d6a6d69e18cdf821f42849d4431da7df827b01ba162ed763\"}}, \"description\": \"\", \"pubkey\": \"8fb7c68f3291b8db46ef86a8b9544cad7052dd7cf817862063d1f151f3c443cd3907830b09a86fe0513f0e863beccf25\", \"path\": \"m/12381/3600/0/0/0\", \"uuid\": \"88fc9701-8670-4378-a3ba-00be25c1330c\", \"version\": 4}";
+
+  private void verifyEnvironmentVariables() {
+    Assumptions.assumeTrue(
+        RW_AWS_ACCESS_KEY_ID != null, "Set RW_AWS_ACCESS_KEY_ID environment variable");
+    Assumptions.assumeTrue(
+        RW_AWS_SECRET_ACCESS_KEY != null, "Set RW_AWS_SECRET_ACCESS_KEY environment variable");
+    Assumptions.assumeTrue(
+        RO_AWS_ACCESS_KEY_ID != null, "Set RO_AWS_ACCESS_KEY_ID environment variable");
+    Assumptions.assumeTrue(
+        RO_AWS_SECRET_ACCESS_KEY != null, "Set RO_AWS_SECRET_ACCESS_KEY environment variable");
+  }
+
+  private void setupSecretsManagers() {
+    awsSecretsManagerDefault = AwsSecretsManager.createAwsSecretsManager(AWS_REGION);
+    awsSecretsManagerExplicit =
+        AwsSecretsManager.createAwsSecretsManager(
+            RO_AWS_ACCESS_KEY_ID, RO_AWS_SECRET_ACCESS_KEY, AWS_REGION);
+  }
+
+  private void setupSecretsManagerClient() {
+    final AwsBasicCredentials awsBasicCredentials =
+        AwsBasicCredentials.create(RW_AWS_ACCESS_KEY_ID, RW_AWS_SECRET_ACCESS_KEY);
+    final StaticCredentialsProvider credentialsProvider =
+        StaticCredentialsProvider.create(awsBasicCredentials);
+    secretsManagerClient =
+        SecretsManagerClient.builder()
+            .credentialsProvider(credentialsProvider)
+            .region(Region.of(AWS_REGION))
+            .build();
+  }
+
+  private void createSecret() {
+    secretName = "signers-aws-integration/" + UUID.randomUUID();
+    final CreateSecretRequest secretRequest =
+        CreateSecretRequest.builder().name(secretName).secretString(SECRET_VALUE).build();
+    secretsManagerClient.createSecret(secretRequest);
+  }
+
+  private void deleteSecret() {
+    final DeleteSecretRequest secretRequest =
+        DeleteSecretRequest.builder().secretId(secretName).build();
+    secretsManagerClient.deleteSecret(secretRequest);
+  }
+
+  private void closeClients() {
+    awsSecretsManagerDefault.close();
+    awsSecretsManagerExplicit.close();
+    secretsManagerClient.close();
+  }
 
   @BeforeAll
   void setup() {
-    Assumptions.assumeTrue(AWS_ACCESS_KEY_ID != null, "Set AWS_ACCESS_KEY_ID environment variable");
-    Assumptions.assumeTrue(
-        AWS_SECRET_ACCESS_KEY != null, "Set AWS_SECRET_ACCESS_KEY environment variable");
-  }
-
-  @BeforeAll
-  void setupSecretManagers() {
-    this.awsSecretsManagerDefault = AwsSecretsManager.createAwsSecretsManager(AWS_REGION);
-    this.awsSecretsManagerExplicit =
-        AwsSecretsManager.createAwsSecretsManager(
-            AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION);
+    verifyEnvironmentVariables();
+    setupSecretsManagers();
+    setupSecretsManagerClient();
+    createSecret();
   }
 
   @AfterAll
-  void close() {
-    this.awsSecretsManagerDefault.close();
-    this.awsSecretsManagerExplicit.close();
+  void teardown() {
+    deleteSecret();
+    closeClients();
   }
 
   @Test
   void fetchSecretValueWithDefaultManager() {
-    Optional<String> secret = awsSecretsManagerDefault.fetchSecretValue(SECRET_NAME, SECRET_KEY);
-    assertThat(secret).hasValue(EXPECTED_KEYSTORE);
+    Optional<String> secret = awsSecretsManagerDefault.fetchSecret(secretName);
+    assertThat(secret).hasValue(SECRET_VALUE);
   }
 
   @Test
   void fetchSecretValueWithExplicitManager() {
-    Optional<String> secret = awsSecretsManagerExplicit.fetchSecretValue(SECRET_NAME, SECRET_KEY);
-    assertThat(secret).hasValue(EXPECTED_KEYSTORE);
+    Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(secretName);
+    assertThat(secret).hasValue(SECRET_VALUE);
   }
 
   @Test
@@ -76,11 +128,5 @@ class AwsSecretsManagerTest {
     assertThatExceptionOfType(RuntimeException.class)
         .isThrownBy(() -> awsSecretsManagerDefault.fetchSecret("empty"))
         .withMessageContaining("Secrets Manager can't find the specified secret.");
-  }
-
-  @Test
-  void fetchingNonExistentSecretValueReturnsEmpty() {
-    Optional<String> secret = awsSecretsManagerDefault.fetchSecretValue(SECRET_NAME, "empty");
-    assertThat(secret).isEmpty();
   }
 }

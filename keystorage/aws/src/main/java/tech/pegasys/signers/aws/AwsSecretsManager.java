@@ -12,7 +12,9 @@
  */
 package tech.pegasys.signers.aws;
 
-import io.vertx.core.json.JsonObject;
+import java.io.Closeable;
+import java.util.Optional;
+
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -21,9 +23,7 @@ import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueReques
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
 
-import java.util.Optional;
-
-public class AwsSecretsManager {
+public class AwsSecretsManager implements Closeable {
 
   private final SecretsManagerClient secretsManagerClient;
 
@@ -66,16 +66,7 @@ public class AwsSecretsManager {
     }
   }
 
-  public Optional<String> fetchSecretValue(final String secretName, final String secretKey) {
-    final Optional<String> secret = fetchSecret(secretName);
-    return secret.map(secretValue -> extractValueFromSecret(secretValue, secretKey));
-  }
-
-  private String extractValueFromSecret(final String secretValue, final String secretKey) {
-    final JsonObject secretValueJson = new JsonObject(secretValue);
-    return secretValueJson.getString(secretKey);
-  }
-
+  @Override
   public void close() {
     this.secretsManagerClient.close();
   }
