@@ -112,13 +112,13 @@ class AwsSecretsManagerTest {
   }
 
   @Test
-  void fetchSecretValueWithDefaultManager() {
+  void fetchSecretWithDefaultManager() {
     Optional<String> secret = awsSecretsManagerDefault.fetchSecret(secretName);
     assertThat(secret).hasValue(SECRET_VALUE);
   }
 
   @Test
-  void fetchSecretValueWithExplicitManager() {
+  void fetchSecretWithExplicitManager() {
     Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(secretName);
     assertThat(secret).hasValue(SECRET_VALUE);
   }
