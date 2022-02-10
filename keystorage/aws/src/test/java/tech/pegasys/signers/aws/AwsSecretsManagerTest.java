@@ -67,7 +67,7 @@ class AwsSecretsManagerTest {
             RO_AWS_ACCESS_KEY_ID, RO_AWS_SECRET_ACCESS_KEY, AWS_REGION);
     awsSecretsManagerInvalidCredentials =
         AwsSecretsManager.createAwsSecretsManager(
-          RO_AWS_ACCESS_KEY_ID, "invalid", AWS_REGION);
+          "invalid", "invalid", AWS_REGION);
   }
 
   private void setupSecretsManagerClient() {
@@ -91,7 +91,7 @@ class AwsSecretsManagerTest {
 
   private void deleteSecret() {
     final DeleteSecretRequest secretRequest =
-        DeleteSecretRequest.builder().secretId(secretName).build();
+      DeleteSecretRequest.builder().secretId(secretName).build();
     secretsManagerClient.deleteSecret(secretRequest);
   }
 
@@ -112,8 +112,10 @@ class AwsSecretsManagerTest {
 
   @AfterAll
   void teardown() {
-    deleteSecret();
-    closeClients();
+    if (awsSecretsManagerDefault != null || awsSecretsManagerExplicit != null || secretsManagerClient != null) {
+      deleteSecret();
+      closeClients();
+    }
   }
 
   @Test
