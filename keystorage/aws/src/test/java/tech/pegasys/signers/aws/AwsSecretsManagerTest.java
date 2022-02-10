@@ -12,6 +12,12 @@
  */
 package tech.pegasys.signers.aws;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
+import java.util.Optional;
+import java.util.UUID;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -23,12 +29,6 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
-
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AwsSecretsManagerTest {
@@ -66,8 +66,7 @@ class AwsSecretsManagerTest {
         AwsSecretsManager.createAwsSecretsManager(
             RO_AWS_ACCESS_KEY_ID, RO_AWS_SECRET_ACCESS_KEY, AWS_REGION);
     awsSecretsManagerInvalidCredentials =
-        AwsSecretsManager.createAwsSecretsManager(
-          "invalid", "invalid", AWS_REGION);
+        AwsSecretsManager.createAwsSecretsManager("invalid", "invalid", AWS_REGION);
   }
 
   private void setupSecretsManagerClient() {
@@ -91,7 +90,7 @@ class AwsSecretsManagerTest {
 
   private void deleteSecret() {
     final DeleteSecretRequest secretRequest =
-      DeleteSecretRequest.builder().secretId(secretName).build();
+        DeleteSecretRequest.builder().secretId(secretName).build();
     secretsManagerClient.deleteSecret(secretRequest);
   }
 
@@ -112,7 +111,9 @@ class AwsSecretsManagerTest {
 
   @AfterAll
   void teardown() {
-    if (awsSecretsManagerDefault != null || awsSecretsManagerExplicit != null || secretsManagerClient != null) {
+    if (awsSecretsManagerDefault != null
+        || awsSecretsManagerExplicit != null
+        || secretsManagerClient != null) {
       deleteSecret();
       closeClients();
     }
@@ -133,8 +134,8 @@ class AwsSecretsManagerTest {
   @Test
   void fetchSecretWithInvalidCredentialsThrowsException() {
     assertThatExceptionOfType(RuntimeException.class)
-      .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(secretName))
-      .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
+        .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(secretName))
+        .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
   }
 
   @Test
