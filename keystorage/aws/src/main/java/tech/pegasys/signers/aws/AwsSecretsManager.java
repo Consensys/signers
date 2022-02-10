@@ -12,15 +12,15 @@
  */
 package tech.pegasys.signers.aws;
 
+import java.io.Closeable;
+import java.util.Optional;
+
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
-
-import java.io.Closeable;
-import java.util.Optional;
 
 public class AwsSecretsManager implements Closeable {
 
