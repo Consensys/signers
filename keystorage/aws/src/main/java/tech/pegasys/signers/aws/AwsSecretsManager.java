@@ -60,7 +60,7 @@ public class AwsSecretsManager implements Closeable {
       final GetSecretValueResponse valueResponse =
           secretsManagerClient.getSecretValue(getSecretValueRequest);
       return Optional.of(valueResponse.secretString());
-    } catch (RuntimeException e) {
+    } catch (final RuntimeException e) {
       return Optional.empty();
     }
   }
