@@ -42,6 +42,7 @@ class AwsSecretsManagerTest {
 
   private AwsSecretsManager awsSecretsManagerDefault;
   private AwsSecretsManager awsSecretsManagerExplicit;
+  private AwsSecretsManager awsSecretsManagerInvalidCredentials;
   private SecretsManagerClient secretsManagerClient;
   private String secretName;
 
@@ -64,6 +65,9 @@ class AwsSecretsManagerTest {
     awsSecretsManagerExplicit =
         AwsSecretsManager.createAwsSecretsManager(
             RO_AWS_ACCESS_KEY_ID, RO_AWS_SECRET_ACCESS_KEY, AWS_REGION);
+    awsSecretsManagerInvalidCredentials =
+        AwsSecretsManager.createAwsSecretsManager(
+          RO_AWS_ACCESS_KEY_ID, "invalid", AWS_REGION);
   }
 
   private void setupSecretsManagerClient() {
@@ -94,6 +98,7 @@ class AwsSecretsManagerTest {
   private void closeClients() {
     awsSecretsManagerDefault.close();
     awsSecretsManagerExplicit.close();
+    awsSecretsManagerInvalidCredentials.close();
     secretsManagerClient.close();
   }
 
@@ -124,9 +129,16 @@ class AwsSecretsManagerTest {
   }
 
   @Test
+  void fetchSecretWithInvalidCredentialsThrowsException() {
+    assertThatExceptionOfType(RuntimeException.class)
+      .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(secretName))
+      .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
+  }
+
+  @Test
   void fetchingNonExistentSecretThrowsException() {
     assertThatExceptionOfType(RuntimeException.class)
         .isThrownBy(() -> awsSecretsManagerDefault.fetchSecret("empty"))
-        .withMessageContaining("Secrets Manager can't find the specified secret.");
+        .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
   }
 }
