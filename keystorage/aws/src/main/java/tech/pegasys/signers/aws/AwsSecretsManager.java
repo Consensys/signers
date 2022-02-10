@@ -62,7 +62,7 @@ public class AwsSecretsManager implements Closeable {
           secretsManagerClient.getSecretValue(getSecretValueRequest);
       return Optional.of(valueResponse.secretString());
     } catch (SecretsManagerException e) {
-      throw new RuntimeException("Failed to fetch secret from AWS Secrets Manager.", e);
+      return Optional.empty();
     }
   }
 

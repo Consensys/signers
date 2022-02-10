@@ -13,7 +13,6 @@
 package tech.pegasys.signers.aws;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -132,16 +131,14 @@ class AwsSecretsManagerTest {
   }
 
   @Test
-  void fetchSecretWithInvalidCredentialsThrowsException() {
-    assertThatExceptionOfType(RuntimeException.class)
-        .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(secretName))
-        .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
+  void fetchSecretWithInvalidCredentialsReturnsEmpty() {
+    Optional<String> secret = awsSecretsManagerInvalidCredentials.fetchSecret(secretName);
+    assertThat(secret).isEmpty();
   }
 
   @Test
-  void fetchingNonExistentSecretThrowsException() {
-    assertThatExceptionOfType(RuntimeException.class)
-        .isThrownBy(() -> awsSecretsManagerDefault.fetchSecret("empty"))
-        .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
+  void fetchingNonExistentSecretReturnsEmpty() {
+    Optional<String> secret = awsSecretsManagerDefault.fetchSecret("empty");
+    assertThat(secret).isEmpty();
   }
 }
