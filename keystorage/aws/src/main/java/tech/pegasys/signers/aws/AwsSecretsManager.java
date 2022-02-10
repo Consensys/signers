@@ -21,6 +21,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
 
 public class AwsSecretsManager implements Closeable {
 
@@ -60,7 +61,7 @@ public class AwsSecretsManager implements Closeable {
       final GetSecretValueResponse valueResponse =
           secretsManagerClient.getSecretValue(getSecretValueRequest);
       return Optional.of(valueResponse.secretString());
-    } catch (final RuntimeException e) {
+    } catch (final SecretsManagerException e) {
       return Optional.empty();
     }
   }
