@@ -12,12 +12,6 @@
  */
 package tech.pegasys.signers.aws;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
-import java.util.Optional;
-import java.util.UUID;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -29,6 +23,12 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
+
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AwsSecretsManagerTest {
@@ -140,7 +140,7 @@ class AwsSecretsManagerTest {
 
   @Test
   void fetchingNonExistentSecretReturnsEmpty() {
-    Optional<String> secret = awsSecretsManagerDefault.fetchSecret("empty");
+    Optional<String> secret = awsSecretsManagerExplicit.fetchSecret("signers-aws-integration/empty");
     assertThat(secret).isEmpty();
   }
 }
