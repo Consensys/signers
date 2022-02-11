@@ -140,7 +140,7 @@ class AwsSecretsManagerTest {
 
   @Test
   void fetchingNonExistentSecretReturnsEmpty() {
-    Optional<String> secret = awsSecretsManagerDefault.fetchSecret("empty");
+    Optional<String> secret = awsSecretsManagerDefault.fetchSecret("signers-aws-integration/empty");
     assertThat(secret).isEmpty();
   }
 }
