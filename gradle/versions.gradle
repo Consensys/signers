@@ -88,5 +88,11 @@ dependencyManagement {
     dependency 'org.zeroturnaround:zt-exec:1.12'
 
     dependency 'org.xipki.iaik:sunpkcs11-wrapper:1.4.8'
+
+    dependencySet(group: 'software.amazon.awssdk', version: '2.17.125') {
+      entry 'bom'
+      entry 'auth'
+      entry 'secretsmanager'
+    }
   }
 }
