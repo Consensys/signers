@@ -1,4 +1,9 @@
 # Changelog
+## 2.1.0
+### Features Added
+- Added support for AWS Secrets Manager
+
+---
 ## 2.0.0
 ### Features Added
 - Update various dependencies. 
