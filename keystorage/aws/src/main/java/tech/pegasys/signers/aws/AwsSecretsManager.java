@@ -48,9 +48,8 @@ public class AwsSecretsManager implements Closeable {
     return new AwsSecretsManager(secretsManagerClient);
   }
 
-  public static AwsSecretsManager createAwsSecretsManager(final String region) {
-    final SecretsManagerClient secretsManagerClient =
-        SecretsManagerClient.builder().region(Region.of(region)).build();
+  public static AwsSecretsManager createAwsSecretsManager() {
+    final SecretsManagerClient secretsManagerClient = SecretsManagerClient.builder().build();
 
     return new AwsSecretsManager(secretsManagerClient);
   }

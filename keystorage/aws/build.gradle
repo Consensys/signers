@@ -34,6 +34,7 @@ dependencies {
 
   implementation 'software.amazon.awssdk:auth'
   implementation 'software.amazon.awssdk:secretsmanager'
+  implementation 'com.google.guava:guava'
 
   testImplementation 'org.assertj:assertj-core'
   testImplementation 'org.junit.jupiter:junit-jupiter-engine'
