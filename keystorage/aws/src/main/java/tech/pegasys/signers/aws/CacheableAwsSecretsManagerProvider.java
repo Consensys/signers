@@ -19,12 +19,15 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 
-public class CacheableAwsSecretsManager {
+public class CacheableAwsSecretsManagerProvider {
 
-  private static final Cache<String, AwsSecretsManager> awsSecretsManagerCache =
-      CacheBuilder.newBuilder().build();
+  private final Cache<String, AwsSecretsManager> awsSecretsManagerCache;
 
-  private static AwsSecretsManager fromCacheOrCallable(
+  public CacheableAwsSecretsManagerProvider(final long maximumSize) {
+    awsSecretsManagerCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
+  }
+
+  private AwsSecretsManager fromCacheOrCallable(
       final String key, Callable<? extends AwsSecretsManager> loader) {
     try {
       return awsSecretsManagerCache.get(key, loader);
@@ -33,32 +36,23 @@ public class CacheableAwsSecretsManager {
     }
   }
 
-  public static AwsSecretsManager createAwsSecretsManager(
+  public AwsSecretsManager createAwsSecretsManager(
       final String accessKeyId, final String secretAccessKey, final String region) {
-    final String key = accessKeyId;
     return fromCacheOrCallable(
-        key,
-        new Callable<AwsSecretsManager>() {
-          @Override
-          public AwsSecretsManager call() {
-            return AwsSecretsManager.createAwsSecretsManager(accessKeyId, secretAccessKey, region);
-          }
-        });
+        accessKeyId,
+        () -> AwsSecretsManager.createAwsSecretsManager(accessKeyId, secretAccessKey, region));
   }
 
-  public static AwsSecretsManager createAwsSecretsManager() {
+  public AwsSecretsManager createAwsSecretsManager() {
     final String key = DefaultCredentialsProvider.create().resolveCredentials().accessKeyId();
-    return fromCacheOrCallable(
-        key,
-        new Callable<AwsSecretsManager>() {
-          @Override
-          public AwsSecretsManager call() {
-            return AwsSecretsManager.createAwsSecretsManager();
-          }
-        });
+    return fromCacheOrCallable(key, () -> AwsSecretsManager.createAwsSecretsManager());
   }
 
-  public static void clearCache() {
+  public void clearCache() {
+    awsSecretsManagerCache
+        .asMap()
+        .values()
+        .forEach((awsSecretsManager -> awsSecretsManager.close()));
     awsSecretsManagerCache.invalidateAll();
   }
 }

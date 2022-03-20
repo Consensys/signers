@@ -21,13 +21,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CacheableAwsSecretsManagerTest {
+class CacheableAwsSecretsManagerProviderTest {
 
   private final String RW_AWS_ACCESS_KEY_ID = System.getenv("RW_AWS_ACCESS_KEY_ID");
   private final String RW_AWS_SECRET_ACCESS_KEY = System.getenv("RW_AWS_SECRET_ACCESS_KEY");
   private final String AWS_ACCESS_KEY_ID = System.getenv("AWS_ACCESS_KEY_ID");
   private final String AWS_SECRET_ACCESS_KEY = System.getenv("AWS_SECRET_ACCESS_KEY");
   private final String AWS_REGION = "us-east-2";
+
+  private CacheableAwsSecretsManagerProvider cacheableAwsSecretsManagerProvider;
+  private final long cacheMaximumSize = 5;
 
   private void verifyEnvironmentVariables() {
     Assumptions.assumeTrue(
@@ -39,47 +42,52 @@ class CacheableAwsSecretsManagerTest {
         AWS_SECRET_ACCESS_KEY != null, "Set AWS_SECRET_ACCESS_KEY environment variable");
   }
 
+  private void initializeCacheableAwsSecretsManagerProvider() {
+    cacheableAwsSecretsManagerProvider = new CacheableAwsSecretsManagerProvider(cacheMaximumSize);
+  }
+
   private AwsSecretsManager createDefaultSecretsManager() {
-    return CacheableAwsSecretsManager.createAwsSecretsManager();
+    return cacheableAwsSecretsManagerProvider.createAwsSecretsManager();
   }
 
   private AwsSecretsManager createSpecifiedSecretsManager() {
-    return CacheableAwsSecretsManager.createAwsSecretsManager(
+    return cacheableAwsSecretsManagerProvider.createAwsSecretsManager(
         AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION);
   }
 
   private AwsSecretsManager createSpecifiedSecretsManagerRW() {
-    return CacheableAwsSecretsManager.createAwsSecretsManager(
+    return cacheableAwsSecretsManagerProvider.createAwsSecretsManager(
         RW_AWS_ACCESS_KEY_ID, RW_AWS_SECRET_ACCESS_KEY, AWS_REGION);
   }
 
   @BeforeAll
   void setup() {
     verifyEnvironmentVariables();
+    initializeCacheableAwsSecretsManagerProvider();
   }
 
   @AfterEach
   void teardown() {
-    CacheableAwsSecretsManager.clearCache();
+    cacheableAwsSecretsManagerProvider.clearCache();
   }
 
   @Test
-  void returnsCachedSpecifiedSecretsManager() {
+  void isSameAsCachedSpecifiedSecretsManager() {
     assertThat(createSpecifiedSecretsManager()).isEqualTo(createSpecifiedSecretsManager());
   }
 
   @Test
-  void returnsCachedDefaultSecretsManager() {
+  void isSameAsCachedDefaultSecretsManager() {
     assertThat(createDefaultSecretsManager()).isEqualTo(createDefaultSecretsManager());
   }
 
   @Test
-  void returnsCachedDefaultSecretsManagerAfterCachingSpecified() {
+  void isSameAsCachedDefaultSecretsManagerAfterCachingSpecified() {
     assertThat(createSpecifiedSecretsManager()).isEqualTo(createDefaultSecretsManager());
   }
 
   @Test
-  void returnsCorrectCachedSecretsManager() {
+  void isSameAsCorrectCachedSecretsManager() {
     assertThat(createSpecifiedSecretsManager())
         .isNotEqualTo(createSpecifiedSecretsManagerRW())
         .isEqualTo(createDefaultSecretsManager());
@@ -89,7 +97,7 @@ class CacheableAwsSecretsManagerTest {
   void validateClearCache() {
     final AwsSecretsManager awsSecretsManager = createSpecifiedSecretsManager();
     final AwsSecretsManager awsSecretsManagerRW = createSpecifiedSecretsManagerRW();
-    CacheableAwsSecretsManager.clearCache();
+    cacheableAwsSecretsManagerProvider.clearCache();
     assertThat(createSpecifiedSecretsManager()).isNotEqualTo(awsSecretsManager);
     assertThat(createSpecifiedSecretsManagerRW()).isNotEqualTo(awsSecretsManagerRW);
   }
