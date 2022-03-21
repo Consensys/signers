@@ -31,7 +31,7 @@ class CacheableAwsSecretsManagerProviderTest {
   private final String DIFFERENT_AWS_REGION = "us-east-1";
 
   private CacheableAwsSecretsManagerProvider cacheableAwsSecretsManagerProvider;
-  private final long cacheMaximumSize = 5;
+  private long cacheMaximumSize;
 
   private void verifyEnvironmentVariables() {
     Assumptions.assumeTrue(
@@ -45,6 +45,7 @@ class CacheableAwsSecretsManagerProviderTest {
   }
 
   private void initializeCacheableAwsSecretsManagerProvider() {
+    cacheMaximumSize = 4;
     cacheableAwsSecretsManagerProvider = new CacheableAwsSecretsManagerProvider(cacheMaximumSize);
   }
 
@@ -57,9 +58,14 @@ class CacheableAwsSecretsManagerProviderTest {
         AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION);
   }
 
-  private AwsSecretsManager createSecretsManagerDifferentKeysSameRegion() {
+  private AwsSecretsManager createSecretsManagerDifferentKeys() {
     return cacheableAwsSecretsManagerProvider.createAwsSecretsManager(
         DIFFERENT_AWS_ACCESS_KEY_ID, DIFFERENT_AWS_SECRET_ACCESS_KEY, AWS_REGION);
+  }
+
+  private AwsSecretsManager createSecretsManagerDifferentRegion() {
+    return cacheableAwsSecretsManagerProvider.createAwsSecretsManager(
+        AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, DIFFERENT_AWS_REGION);
   }
 
   private AwsSecretsManager createSecretsManagerDifferentKeysDifferentRegion() {
@@ -95,26 +101,25 @@ class CacheableAwsSecretsManagerProviderTest {
 
   @Test
   void isSameAsCorrectCachedSecretsManager() {
-    assertThat(createSpecifiedSecretsManager())
-        .isSameAs(createDefaultSecretsManager())
-        .isNotSameAs(createSecretsManagerDifferentKeysSameRegion())
-        .isNotSameAs(createSecretsManagerDifferentKeysDifferentRegion());
+    assertThat(createDefaultSecretsManager())
+        .isNotSameAs(createSecretsManagerDifferentKeys())
+        .isNotSameAs(createSecretsManagerDifferentRegion())
+        .isNotSameAs(createSecretsManagerDifferentKeysDifferentRegion())
+        .isSameAs(createSpecifiedSecretsManager());
   }
 
   @Test
   void isNotSameAsSecretsManagerDifferentRegion() {
-    assertThat(createSecretsManagerDifferentKeysSameRegion())
+    assertThat(createSecretsManagerDifferentKeys())
         .isNotSameAs(createSecretsManagerDifferentKeysDifferentRegion());
   }
 
   @Test
   void validateClose() {
     final AwsSecretsManager awsSecretsManager = createSpecifiedSecretsManager();
-    final AwsSecretsManager differentAwsSecretsManager =
-        createSecretsManagerDifferentKeysSameRegion();
+    final AwsSecretsManager differentAwsSecretsManager = createSecretsManagerDifferentKeys();
     cacheableAwsSecretsManagerProvider.close();
     assertThat(createSpecifiedSecretsManager()).isNotSameAs(awsSecretsManager);
-    assertThat(createSecretsManagerDifferentKeysSameRegion())
-        .isNotSameAs(differentAwsSecretsManager);
+    assertThat(createSecretsManagerDifferentKeys()).isNotSameAs(differentAwsSecretsManager);
   }
 }
