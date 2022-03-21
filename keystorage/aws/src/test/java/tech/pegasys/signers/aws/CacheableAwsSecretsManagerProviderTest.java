@@ -23,20 +23,22 @@ import org.junit.jupiter.api.TestInstance;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CacheableAwsSecretsManagerProviderTest {
 
-  private final String RW_AWS_ACCESS_KEY_ID = System.getenv("RW_AWS_ACCESS_KEY_ID");
-  private final String RW_AWS_SECRET_ACCESS_KEY = System.getenv("RW_AWS_SECRET_ACCESS_KEY");
   private final String AWS_ACCESS_KEY_ID = System.getenv("AWS_ACCESS_KEY_ID");
   private final String AWS_SECRET_ACCESS_KEY = System.getenv("AWS_SECRET_ACCESS_KEY");
   private final String AWS_REGION = "us-east-2";
+  private final String DIFFERENT_AWS_ACCESS_KEY_ID = System.getenv("RW_AWS_ACCESS_KEY_ID");
+  private final String DIFFERENT_AWS_SECRET_ACCESS_KEY = System.getenv("RW_AWS_SECRET_ACCESS_KEY");
+  private final String DIFFERENT_AWS_REGION = "us-east-1";
 
   private CacheableAwsSecretsManagerProvider cacheableAwsSecretsManagerProvider;
   private final long cacheMaximumSize = 5;
 
   private void verifyEnvironmentVariables() {
     Assumptions.assumeTrue(
-        RW_AWS_ACCESS_KEY_ID != null, "Set RW_AWS_ACCESS_KEY_ID environment variable");
+        DIFFERENT_AWS_ACCESS_KEY_ID != null, "Set RW_AWS_ACCESS_KEY_ID environment variable");
     Assumptions.assumeTrue(
-        RW_AWS_SECRET_ACCESS_KEY != null, "Set RW_AWS_SECRET_ACCESS_KEY environment variable");
+        DIFFERENT_AWS_SECRET_ACCESS_KEY != null,
+        "Set RW_AWS_SECRET_ACCESS_KEY environment variable");
     Assumptions.assumeTrue(AWS_ACCESS_KEY_ID != null, "Set AWS_ACCESS_KEY_ID environment variable");
     Assumptions.assumeTrue(
         AWS_SECRET_ACCESS_KEY != null, "Set AWS_SECRET_ACCESS_KEY environment variable");
@@ -55,9 +57,14 @@ class CacheableAwsSecretsManagerProviderTest {
         AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION);
   }
 
-  private AwsSecretsManager createSpecifiedSecretsManagerRW() {
+  private AwsSecretsManager createSecretsManagerDifferentKeysSameRegion() {
     return cacheableAwsSecretsManagerProvider.createAwsSecretsManager(
-        RW_AWS_ACCESS_KEY_ID, RW_AWS_SECRET_ACCESS_KEY, AWS_REGION);
+        DIFFERENT_AWS_ACCESS_KEY_ID, DIFFERENT_AWS_SECRET_ACCESS_KEY, AWS_REGION);
+  }
+
+  private AwsSecretsManager createSecretsManagerDifferentKeysDifferentRegion() {
+    return cacheableAwsSecretsManagerProvider.createAwsSecretsManager(
+        DIFFERENT_AWS_ACCESS_KEY_ID, DIFFERENT_AWS_SECRET_ACCESS_KEY, DIFFERENT_AWS_REGION);
   }
 
   @BeforeAll
@@ -89,16 +96,25 @@ class CacheableAwsSecretsManagerProviderTest {
   @Test
   void isSameAsCorrectCachedSecretsManager() {
     assertThat(createSpecifiedSecretsManager())
-        .isNotSameAs(createSpecifiedSecretsManagerRW())
-        .isSameAs(createDefaultSecretsManager());
+        .isSameAs(createDefaultSecretsManager())
+        .isNotSameAs(createSecretsManagerDifferentKeysSameRegion())
+        .isNotSameAs(createSecretsManagerDifferentKeysDifferentRegion());
+  }
+
+  @Test
+  void isNotSameAsSecretsManagerDifferentRegion() {
+    assertThat(createSecretsManagerDifferentKeysSameRegion())
+        .isNotSameAs(createSecretsManagerDifferentKeysDifferentRegion());
   }
 
   @Test
   void validateClearCache() {
     final AwsSecretsManager awsSecretsManager = createSpecifiedSecretsManager();
-    final AwsSecretsManager awsSecretsManagerRW = createSpecifiedSecretsManagerRW();
+    final AwsSecretsManager differentAwsSecretsManager =
+        createSecretsManagerDifferentKeysSameRegion();
     cacheableAwsSecretsManagerProvider.close();
     assertThat(createSpecifiedSecretsManager()).isNotSameAs(awsSecretsManager);
-    assertThat(createSpecifiedSecretsManagerRW()).isNotSameAs(awsSecretsManagerRW);
+    assertThat(createSecretsManagerDifferentKeysSameRegion())
+        .isNotSameAs(differentAwsSecretsManager);
   }
 }
