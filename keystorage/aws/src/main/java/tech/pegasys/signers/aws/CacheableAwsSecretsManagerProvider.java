@@ -17,20 +17,24 @@ import java.util.concurrent.ExecutionException;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 
 public class CacheableAwsSecretsManagerProvider {
 
-  private final Cache<String, AwsSecretsManager> awsSecretsManagerCache;
+  private static final Logger LOGGER = LogManager.getLogger();
+  private final Cache<AwsKeyIdentifier, AwsSecretsManager> awsSecretsManagerCache;
 
   public CacheableAwsSecretsManagerProvider(final long maximumSize) {
     awsSecretsManagerCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
   }
 
   private AwsSecretsManager fromCacheOrCallable(
-      final String key, Callable<? extends AwsSecretsManager> loader) {
+      final AwsKeyIdentifier awsKeyIdentifier, Callable<? extends AwsSecretsManager> loader) {
     try {
-      return awsSecretsManagerCache.get(key, loader);
+      return awsSecretsManagerCache.get(awsKeyIdentifier, loader);
     } catch (ExecutionException e) {
       throw new RuntimeException(e.getMessage());
     }
@@ -39,20 +43,31 @@ public class CacheableAwsSecretsManagerProvider {
   public AwsSecretsManager createAwsSecretsManager(
       final String accessKeyId, final String secretAccessKey, final String region) {
     return fromCacheOrCallable(
-        accessKeyId,
+        new AwsKeyIdentifier(accessKeyId, region),
         () -> AwsSecretsManager.createAwsSecretsManager(accessKeyId, secretAccessKey, region));
   }
 
   public AwsSecretsManager createAwsSecretsManager() {
-    final String key = DefaultCredentialsProvider.create().resolveCredentials().accessKeyId();
-    return fromCacheOrCallable(key, () -> AwsSecretsManager.createAwsSecretsManager());
+    final String accessKeyId =
+        DefaultCredentialsProvider.create().resolveCredentials().accessKeyId();
+    final String region = DefaultAwsRegionProviderChain.builder().build().getRegion().toString();
+    return fromCacheOrCallable(
+        new AwsKeyIdentifier(accessKeyId, region),
+        () -> AwsSecretsManager.createAwsSecretsManager());
   }
 
-  public void clearCache() {
+  public void close() {
     awsSecretsManagerCache
         .asMap()
         .values()
-        .forEach((awsSecretsManager -> awsSecretsManager.close()));
+        .forEach(
+            awsSecretsManager -> {
+              try {
+                awsSecretsManager.close();
+              } catch (RuntimeException e) {
+                LOGGER.warn("Unable to close AWS Secrets Manager", e);
+              }
+            });
     awsSecretsManagerCache.invalidateAll();
   }
 }

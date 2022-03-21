@@ -68,37 +68,37 @@ class CacheableAwsSecretsManagerProviderTest {
 
   @AfterEach
   void teardown() {
-    cacheableAwsSecretsManagerProvider.clearCache();
+    cacheableAwsSecretsManagerProvider.close();
   }
 
   @Test
   void isSameAsCachedSpecifiedSecretsManager() {
-    assertThat(createSpecifiedSecretsManager()).isEqualTo(createSpecifiedSecretsManager());
+    assertThat(createSpecifiedSecretsManager()).isSameAs(createSpecifiedSecretsManager());
   }
 
   @Test
   void isSameAsCachedDefaultSecretsManager() {
-    assertThat(createDefaultSecretsManager()).isEqualTo(createDefaultSecretsManager());
+    assertThat(createDefaultSecretsManager()).isSameAs(createDefaultSecretsManager());
   }
 
   @Test
   void isSameAsCachedDefaultSecretsManagerAfterCachingSpecified() {
-    assertThat(createSpecifiedSecretsManager()).isEqualTo(createDefaultSecretsManager());
+    assertThat(createSpecifiedSecretsManager()).isSameAs(createDefaultSecretsManager());
   }
 
   @Test
   void isSameAsCorrectCachedSecretsManager() {
     assertThat(createSpecifiedSecretsManager())
-        .isNotEqualTo(createSpecifiedSecretsManagerRW())
-        .isEqualTo(createDefaultSecretsManager());
+        .isNotSameAs(createSpecifiedSecretsManagerRW())
+        .isSameAs(createDefaultSecretsManager());
   }
 
   @Test
   void validateClearCache() {
     final AwsSecretsManager awsSecretsManager = createSpecifiedSecretsManager();
     final AwsSecretsManager awsSecretsManagerRW = createSpecifiedSecretsManagerRW();
-    cacheableAwsSecretsManagerProvider.clearCache();
-    assertThat(createSpecifiedSecretsManager()).isNotEqualTo(awsSecretsManager);
-    assertThat(createSpecifiedSecretsManagerRW()).isNotEqualTo(awsSecretsManagerRW);
+    cacheableAwsSecretsManagerProvider.close();
+    assertThat(createSpecifiedSecretsManager()).isNotSameAs(awsSecretsManager);
+    assertThat(createSpecifiedSecretsManagerRW()).isNotSameAs(awsSecretsManagerRW);
   }
 }
