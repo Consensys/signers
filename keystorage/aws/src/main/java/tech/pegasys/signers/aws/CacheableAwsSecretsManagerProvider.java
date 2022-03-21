@@ -21,6 +21,7 @@ import com.google.common.cache.CacheBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 
 public class CacheableAwsSecretsManagerProvider implements Closeable {
@@ -44,19 +45,20 @@ public class CacheableAwsSecretsManagerProvider implements Closeable {
   public AwsSecretsManager createAwsSecretsManager(
       final String accessKeyId, final String secretAccessKey, final String region) {
     return fromCacheOrCallable(
-        new AwsKeyIdentifier(accessKeyId, region),
+        new AwsKeyIdentifier(accessKeyId, Region.of(region)),
         () -> AwsSecretsManager.createAwsSecretsManager(accessKeyId, secretAccessKey, region));
   }
 
   public AwsSecretsManager createAwsSecretsManager() {
     final String accessKeyId =
         DefaultCredentialsProvider.create().resolveCredentials().accessKeyId();
-    final String region = DefaultAwsRegionProviderChain.builder().build().getRegion().toString();
+    final Region region = DefaultAwsRegionProviderChain.builder().build().getRegion();
     return fromCacheOrCallable(
         new AwsKeyIdentifier(accessKeyId, region),
         () -> AwsSecretsManager.createAwsSecretsManager());
   }
 
+  @Override
   public void close() {
     awsSecretsManagerCache
         .asMap()

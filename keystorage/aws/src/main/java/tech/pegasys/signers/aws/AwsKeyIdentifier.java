@@ -14,11 +14,13 @@ package tech.pegasys.signers.aws;
 
 import java.util.Objects;
 
+import software.amazon.awssdk.regions.Region;
+
 public class AwsKeyIdentifier {
   private final String accessKeyId;
-  private final String region;
+  private final Region region;
 
-  public AwsKeyIdentifier(final String accessKeyId, final String region) {
+  public AwsKeyIdentifier(final String accessKeyId, final Region region) {
     this.accessKeyId = accessKeyId;
     this.region = region;
   }
@@ -27,7 +29,7 @@ public class AwsKeyIdentifier {
     return accessKeyId;
   }
 
-  public String getRegion() {
+  public Region getRegion() {
     return region;
   }
 
