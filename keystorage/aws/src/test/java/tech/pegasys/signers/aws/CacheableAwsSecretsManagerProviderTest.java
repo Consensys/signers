@@ -108,7 +108,7 @@ class CacheableAwsSecretsManagerProviderTest {
   }
 
   @Test
-  void validateClearCache() {
+  void validateClose() {
     final AwsSecretsManager awsSecretsManager = createSpecifiedSecretsManager();
     final AwsSecretsManager differentAwsSecretsManager =
         createSecretsManagerDifferentKeysSameRegion();
