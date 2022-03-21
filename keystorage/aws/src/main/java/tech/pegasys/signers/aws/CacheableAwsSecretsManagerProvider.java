@@ -12,6 +12,7 @@
  */
 package tech.pegasys.signers.aws;
 
+import java.io.Closeable;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -22,7 +23,7 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 
-public class CacheableAwsSecretsManagerProvider {
+public class CacheableAwsSecretsManagerProvider implements Closeable {
 
   private static final Logger LOGGER = LogManager.getLogger();
   private final Cache<AwsKeyIdentifier, AwsSecretsManager> awsSecretsManagerCache;
