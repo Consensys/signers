@@ -12,9 +12,6 @@
  */
 package tech.pegasys.signers.aws;
 
-import java.io.Closeable;
-import java.util.Optional;
-
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -24,7 +21,10 @@ import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRespon
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
 
-public class AwsSecretsManager implements Closeable {
+import java.io.Closeable;
+import java.util.Optional;
+
+class AwsSecretsManager implements Closeable {
 
   private final SecretsManagerClient secretsManagerClient;
 
@@ -32,7 +32,7 @@ public class AwsSecretsManager implements Closeable {
     this.secretsManagerClient = secretsManagerClient;
   }
 
-  public static AwsSecretsManager createAwsSecretsManager(
+  static AwsSecretsManager createAwsSecretsManager(
       final String accessKeyId, final String secretAccessKey, final String region) {
     final AwsBasicCredentials awsBasicCredentials =
         AwsBasicCredentials.create(accessKeyId, secretAccessKey);
@@ -48,7 +48,7 @@ public class AwsSecretsManager implements Closeable {
     return new AwsSecretsManager(secretsManagerClient);
   }
 
-  public static AwsSecretsManager createAwsSecretsManager() {
+  static AwsSecretsManager createAwsSecretsManager() {
     final SecretsManagerClient secretsManagerClient = SecretsManagerClient.builder().build();
 
     return new AwsSecretsManager(secretsManagerClient);

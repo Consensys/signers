@@ -15,6 +15,7 @@ package tech.pegasys.signers.aws;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -31,7 +32,6 @@ class AwsSecretsManagerProviderTest {
   private final String DIFFERENT_AWS_REGION = "us-east-1";
 
   private AwsSecretsManagerProvider awsSecretsManagerProvider;
-  private long cacheMaximumSize;
 
   private void verifyEnvironmentVariables() {
     Assumptions.assumeTrue(
@@ -42,11 +42,6 @@ class AwsSecretsManagerProviderTest {
     Assumptions.assumeTrue(AWS_ACCESS_KEY_ID != null, "Set AWS_ACCESS_KEY_ID environment variable");
     Assumptions.assumeTrue(
         AWS_SECRET_ACCESS_KEY != null, "Set AWS_SECRET_ACCESS_KEY environment variable");
-  }
-
-  private void initializeCacheableAwsSecretsManagerProvider() {
-    cacheMaximumSize = 4;
-    awsSecretsManagerProvider = new AwsSecretsManagerProvider(cacheMaximumSize);
   }
 
   private AwsSecretsManager createDefaultSecretsManager() {
@@ -76,7 +71,11 @@ class AwsSecretsManagerProviderTest {
   @BeforeAll
   void setup() {
     verifyEnvironmentVariables();
-    initializeCacheableAwsSecretsManagerProvider();
+  }
+
+  @BeforeEach
+  void initializeCacheableAwsSecretsManagerProvider() {
+    awsSecretsManagerProvider = new AwsSecretsManagerProvider(4);
   }
 
   @AfterEach
@@ -112,6 +111,21 @@ class AwsSecretsManagerProviderTest {
   void isNotSameAsSecretsManagerDifferentRegion() {
     assertThat(createSecretsManagerDifferentKeys())
         .isNotSameAs(createSecretsManagerDifferentKeysDifferentRegion());
+  }
+
+  @Test
+  void validateCacheUpperBound() {
+    awsSecretsManagerProvider = new AwsSecretsManagerProvider(1);
+    assertThat(createDefaultSecretsManager()) // cache miss, create entry
+        .isSameAs(createDefaultSecretsManager()) // cache hit
+        .isNotSameAs(createSecretsManagerDifferentKeys()) // cache miss, evict & create entry
+        .isNotSameAs(createDefaultSecretsManager()); // cache miss
+  }
+
+  @Test
+  void secretsManagerIsNotCachedWhenCacheSizeIsSetToZero() {
+    awsSecretsManagerProvider = new AwsSecretsManagerProvider(0);
+    assertThat(createSpecifiedSecretsManager()).isNotSameAs(createSpecifiedSecretsManager());
   }
 
   @Test
