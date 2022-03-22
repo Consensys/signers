@@ -24,12 +24,12 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 
-public class CacheableAwsSecretsManagerProvider implements Closeable {
+public class AwsSecretsManagerProvider implements Closeable {
 
   private static final Logger LOGGER = LogManager.getLogger();
   private final Cache<AwsKeyIdentifier, AwsSecretsManager> awsSecretsManagerCache;
 
-  public CacheableAwsSecretsManagerProvider(final long maximumSize) {
+  public AwsSecretsManagerProvider(final long maximumSize) {
     awsSecretsManagerCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
   }
 

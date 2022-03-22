@@ -12,16 +12,16 @@
  */
 package tech.pegasys.signers.aws;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class CacheableAwsSecretsManagerProviderTest {
+class AwsSecretsManagerProviderTest {
 
   private final String AWS_ACCESS_KEY_ID = System.getenv("AWS_ACCESS_KEY_ID");
   private final String AWS_SECRET_ACCESS_KEY = System.getenv("AWS_SECRET_ACCESS_KEY");
@@ -30,7 +30,7 @@ class CacheableAwsSecretsManagerProviderTest {
   private final String DIFFERENT_AWS_SECRET_ACCESS_KEY = System.getenv("RW_AWS_SECRET_ACCESS_KEY");
   private final String DIFFERENT_AWS_REGION = "us-east-1";
 
-  private CacheableAwsSecretsManagerProvider cacheableAwsSecretsManagerProvider;
+  private AwsSecretsManagerProvider awsSecretsManagerProvider;
   private long cacheMaximumSize;
 
   private void verifyEnvironmentVariables() {
@@ -46,30 +46,30 @@ class CacheableAwsSecretsManagerProviderTest {
 
   private void initializeCacheableAwsSecretsManagerProvider() {
     cacheMaximumSize = 4;
-    cacheableAwsSecretsManagerProvider = new CacheableAwsSecretsManagerProvider(cacheMaximumSize);
+    awsSecretsManagerProvider = new AwsSecretsManagerProvider(cacheMaximumSize);
   }
 
   private AwsSecretsManager createDefaultSecretsManager() {
-    return cacheableAwsSecretsManagerProvider.createAwsSecretsManager();
+    return awsSecretsManagerProvider.createAwsSecretsManager();
   }
 
   private AwsSecretsManager createSpecifiedSecretsManager() {
-    return cacheableAwsSecretsManagerProvider.createAwsSecretsManager(
+    return awsSecretsManagerProvider.createAwsSecretsManager(
         AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION);
   }
 
   private AwsSecretsManager createSecretsManagerDifferentKeys() {
-    return cacheableAwsSecretsManagerProvider.createAwsSecretsManager(
+    return awsSecretsManagerProvider.createAwsSecretsManager(
         DIFFERENT_AWS_ACCESS_KEY_ID, DIFFERENT_AWS_SECRET_ACCESS_KEY, AWS_REGION);
   }
 
   private AwsSecretsManager createSecretsManagerDifferentRegion() {
-    return cacheableAwsSecretsManagerProvider.createAwsSecretsManager(
+    return awsSecretsManagerProvider.createAwsSecretsManager(
         AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, DIFFERENT_AWS_REGION);
   }
 
   private AwsSecretsManager createSecretsManagerDifferentKeysDifferentRegion() {
-    return cacheableAwsSecretsManagerProvider.createAwsSecretsManager(
+    return awsSecretsManagerProvider.createAwsSecretsManager(
         DIFFERENT_AWS_ACCESS_KEY_ID, DIFFERENT_AWS_SECRET_ACCESS_KEY, DIFFERENT_AWS_REGION);
   }
 
@@ -81,7 +81,7 @@ class CacheableAwsSecretsManagerProviderTest {
 
   @AfterEach
   void teardown() {
-    cacheableAwsSecretsManagerProvider.close();
+    awsSecretsManagerProvider.close();
   }
 
   @Test
@@ -118,7 +118,7 @@ class CacheableAwsSecretsManagerProviderTest {
   void validateClose() {
     final AwsSecretsManager awsSecretsManager = createSpecifiedSecretsManager();
     final AwsSecretsManager differentAwsSecretsManager = createSecretsManagerDifferentKeys();
-    cacheableAwsSecretsManagerProvider.close();
+    awsSecretsManagerProvider.close();
     assertThat(createSpecifiedSecretsManager()).isNotSameAs(awsSecretsManager);
     assertThat(createSecretsManagerDifferentKeys()).isNotSameAs(differentAwsSecretsManager);
   }
