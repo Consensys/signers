@@ -24,7 +24,7 @@ import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRespon
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
 
-class AwsSecretsManager implements Closeable {
+public class AwsSecretsManager implements Closeable {
 
   private final SecretsManagerClient secretsManagerClient;
 
