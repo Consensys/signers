@@ -29,8 +29,8 @@ public class AwsSecretsManagerProvider implements Closeable {
   private static final Logger LOGGER = LogManager.getLogger();
   private final Cache<AwsKeyIdentifier, AwsSecretsManager> awsSecretsManagerCache;
 
-  public AwsSecretsManagerProvider(final long maximumSize) {
-    awsSecretsManagerCache = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
+  public AwsSecretsManagerProvider(final long cacheMaximumSize) {
+    awsSecretsManagerCache = CacheBuilder.newBuilder().maximumSize(cacheMaximumSize).build();
   }
 
   private AwsSecretsManager fromCacheOrCallable(
