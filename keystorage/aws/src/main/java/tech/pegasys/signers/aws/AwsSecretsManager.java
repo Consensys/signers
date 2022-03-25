@@ -32,7 +32,7 @@ public class AwsSecretsManager implements Closeable {
     this.secretsManagerClient = secretsManagerClient;
   }
 
-  public static AwsSecretsManager createAwsSecretsManager(
+  static AwsSecretsManager createAwsSecretsManager(
       final String accessKeyId, final String secretAccessKey, final String region) {
     final AwsBasicCredentials awsBasicCredentials =
         AwsBasicCredentials.create(accessKeyId, secretAccessKey);
@@ -48,9 +48,8 @@ public class AwsSecretsManager implements Closeable {
     return new AwsSecretsManager(secretsManagerClient);
   }
 
-  public static AwsSecretsManager createAwsSecretsManager(final String region) {
-    final SecretsManagerClient secretsManagerClient =
-        SecretsManagerClient.builder().region(Region.of(region)).build();
+  static AwsSecretsManager createAwsSecretsManager() {
+    final SecretsManagerClient secretsManagerClient = SecretsManagerClient.builder().build();
 
     return new AwsSecretsManager(secretsManagerClient);
   }

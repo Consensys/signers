@@ -61,7 +61,7 @@ class AwsSecretsManagerTest {
   }
 
   private void setupSecretsManagers() {
-    awsSecretsManagerDefault = AwsSecretsManager.createAwsSecretsManager(AWS_REGION);
+    awsSecretsManagerDefault = AwsSecretsManager.createAwsSecretsManager();
     awsSecretsManagerExplicit =
         AwsSecretsManager.createAwsSecretsManager(
             RO_AWS_ACCESS_KEY_ID, RO_AWS_SECRET_ACCESS_KEY, AWS_REGION);
