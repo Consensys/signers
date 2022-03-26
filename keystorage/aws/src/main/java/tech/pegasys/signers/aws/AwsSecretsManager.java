@@ -13,16 +13,15 @@
 package tech.pegasys.signers.aws;
 
 import java.io.Closeable;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
-import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
-import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
+import software.amazon.awssdk.services.secretsmanager.model.*;
 
 public class AwsSecretsManager implements Closeable {
 
@@ -65,6 +64,16 @@ public class AwsSecretsManager implements Closeable {
       return Optional.empty();
     } catch (final SecretsManagerException e) {
       throw new RuntimeException("Failed to fetch secret from AWS Secrets Manager.", e);
+    }
+  }
+
+  public List<String> getAvailableSecrets() {
+    try {
+      return secretsManagerClient.listSecrets().secretList().stream()
+          .map(s -> s.arn())
+          .collect(Collectors.toList());
+    } catch (final SecretsManagerException e) {
+      throw new RuntimeException("Failed to list secrets from AWS Secrets Manager.", e);
     }
   }
 

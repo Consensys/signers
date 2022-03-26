@@ -15,6 +15,7 @@ package tech.pegasys.signers.aws;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -142,5 +143,17 @@ class AwsSecretsManagerTest {
   void fetchingNonExistentSecretReturnsEmpty() {
     Optional<String> secret = awsSecretsManagerDefault.fetchSecret("signers-aws-integration/empty");
     assertThat(secret).isEmpty();
+  }
+
+  @Test
+  void getAvailableSecretsWithDefaultManager() {
+    List<String> secrets = awsSecretsManagerDefault.getAvailableSecrets();
+    assertThat(secrets).contains(secretName).hasSize(1);
+  }
+
+  @Test
+  void getAvailableSecretsWithExplicitManager() {
+    List<String> secrets = awsSecretsManagerExplicit.getAvailableSecrets();
+    assertThat(secrets).contains(secretName).hasSize(1);
   }
 }
