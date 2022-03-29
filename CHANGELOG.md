@@ -1,9 +1,7 @@
 # Changelog
-## Next release
+## 2.2.0
 ### Features Added
 - Performance improvements for AWS Secrets Manager
-### Breaking Changes
-- Migrated construction of AwsSecretsManager to AwsSecretsManagerProvider
 
 ---
 ## 2.1.0
