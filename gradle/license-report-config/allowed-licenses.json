@@ -66,6 +66,13 @@
     },
     {
       "moduleName": "io.netty:netty-tcnative-classes"
+    },
+    {
+      "moduleLicense": "Unicode/ICU License",
+      "moduleName": "com.ibm.icu:icu4j"
+    },
+    {
+      "moduleName": "org.antlr:ST4"
     }
   ],
   "overrideLicenses": [
@@ -120,6 +127,14 @@
     {
       "moduleName": "io.netty:netty-tcnative-classes",
       "moduleLicense": "Apache License, Version 2.0"
+    },
+    {
+      "moduleName": "org.antlr:ST4",
+      "moduleLicense": "The BSD License"
+    },
+    {
+      "moduleName": "org.java-websocket:Java-WebSocket",
+      "moduleLicense": "MIT License"
     }
   ]
 }
