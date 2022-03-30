@@ -1,6 +1,6 @@
 # Changelog
 
-## Next Version
+## 2.2.1
 ### Features Added
  - Update various dependent libraries versions
 
