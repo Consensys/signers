@@ -13,21 +13,21 @@
 
 dependencyManagement {
   dependencies {
-    dependency 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
+    dependency 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
 
-    dependencySet(group: 'com.google.errorprone', version: '2.10.0') {
+    dependencySet(group: 'com.google.errorprone', version: '2.11.0') {
       entry 'error_prone_annotation'
       entry 'error_prone_check_api'
       entry 'error_prone_core'
       entry 'error_prone_test_helpers'
     }
-    dependency 'com.google.guava:guava:31.0.1-jre'
+    dependency 'com.google.guava:guava:31.1-jre'
 
-    dependencySet(group: 'com.azure', version: '4.3.6') {
+    dependencySet(group: 'com.azure', version: '4.3.8') {
       entry 'azure-security-keyvault-secrets'
       entry 'azure-security-keyvault-keys'
     }
-    dependency 'com.azure:azure-identity:1.4.3'
+    dependency 'com.azure:azure-identity:1.4.6'
 
     dependency 'commons-cli:commons-cli:1.5.0'
 
@@ -35,7 +35,7 @@ dependencyManagement {
 
     dependency 'io.rest-assured:rest-assured:4.4.0'
 
-    dependencySet(group: 'io.vertx', version: '4.2.3') {
+    dependencySet(group: 'io.vertx', version: '4.2.6') {
       entry 'vertx-codegen'
       entry 'vertx-core'
       entry 'vertx-unit'
@@ -47,13 +47,13 @@ dependencyManagement {
 
     dependency 'org.apache.commons:commons-lang3:3.12.0'
 
-    dependencySet(group: 'org.apache.logging.log4j', version: '2.17.1') {
+    dependencySet(group: 'org.apache.logging.log4j', version: '2.17.2') {
       entry 'log4j-api'
       entry 'log4j-core'
       entry 'log4j-slf4j-impl'
     }
 
-    dependencySet(group: 'org.apache.tuweni', version: '2.0.0') {
+    dependencySet(group: 'org.apache.tuweni', version: '2.2.0') {
       entry 'tuweni-bytes'
       entry 'tuweni-crypto'
       entry 'tuweni-net'
@@ -83,13 +83,13 @@ dependencyManagement {
       entry 'mockito-junit-jupiter'
     }
 
-    dependency 'org.web3j:core:4.8.9'
+    dependency 'org.web3j:core:4.9.0'
 
     dependency 'org.zeroturnaround:zt-exec:1.12'
 
-    dependency 'org.xipki.iaik:sunpkcs11-wrapper:1.4.8'
+    dependency 'org.xipki.iaik:sunpkcs11-wrapper:1.4.9'
 
-    dependencySet(group: 'software.amazon.awssdk', version: '2.17.125') {
+    dependencySet(group: 'software.amazon.awssdk', version: '2.17.158') {
       entry 'bom'
       entry 'auth'
       entry 'secretsmanager'

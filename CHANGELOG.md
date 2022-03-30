@@ -1,4 +1,10 @@
 # Changelog
+
+## Next Version
+### Features Added
+ - Update various dependent libraries versions
+
+---
 ## 2.2.0
 ### Features Added
 - Performance improvements for AWS Secrets Manager
