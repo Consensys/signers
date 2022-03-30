@@ -1,7 +1,13 @@
 # Changelog
-## 2.2.0
+
+## Next Version
 ### Features Added
 - Performance improvements for AWS Secrets Manager
+
+---
+## 2.2.0
+### Features Added
+- Upgraded jackson-databind dependency version
 
 ---
 ## 2.1.0
