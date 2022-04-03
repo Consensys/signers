@@ -13,10 +13,14 @@
 package tech.pegasys.signers.aws;
 
 import java.io.Closeable;
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -24,10 +28,11 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
-import software.amazon.awssdk.services.secretsmanager.model.SecretListEntry;
 import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
 
 public class AwsSecretsManager implements Closeable {
+
+  private static final Logger LOG = LogManager.getLogger();
 
   private final SecretsManagerClient secretsManagerClient;
 
@@ -71,18 +76,38 @@ public class AwsSecretsManager implements Closeable {
     }
   }
 
-  public List<SecretListEntry> getAvailableSecrets() {
-    try {
-      return secretsManagerClient.listSecrets().secretList().stream().collect(Collectors.toList());
-    } catch (final SecretsManagerException e) {
-      throw new RuntimeException("Failed to list secrets from AWS Secrets Manager.", e);
-    }
+  public <R> Collection<R> mapSecretsList(
+      final String prefix, final BiFunction<String, String, R> mapper) {
+    final Set<R> result = ConcurrentHashMap.newKeySet();
+    secretsManagerClient.listSecretsPaginator().stream()
+        .parallel()
+        .forEach(
+            p ->
+                p.secretList()
+                    .parallelStream()
+                    .forEach(
+                        secret -> {
+                          final String secretName = secret.name();
+                          if (secretName.startsWith(prefix)) {
+                            try {
+                              final R obj = mapper.apply(secretName, fetchSecret(secretName).get());
+                              if (obj != null) {
+                                result.add(obj);
+                              } else {
+                                LOG.warn("Mapped '{}' to a null object, and was discarded", secret);
+                              }
+                            } catch (final Exception e) {
+                              LOG.warn(
+                                  "Failed to map secret '{}' to requested object type.",
+                                  secretName);
+                            }
+                          }
+                        }));
+    return result;
   }
 
-  public List<SecretListEntry> getAvailableSecrets(final String secretNamePrefix) {
-    return getAvailableSecrets().stream()
-        .filter(s -> !s.arn().startsWith(secretNamePrefix))
-        .collect(Collectors.toList());
+  public <R> Collection<R> mapSecretsList(final BiFunction<String, String, R> mapper) {
+    return mapSecretsList("", mapper);
   }
 
   @Override
