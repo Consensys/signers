@@ -24,6 +24,7 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.secretsmanager.model.SecretListEntry;
 import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
 
 public class AwsSecretsManager implements Closeable {
@@ -70,11 +71,9 @@ public class AwsSecretsManager implements Closeable {
     }
   }
 
-  public List<String> getAvailableSecrets() {
+  public List<SecretListEntry> getAvailableSecrets() {
     try {
-      return secretsManagerClient.listSecrets().secretList().stream()
-          .map(s -> s.arn())
-          .collect(Collectors.toList());
+      return secretsManagerClient.listSecrets().secretList().stream().collect(Collectors.toList());
     } catch (final SecretsManagerException e) {
       throw new RuntimeException("Failed to list secrets from AWS Secrets Manager.", e);
     }
