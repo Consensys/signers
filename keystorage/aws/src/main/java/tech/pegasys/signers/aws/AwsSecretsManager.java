@@ -79,6 +79,12 @@ public class AwsSecretsManager implements Closeable {
     }
   }
 
+  public List<SecretListEntry> getAvailableSecrets(final String secretNamePrefix) {
+    return getAvailableSecrets().stream()
+        .filter(s -> !s.arn().startsWith(secretNamePrefix))
+        .collect(Collectors.toList());
+  }
+
   @Override
   public void close() {
     this.secretsManagerClient.close();
