@@ -85,22 +85,21 @@ public class AwsSecretsManager implements Closeable {
             p ->
                 p.secretList()
                     .parallelStream()
+                    .map(secretEntry -> secretEntry.name())
+                    .filter(secretName -> secretName.startsWith(prefix))
                     .forEach(
-                        secret -> {
-                          final String secretName = secret.name();
-                          if (secretName.startsWith(prefix)) {
-                            try {
-                              final R obj = mapper.apply(secretName, fetchSecret(secretName).get());
-                              if (obj != null) {
-                                result.add(obj);
-                              } else {
-                                LOG.warn("Mapped '{}' to a null object, and was discarded", secret);
-                              }
-                            } catch (final Exception e) {
+                        secretName -> {
+                          try {
+                            final R obj = mapper.apply(secretName, fetchSecret(secretName).get());
+                            if (obj != null) {
+                              result.add(obj);
+                            } else {
                               LOG.warn(
-                                  "Failed to map secret '{}' to requested object type.",
-                                  secretName);
+                                  "Mapped '{}' to a null object, and was discarded", secretName);
                             }
+                          } catch (final Exception e) {
+                            LOG.warn(
+                                "Failed to map secret '{}' to requested object type.", secretName);
                           }
                         }));
     return result;
