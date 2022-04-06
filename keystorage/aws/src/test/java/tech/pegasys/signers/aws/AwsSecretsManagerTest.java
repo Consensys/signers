@@ -174,9 +174,22 @@ class AwsSecretsManagerTest {
     createSecret(); // 3rd
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecretsList(secretNamePrefix, AbstractMap.SimpleEntry::new);
+        awsSecretsManagerExplicit.mapSecretsList(AbstractMap.SimpleEntry::new);
 
     secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
+  }
+
+  @Test
+  void multipleSecretsWithoutPrefixCanBeFetchedAndMapped() {
+    secretNamePrefix = "";
+    createSecret(); //
+    createSecret(); //
+
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecretsList(AbstractMap.SimpleEntry::new);
+
+    secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
+    secretNamePrefix = "signers-aws-integration/";
   }
 
   @Test
