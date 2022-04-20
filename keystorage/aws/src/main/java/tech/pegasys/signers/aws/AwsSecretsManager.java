@@ -13,6 +13,7 @@
 package tech.pegasys.signers.aws;
 
 import java.io.Closeable;
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -25,9 +26,12 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.Filter;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.ListSecretsRequest;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.secretsmanager.model.SecretListEntry;
 import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
 
 public class AwsSecretsManager implements Closeable {
@@ -76,37 +80,37 @@ public class AwsSecretsManager implements Closeable {
     }
   }
 
-  public <R> Collection<R> mapSecretsList(
-      final String prefix, final BiFunction<String, String, R> mapper) {
-    final Set<R> result = ConcurrentHashMap.newKeySet();
-    secretsManagerClient.listSecretsPaginator().stream()
-        .parallel()
-        .forEach(
-            p ->
-                p.secretList()
-                    .parallelStream()
-                    .map(secretEntry -> secretEntry.name())
-                    .filter(secretName -> secretName.startsWith(prefix))
-                    .forEach(
-                        secretName -> {
-                          try {
-                            final R obj = mapper.apply(secretName, fetchSecret(secretName).get());
-                            if (obj != null) {
-                              result.add(obj);
-                            } else {
-                              LOG.warn(
-                                  "Mapped '{}' to a null object, and was discarded", secretName);
-                            }
-                          } catch (final Exception e) {
-                            LOG.warn(
-                                "Failed to map secret '{}' to requested object type.", secretName);
-                          }
-                        }));
-    return result;
+  private Collection<SecretListEntry> listSecrets(final AbstractMap<String, String> tags) {
+    final ListSecretsRequest.Builder listSecretsRequestBuilder = ListSecretsRequest.builder();
+    if (tags != null) {
+      final Filter keys = Filter.builder().key("tag-key").values(tags.keySet()).build();
+      final Filter values = Filter.builder().key("tag-value").values(tags.values()).build();
+      listSecretsRequestBuilder.filters(keys, values);
+    }
+    final ListSecretsRequest listSecretsRequest = listSecretsRequestBuilder.build();
+    return secretsManagerClient.listSecrets(listSecretsRequest).secretList();
   }
 
-  public <R> Collection<R> mapSecretsList(final BiFunction<String, String, R> mapper) {
-    return mapSecretsList("", mapper);
+  public <R> Collection<R> mapSecrets(
+      final AbstractMap<String, String> tags, final BiFunction<String, String, R> mapper) {
+    final Set<R> result = ConcurrentHashMap.newKeySet();
+    listSecrets(tags)
+        .parallelStream()
+        .forEach(
+            secretEntry -> {
+              try {
+                final String secretValue = fetchSecret(secretEntry.name()).get();
+                final R obj = mapper.apply(secretEntry.name(), secretValue);
+                if (obj != null) {
+                  result.add(obj);
+                } else {
+                  LOG.warn("Mapped '{}' to a null object, and was discarded", secretEntry.name());
+                }
+              } catch (final Exception e) {
+                LOG.warn("Failed to map secret '{}' to requested object type.", secretEntry.name());
+              }
+            });
+    return result;
   }
 
   @Override
