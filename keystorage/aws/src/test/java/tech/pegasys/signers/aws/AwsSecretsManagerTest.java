@@ -104,8 +104,7 @@ class AwsSecretsManagerTest {
   }
 
   void createSecret(
-      final boolean multipleSecrets, final boolean multipleTags, final boolean sharedTag)
-      throws InterruptedException {
+      final boolean multipleSecrets, final boolean multipleTags, final boolean sharedTag) {
     secretNamePrefix = "signers-aws-integration/";
     secretName = secretNamePrefix + UUID.randomUUID();
     secretNames.add(secretName);
@@ -142,15 +141,12 @@ class AwsSecretsManagerTest {
   }
 
   @AfterEach
-  void deleteSecrets() throws InterruptedException {
+  void deleteSecrets() {
     secretNames.forEach(
         name -> {
-          try {
-            final DeleteSecretRequest secretRequest =
-                DeleteSecretRequest.builder().secretId(name).build();
-            secretsManagerClient.deleteSecret(secretRequest);
-          } catch (Exception e) {
-          }
+          final DeleteSecretRequest secretRequest =
+              DeleteSecretRequest.builder().secretId(name).build();
+          secretsManagerClient.deleteSecret(secretRequest);
         });
     secretNames.clear();
     secretTags.clear();
@@ -174,7 +170,7 @@ class AwsSecretsManagerTest {
   }
 
   @AfterAll
-  void teardown() throws InterruptedException {
+  void teardown() {
     if (awsSecretsManagerDefault != null
         || awsSecretsManagerExplicit != null
         || secretsManagerClient != null) {
@@ -184,21 +180,21 @@ class AwsSecretsManagerTest {
   }
 
   @Test
-  void fetchSecretWithDefaultManager() throws InterruptedException {
+  void fetchSecretWithDefaultManager() {
     createSecret(false, false, false);
     Optional<String> secret = awsSecretsManagerDefault.fetchSecret(secretName);
     assertThat(secret).hasValue(SECRET_VALUE);
   }
 
   @Test
-  void fetchSecretWithExplicitManager() throws InterruptedException {
+  void fetchSecretWithExplicitManager() {
     createSecret(false, false, false);
     Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(secretName);
     assertThat(secret).hasValue(SECRET_VALUE);
   }
 
   @Test
-  void fetchSecretWithInvalidCredentialsReturnsEmpty() throws InterruptedException {
+  void fetchSecretWithInvalidCredentialsReturnsEmpty() {
     createSecret(false, false, false);
     assertThatExceptionOfType(RuntimeException.class)
         .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(secretName))
@@ -206,14 +202,14 @@ class AwsSecretsManagerTest {
   }
 
   @Test
-  void fetchingNonExistentSecretReturnsEmpty() throws InterruptedException {
+  void fetchingNonExistentSecretReturnsEmpty() {
     createSecret(false, false, false);
     Optional<String> secret = awsSecretsManagerDefault.fetchSecret("signers-aws-integration/empty");
     assertThat(secret).isEmpty();
   }
 
   @Test
-  void listAndMapSingleSecretWithSingleTag() throws InterruptedException {
+  void listAndMapSingleSecretWithSingleTag() {
     createSecret(false, false, false);
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
@@ -223,7 +219,7 @@ class AwsSecretsManagerTest {
   }
 
   @Test
-  void listAndMapSingleSecretWithMultipleTags() throws InterruptedException {
+  void listAndMapSingleSecretWithMultipleTags() {
     createSecret(false, true, false);
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
@@ -233,7 +229,7 @@ class AwsSecretsManagerTest {
   }
 
   @Test
-  void listAndMapMultipleSecretsWithMultipleTags() throws InterruptedException {
+  void listAndMapMultipleSecretsWithMultipleTags() {
     createSecret(true, true, false);
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
@@ -243,7 +239,7 @@ class AwsSecretsManagerTest {
   }
 
   @Test
-  void listAndMapMultipleSecretsWithSharedTags() throws InterruptedException {
+  void listAndMapMultipleSecretsWithSharedTags() {
     createSecret(true, false, true);
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
@@ -253,7 +249,7 @@ class AwsSecretsManagerTest {
   }
 
   @Test
-  void listAndMapMultipleSecretsWithMultipleAndSharedTags() throws InterruptedException {
+  void listAndMapMultipleSecretsWithMultipleAndSharedTags() {
     createSecret(true, false, true);
     createSecret(true, true, false);
 
@@ -264,7 +260,7 @@ class AwsSecretsManagerTest {
   }
 
   @Test
-  void throwsAwayObjectsThatFailMapper() throws InterruptedException {
+  void throwsAwayObjectsThatFailMapper() {
     createSecret(true, false, false);
 
     final String failEntryName = secretNames.get(1);
@@ -287,7 +283,7 @@ class AwsSecretsManagerTest {
   }
 
   @Test
-  void throwsAwayObjectsWhichMapToNull() throws InterruptedException {
+  void throwsAwayObjectsWhichMapToNull() {
     createSecret(true, false, false);
 
     final String nullEntryName = secretNames.get(1);
