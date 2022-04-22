@@ -27,7 +27,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -104,6 +103,71 @@ class AwsSecretsManagerTest {
     secretsManagerClient.close();
   }
 
+  void createSecret(
+      final boolean multipleSecrets, final boolean multipleTags, final boolean sharedTag)
+      throws InterruptedException {
+    secretNamePrefix = "signers-aws-integration/";
+    secretName = secretNamePrefix + UUID.randomUUID();
+    secretNames.add(secretName);
+
+    final List<Tag> tags = new ArrayList<>();
+
+    if (sharedTag) {
+      secretTags
+          .entrySet()
+          .forEach(
+              entry -> tags.add(Tag.builder().key(entry.getKey()).value(entry.getValue()).build()));
+    } else if (multipleTags) {
+      tags.add(Tag.builder().key(secretNamePrefix + UUID.randomUUID()).value(secretName).build());
+    }
+
+    tags.add(Tag.builder().key(secretNamePrefix + UUID.randomUUID()).value(secretName).build());
+
+    tags.forEach(
+        tag -> {
+          secretTags.put(tag.key(), tag.value());
+        });
+
+    final CreateSecretRequest secretRequest =
+        CreateSecretRequest.builder()
+            .name(secretName)
+            .secretString(SECRET_VALUE)
+            .tags(tags)
+            .build();
+    secretsManagerClient.createSecret(secretRequest);
+
+    Thread.sleep(1000); // allow secrets manager to update before fetching/listing
+
+    if (multipleSecrets) {
+      createSecret(false, multipleTags, sharedTag);
+    }
+  }
+
+  @AfterEach
+  void deleteSecrets() throws InterruptedException {
+    secretNames.forEach(
+        name -> {
+          try {
+            final DeleteSecretRequest secretRequest =
+                DeleteSecretRequest.builder().secretId(name).build();
+            secretsManagerClient.deleteSecret(secretRequest);
+            Thread.sleep(750);
+          } catch (Exception e) {
+          }
+        });
+    secretNames.clear();
+    secretTags.clear();
+  }
+
+  private void validateMappedSecret(
+      final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries,
+      final String secretName) {
+    final Optional<AbstractMap.SimpleEntry<String, String>> secretEntry =
+        secretEntries.stream().filter(e -> e.getKey().equals(secretName)).findAny();
+    assertThat(secretEntry).isPresent();
+    assertThat(secretEntry.get().getValue()).isEqualTo(SECRET_VALUE);
+  }
+
   @BeforeAll
   void setup() {
     verifyEnvironmentVariables();
@@ -113,7 +177,7 @@ class AwsSecretsManagerTest {
   }
 
   @AfterAll
-  void teardown() {
+  void teardown() throws InterruptedException {
     if (awsSecretsManagerDefault != null
         || awsSecretsManagerExplicit != null
         || secretsManagerClient != null) {
@@ -122,70 +186,79 @@ class AwsSecretsManagerTest {
     }
   }
 
-  @BeforeEach
-  private void createSecret() throws InterruptedException {
-    secretNamePrefix = "signers-aws-integration/";
-    secretName = secretNamePrefix + UUID.randomUUID();
-    final Tag tag =
-        Tag.builder().key(secretNamePrefix + UUID.randomUUID()).value(secretName).build();
-    final CreateSecretRequest secretRequest =
-        CreateSecretRequest.builder().name(secretName).secretString(SECRET_VALUE).tags(tag).build();
-    secretsManagerClient.createSecret(secretRequest);
-    secretNames.add(secretName);
-    secretTags.put(tag.key(), tag.value());
-    Thread.sleep(250); // allow secrets manager to update before fetching/listing
-  }
-
-  @AfterEach
-  private void deleteSecrets() {
-    secretNames.forEach(
-        name -> {
-          final DeleteSecretRequest secretRequest =
-              DeleteSecretRequest.builder().secretId(name).build();
-          secretsManagerClient.deleteSecret(secretRequest);
-        });
-    secretNames.clear();
-    secretTags.clear();
-  }
-
   @Test
-  void fetchSecretWithDefaultManager() {
+  void fetchSecretWithDefaultManager() throws InterruptedException {
+    createSecret(false, false, false);
     Optional<String> secret = awsSecretsManagerDefault.fetchSecret(secretName);
     assertThat(secret).hasValue(SECRET_VALUE);
   }
 
   @Test
-  void fetchSecretWithExplicitManager() {
+  void fetchSecretWithExplicitManager() throws InterruptedException {
+    createSecret(false, false, false);
     Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(secretName);
     assertThat(secret).hasValue(SECRET_VALUE);
   }
 
   @Test
-  void fetchSecretWithInvalidCredentialsReturnsEmpty() {
+  void fetchSecretWithInvalidCredentialsReturnsEmpty() throws InterruptedException {
+    createSecret(false, false, false);
     assertThatExceptionOfType(RuntimeException.class)
         .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(secretName))
         .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
   }
 
   @Test
-  void fetchingNonExistentSecretReturnsEmpty() {
+  void fetchingNonExistentSecretReturnsEmpty() throws InterruptedException {
+    createSecret(false, false, false);
     Optional<String> secret = awsSecretsManagerDefault.fetchSecret("signers-aws-integration/empty");
     assertThat(secret).isEmpty();
   }
 
-  void validateMappedSecret(
-      final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries,
-      final String secretName) {
-    final Optional<AbstractMap.SimpleEntry<String, String>> secretEntry =
-        secretEntries.stream().filter(e -> e.getKey().equals(secretName)).findAny();
-    assertThat(secretEntry).isPresent();
-    assertThat(secretEntry.get().getValue()).isEqualTo(SECRET_VALUE);
+  @Test
+  void listAndMapSingleSecretWithSingleTag() throws InterruptedException {
+    createSecret(false, false, false);
+
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(secretTags, AbstractMap.SimpleEntry::new);
+
+    secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
   }
 
   @Test
-  void multipleSecretsCanBeFetchedAndMapped() throws InterruptedException {
-    createSecret(); // 2nd
-    createSecret(); // 3rd
+  void listAndMapSingleSecretWithMultipleTags() throws InterruptedException {
+    createSecret(false, true, false);
+
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(secretTags, AbstractMap.SimpleEntry::new);
+
+    secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
+  }
+
+  @Test
+  void listAndMapMultipleSecretsWithMultipleTags() throws InterruptedException {
+    createSecret(true, true, false);
+
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(secretTags, AbstractMap.SimpleEntry::new);
+
+    secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
+  }
+
+  @Test
+  void listAndMapMultipleSecretsWithSharedTags() throws InterruptedException {
+    createSecret(true, false, true);
+
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(secretTags, AbstractMap.SimpleEntry::new);
+
+    secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
+  }
+
+  @Test
+  void listAndMapMultipleSecretsWithMultipleAndSharedTags() throws InterruptedException {
+    createSecret(true, false, true);
+    createSecret(true, true, false);
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(secretTags, AbstractMap.SimpleEntry::new);
@@ -195,7 +268,8 @@ class AwsSecretsManagerTest {
 
   @Test
   void throwsAwayObjectsThatFailMapper() throws InterruptedException {
-    createSecret(); // fail entry
+    createSecret(true, false, false);
+
     final String failEntryName = secretNames.get(1);
 
     Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
@@ -217,7 +291,8 @@ class AwsSecretsManagerTest {
 
   @Test
   void throwsAwayObjectsWhichMapToNull() throws InterruptedException {
-    createSecret(); // null entry
+    createSecret(true, false, false);
+
     final String nullEntryName = secretNames.get(1);
 
     Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
