@@ -136,8 +136,6 @@ class AwsSecretsManagerTest {
             .build();
     secretsManagerClient.createSecret(secretRequest);
 
-    Thread.sleep(1000); // allow secrets manager to update before fetching/listing
-
     if (multipleSecrets) {
       createSecret(false, multipleTags, sharedTag);
     }
@@ -151,7 +149,6 @@ class AwsSecretsManagerTest {
             final DeleteSecretRequest secretRequest =
                 DeleteSecretRequest.builder().secretId(name).build();
             secretsManagerClient.deleteSecret(secretRequest);
-            Thread.sleep(750);
           } catch (Exception e) {
           }
         });
