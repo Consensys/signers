@@ -32,8 +32,8 @@ import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueReques
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 import software.amazon.awssdk.services.secretsmanager.model.ListSecretsRequest;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
-import software.amazon.awssdk.services.secretsmanager.model.SecretListEntry;
 import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerException;
+import software.amazon.awssdk.services.secretsmanager.paginators.ListSecretsIterable;
 
 public class AwsSecretsManager implements Closeable {
 
@@ -81,7 +81,7 @@ public class AwsSecretsManager implements Closeable {
     }
   }
 
-  private Collection<SecretListEntry> listSecrets(
+  private ListSecretsIterable listSecrets(
       final List<String> tagKeys, final List<String> tagValues) {
     final ListSecretsRequest.Builder listSecretsRequestBuilder = ListSecretsRequest.builder();
     if (!tagKeys.isEmpty()) {
@@ -92,8 +92,7 @@ public class AwsSecretsManager implements Closeable {
       listSecretsRequestBuilder.filters(
           Filter.builder().key(FilterNameStringType.TAG_VALUE).values(tagValues).build());
     }
-    final ListSecretsRequest listSecretsRequest = listSecretsRequestBuilder.build();
-    return secretsManagerClient.listSecrets(listSecretsRequest).secretList();
+    return secretsManagerClient.listSecretsPaginator(listSecretsRequestBuilder.build());
   }
 
   public <R> Collection<R> mapSecrets(
@@ -102,20 +101,30 @@ public class AwsSecretsManager implements Closeable {
       final BiFunction<String, String, R> mapper) {
     final Set<R> result = ConcurrentHashMap.newKeySet();
     listSecrets(tagKeys, tagValues)
-        .parallelStream()
-        .forEach(
-            secretEntry -> {
-              try {
-                final String secretValue = fetchSecret(secretEntry.name()).get();
-                final R obj = mapper.apply(secretEntry.name(), secretValue);
-                if (obj != null) {
-                  result.add(obj);
-                } else {
-                  LOG.warn("Mapped '{}' to a null object, and was discarded", secretEntry.name());
-                }
-              } catch (final Exception e) {
-                LOG.warn("Failed to map secret '{}' to requested object type.", secretEntry.name());
-              }
+        .iterator()
+        .forEachRemaining(
+            listSecretsResponse -> {
+              listSecretsResponse
+                  .secretList()
+                  .parallelStream()
+                  .forEach(
+                      secretEntry -> {
+                        try {
+                          final String secretValue = fetchSecret(secretEntry.name()).get();
+                          final R obj = mapper.apply(secretEntry.name(), secretValue);
+                          if (obj != null) {
+                            result.add(obj);
+                          } else {
+                            LOG.warn(
+                                "Mapped '{}' to a null object, and was discarded",
+                                secretEntry.name());
+                          }
+                        } catch (final Exception e) {
+                          LOG.warn(
+                              "Failed to map secret '{}' to requested object type.",
+                              secretEntry.name());
+                        }
+                      });
             });
     return result;
   }
