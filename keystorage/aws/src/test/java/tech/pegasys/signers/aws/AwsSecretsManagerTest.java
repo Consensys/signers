@@ -12,17 +12,6 @@
  */
 package tech.pegasys.signers.aws;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
@@ -36,6 +25,18 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.Tag;
+
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AwsSecretsManagerTest {
@@ -93,7 +94,7 @@ class AwsSecretsManagerTest {
 
   private void initializeVariables() {
     secretNames = new ArrayList<>();
-    secretTags = new HashMap<>();
+    secretTags = new HashMap<String, String>();
   }
 
   private void closeClients() {
@@ -213,7 +214,10 @@ class AwsSecretsManagerTest {
     createSecret(false, false, false);
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(secretTags, AbstractMap.SimpleEntry::new);
+        awsSecretsManagerExplicit.mapSecrets(
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
+            AbstractMap.SimpleEntry::new);
 
     secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
   }
@@ -223,7 +227,10 @@ class AwsSecretsManagerTest {
     createSecret(false, true, false);
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(secretTags, AbstractMap.SimpleEntry::new);
+        awsSecretsManagerExplicit.mapSecrets(
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
+            AbstractMap.SimpleEntry::new);
 
     secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
   }
@@ -233,7 +240,10 @@ class AwsSecretsManagerTest {
     createSecret(true, true, false);
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(secretTags, AbstractMap.SimpleEntry::new);
+        awsSecretsManagerExplicit.mapSecrets(
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
+            AbstractMap.SimpleEntry::new);
 
     secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
   }
@@ -243,7 +253,10 @@ class AwsSecretsManagerTest {
     createSecret(true, false, true);
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(secretTags, AbstractMap.SimpleEntry::new);
+        awsSecretsManagerExplicit.mapSecrets(
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
+            AbstractMap.SimpleEntry::new);
 
     secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
   }
@@ -254,7 +267,10 @@ class AwsSecretsManagerTest {
     createSecret(true, true, false);
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(secretTags, AbstractMap.SimpleEntry::new);
+        awsSecretsManagerExplicit.mapSecrets(
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
+            AbstractMap.SimpleEntry::new);
 
     secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
   }
@@ -267,7 +283,8 @@ class AwsSecretsManagerTest {
 
     Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            secretTags,
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
             (name, value) -> {
               if (name.equals(failEntryName)) {
                 throw new RuntimeException("Arbitrary Failure");
@@ -290,7 +307,8 @@ class AwsSecretsManagerTest {
 
     Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            secretTags,
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
             (name, value) -> {
               if (name.equals(nullEntryName)) {
                 return null;
