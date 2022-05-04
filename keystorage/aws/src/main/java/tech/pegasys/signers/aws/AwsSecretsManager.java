@@ -109,14 +109,20 @@ public class AwsSecretsManager implements Closeable {
                   .forEach(
                       secretEntry -> {
                         try {
-                          final String secretValue = fetchSecret(secretEntry.name()).get();
-                          final R obj = mapper.apply(secretEntry.name(), secretValue);
-                          if (obj != null) {
-                            result.add(obj);
-                          } else {
+                          final Optional<String> secretValue = fetchSecret(secretEntry.name());
+                          if (secretValue.isEmpty()) {
                             LOG.warn(
-                                "Mapped '{}' to a null object, and was discarded",
+                                "Failed to fetch secret value '{}', and was discarded",
                                 secretEntry.name());
+                          } else {
+                            final R obj = mapper.apply(secretEntry.name(), secretValue.get());
+                            if (obj == null) {
+                              LOG.warn(
+                                  "Mapped '{}' to a null object, and was discarded",
+                                  secretEntry.name());
+                            } else {
+                              result.add(obj);
+                            }
                           }
                         } catch (final Exception e) {
                           LOG.warn(
