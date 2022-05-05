@@ -32,9 +32,8 @@ import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerAsyncClient;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
-import software.amazon.awssdk.services.secretsmanager.model.CreateSecretResponse;
 import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.Tag;
 
@@ -52,7 +51,7 @@ class AwsSecretsManagerTest {
   private static AwsSecretsManager awsSecretsManagerInvalidCredentials;
   private static AwsBasicCredentials awsBasicCredentials;
   private static StaticCredentialsProvider credentialsProvider;
-  private static SecretsManagerClient testSecretsManagerClient;
+  private static SecretsManagerAsyncClient testSecretsManagerClient;
   private static String testSecretName;
   private static String testSecretNamePrefix;
   private static List<String> testSecretNames;
@@ -97,6 +96,7 @@ class AwsSecretsManagerTest {
 
   @AfterEach
   void closeTestClients() {
+    deleteSecrets();
     closeAwsSecretsManagers();
   }
 
@@ -106,8 +106,6 @@ class AwsSecretsManagerTest {
 
     Optional<String> secret = awsSecretsManagerDefault.fetchSecret(testSecretName);
     assertThat(secret).hasValue(SECRET_VALUE);
-
-    deleteSecrets();
   }
 
   @Test
@@ -116,8 +114,6 @@ class AwsSecretsManagerTest {
 
     Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(testSecretName);
     assertThat(secret).hasValue(SECRET_VALUE);
-
-    deleteSecrets();
   }
 
   @Test
@@ -127,8 +123,6 @@ class AwsSecretsManagerTest {
     assertThatExceptionOfType(RuntimeException.class)
         .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(testSecretName))
         .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
-
-    deleteSecrets();
   }
 
   @Test
@@ -137,8 +131,6 @@ class AwsSecretsManagerTest {
 
     Optional<String> secret = awsSecretsManagerDefault.fetchSecret("signers-aws-integration/empty");
     assertThat(secret).isEmpty();
-
-    deleteSecrets();
   }
 
   @Test
@@ -150,8 +142,6 @@ class AwsSecretsManagerTest {
             testSecretTags.keySet(), testSecretTags.values(), AbstractMap.SimpleEntry::new);
 
     testSecretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
-
-    deleteSecrets();
   }
 
   @Test
@@ -162,8 +152,6 @@ class AwsSecretsManagerTest {
             testSecretTags.keySet(), testSecretTags.values(), AbstractMap.SimpleEntry::new);
 
     testSecretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
-
-    deleteSecrets();
   }
 
   @Test
@@ -175,8 +163,6 @@ class AwsSecretsManagerTest {
         awsSecretsManagerExplicit.mapSecrets(
             testSecretTags.keySet(), testSecretTags.values(), AbstractMap.SimpleEntry::new);
     testSecretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
-
-    deleteSecrets();
   }
 
   @Test
@@ -188,8 +174,6 @@ class AwsSecretsManagerTest {
         awsSecretsManagerExplicit.mapSecrets(
             testSecretTags.keySet(), testSecretTags.values(), AbstractMap.SimpleEntry::new);
     testSecretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
-
-    deleteSecrets();
   }
 
   @Test
@@ -201,8 +185,6 @@ class AwsSecretsManagerTest {
         awsSecretsManagerExplicit.mapSecrets(
             testSecretTags.keySet(), testSecretTags.values(), AbstractMap.SimpleEntry::new);
     testSecretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
-
-    deleteSecrets();
   }
 
   @Test
@@ -226,8 +208,6 @@ class AwsSecretsManagerTest {
     final Optional<AbstractMap.SimpleEntry<String, String>> failEntry =
         secretEntries.stream().filter(e -> e.getKey().equals(failEntryName)).findAny();
     assertThat(failEntry).isEmpty();
-
-    deleteSecrets();
   }
 
   @Test
@@ -251,8 +231,6 @@ class AwsSecretsManagerTest {
     final Optional<AbstractMap.SimpleEntry<String, String>> nullEntry =
         secretEntries.stream().filter(e -> e.getKey().equals("MyBls")).findAny();
     assertThat(nullEntry).isEmpty();
-
-    deleteSecrets();
   }
 
   private static void initAwsSecretsManagers() {
@@ -269,7 +247,7 @@ class AwsSecretsManagerTest {
         AwsBasicCredentials.create(RW_AWS_ACCESS_KEY_ID, RW_AWS_SECRET_ACCESS_KEY);
     credentialsProvider = StaticCredentialsProvider.create(awsBasicCredentials);
     testSecretsManagerClient =
-        SecretsManagerClient.builder()
+        SecretsManagerAsyncClient.builder()
             .credentialsProvider(credentialsProvider)
             .region(Region.of(AWS_REGION))
             .build();
@@ -295,32 +273,25 @@ class AwsSecretsManagerTest {
     closeTestSecretsManager();
   }
 
-  private CreateSecretResponse createSecret(final boolean multipleTags, final boolean sharedTag) {
+  private Tag createTag(final String key, final String value) {
+    return Tag.builder().key(key + UUID.randomUUID()).value(value).build();
+  }
+
+  private void createSecret(final boolean multipleTags, final boolean sharedTag) {
     testSecretNamePrefix = "signers-aws-integration/";
     testSecretName = testSecretNamePrefix + UUID.randomUUID();
-    testSecretNames.add(testSecretName);
 
     final List<Tag> tags = new ArrayList<>();
+    tags.add(createTag(testSecretName, testSecretNamePrefix));
 
+    if (multipleTags) {
+      tags.add(createTag(testSecretName, testSecretNamePrefix + UUID.randomUUID()));
+    }
     if (sharedTag) {
       testSecretTags
           .entrySet()
           .forEach(
               entry -> tags.add(Tag.builder().key(entry.getKey()).value(entry.getValue()).build()));
-    } else {
-      tags.add(
-          Tag.builder()
-              .key(testSecretNamePrefix + UUID.randomUUID())
-              .value(testSecretName)
-              .build());
-    }
-
-    if (multipleTags) {
-      tags.add(
-          Tag.builder()
-              .key(testSecretNamePrefix + UUID.randomUUID())
-              .value(testSecretName)
-              .build());
     }
 
     tags.forEach(
@@ -335,7 +306,8 @@ class AwsSecretsManagerTest {
             .tags(tags)
             .build();
 
-    return testSecretsManagerClient.createSecret(secretRequest);
+    testSecretsManagerClient.createSecret(secretRequest).join();
+    testSecretNames.add(testSecretName);
   }
 
   private static void deleteSecrets() {
@@ -343,7 +315,7 @@ class AwsSecretsManagerTest {
         name -> {
           final DeleteSecretRequest deleteSecretRequest =
               DeleteSecretRequest.builder().secretId(name).build();
-          testSecretsManagerClient.deleteSecret(deleteSecretRequest);
+          testSecretsManagerClient.deleteSecret(deleteSecretRequest).join();
         });
     testSecretNames.clear();
     testSecretTags.clear();
