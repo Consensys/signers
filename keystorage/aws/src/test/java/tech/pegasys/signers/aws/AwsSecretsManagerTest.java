@@ -35,6 +35,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerAsyncClient;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.Tag;
 
 class AwsSecretsManagerTest {
@@ -91,13 +92,14 @@ class AwsSecretsManagerTest {
 
   @BeforeEach
   void initTestClients() {
-    initAwsSecretsManagers();
+    initTestSecretsManager();
+    initTestVariables();
   }
 
   @AfterEach
-  void closeTestClients() {
+  void cleanup() {
     deleteSecrets();
-    closeAwsSecretsManagers();
+    closeTestSecretsManager();
   }
 
   @Test
@@ -274,10 +276,16 @@ class AwsSecretsManagerTest {
   }
 
   private Tag createTag(final String key, final String value) {
-    return Tag.builder().key(key + UUID.randomUUID()).value(value).build();
+    return Tag.builder().key(key).value(value).build();
   }
 
-  private void createSecret(final boolean multipleTags, final boolean sharedTag) {
+  private void waitUntilSecretAvailable(final String secretName) {
+    testSecretsManagerClient
+        .getSecretValue(GetSecretValueRequest.builder().secretId(secretName).build())
+        .join();
+  }
+
+  private void createSecret(final boolean multipleTags, final boolean sharedTags) {
     testSecretNamePrefix = "signers-aws-integration/";
     testSecretName = testSecretNamePrefix + UUID.randomUUID();
 
@@ -285,19 +293,15 @@ class AwsSecretsManagerTest {
     tags.add(createTag(testSecretName, testSecretNamePrefix));
 
     if (multipleTags) {
-      tags.add(createTag(testSecretName, testSecretNamePrefix + UUID.randomUUID()));
+      tags.add(
+          createTag(
+              testSecretNamePrefix + UUID.randomUUID(), testSecretNamePrefix + UUID.randomUUID()));
     }
-    if (sharedTag) {
+    if (sharedTags) {
       testSecretTags
           .entrySet()
-          .forEach(
-              entry -> tags.add(Tag.builder().key(entry.getKey()).value(entry.getValue()).build()));
+          .forEach(entry -> tags.add(createTag(entry.getKey(), entry.getValue())));
     }
-
-    tags.forEach(
-        tag -> {
-          testSecretTags.put(tag.key(), tag.value());
-        });
 
     final CreateSecretRequest secretRequest =
         CreateSecretRequest.builder()
@@ -306,7 +310,13 @@ class AwsSecretsManagerTest {
             .tags(tags)
             .build();
 
+    tags.forEach(
+        tag -> {
+          testSecretTags.put(tag.key(), tag.value());
+        });
+
     testSecretsManagerClient.createSecret(secretRequest).join();
+    waitUntilSecretAvailable(testSecretName);
     testSecretNames.add(testSecretName);
   }
 
