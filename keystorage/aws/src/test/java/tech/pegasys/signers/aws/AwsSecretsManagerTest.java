@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerAsyncClient;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
@@ -51,7 +51,7 @@ class AwsSecretsManagerTest {
   private static AwsSecretsManager awsSecretsManagerInvalidCredentials;
   private static AwsBasicCredentials awsBasicCredentials;
   private static StaticCredentialsProvider credentialsProvider;
-  private static SecretsManagerClient testSecretsManagerClient;
+  private static SecretsManagerAsyncClient testSecretsManagerClient;
   private static String testSecretName;
   private static String testSecretNamePrefix;
   private static List<String> testSecretNames;
@@ -240,7 +240,7 @@ class AwsSecretsManagerTest {
         AwsBasicCredentials.create(RW_AWS_ACCESS_KEY_ID, RW_AWS_SECRET_ACCESS_KEY);
     credentialsProvider = StaticCredentialsProvider.create(awsBasicCredentials);
     testSecretsManagerClient =
-        SecretsManagerClient.builder()
+          SecretsManagerAsyncClient.builder()
             .credentialsProvider(credentialsProvider)
             .region(Region.of(AWS_REGION))
             .build();
@@ -272,7 +272,7 @@ class AwsSecretsManagerTest {
 
   private static void waitUntilSecretAvailable(final String secretName) {
     testSecretsManagerClient.getSecretValue(
-        GetSecretValueRequest.builder().secretId(secretName).build());
+        GetSecretValueRequest.builder().secretId(secretName).build()).join();
   }
 
   private static void createSecret(final boolean multipleTags, final boolean sharedTags) {
@@ -305,9 +305,9 @@ class AwsSecretsManagerTest {
           testSecretTags.put(tag.key(), tag.value());
         });
 
-    testSecretsManagerClient.createSecret(secretRequest);
-    waitUntilSecretAvailable(testSecretName);
+    testSecretsManagerClient.createSecret(secretRequest).join();
     testSecretNames.add(testSecretName);
+    waitUntilSecretAvailable(testSecretName);
   }
 
   private static void deleteSecrets() {
@@ -315,7 +315,7 @@ class AwsSecretsManagerTest {
         name -> {
           final DeleteSecretRequest deleteSecretRequest =
               DeleteSecretRequest.builder().secretId(name).build();
-          testSecretsManagerClient.deleteSecret(deleteSecretRequest);
+          testSecretsManagerClient.deleteSecret(deleteSecretRequest).join();
         });
     testSecretNames.clear();
     testSecretTags.clear();
