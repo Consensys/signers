@@ -240,7 +240,7 @@ class AwsSecretsManagerTest {
         AwsBasicCredentials.create(RW_AWS_ACCESS_KEY_ID, RW_AWS_SECRET_ACCESS_KEY);
     credentialsProvider = StaticCredentialsProvider.create(awsBasicCredentials);
     testSecretsManagerClient =
-          SecretsManagerAsyncClient.builder()
+        SecretsManagerAsyncClient.builder()
             .credentialsProvider(credentialsProvider)
             .region(Region.of(AWS_REGION))
             .build();
@@ -271,8 +271,9 @@ class AwsSecretsManagerTest {
   }
 
   private static void waitUntilSecretAvailable(final String secretName) {
-    testSecretsManagerClient.getSecretValue(
-        GetSecretValueRequest.builder().secretId(secretName).build()).join();
+    testSecretsManagerClient
+        .getSecretValue(GetSecretValueRequest.builder().secretId(secretName).build())
+        .join();
   }
 
   private static void createSecret(final boolean multipleTags, final boolean sharedTags) {
