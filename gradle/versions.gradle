@@ -93,6 +93,7 @@ dependencyManagement {
       entry 'bom'
       entry 'auth'
       entry 'secretsmanager'
+      entry 'sts'
     }
   }
 }
