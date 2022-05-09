@@ -1,6 +1,9 @@
 # Changelog
 
 ## 2.2.2
+### Features Added
+ - Added support for bulk loading of secrets from AWS Secrets Manager
+
 ### Bugs Fixed
  - AWS secrets manager using environment config didn't work when using web identity tokens due to missing sts library.
 
