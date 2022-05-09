@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -55,16 +56,15 @@ class AwsSecretsManagerTest {
   private static String testSecretName;
   private static String testSecretNamePrefix;
   private static List<String> testSecretNames;
-  private static AbstractMap<String, String> allTestSecretTags;
-  private static AbstractMap<String, String> testSecretSingleTag;
-  private static AbstractMap<String, String> testSecretMultipleTags;
-  private static AbstractMap<String, String> testSecretSingleSharedTag;
-  private static AbstractMap<String, String> testSecretMultipleSharedTags;
+  private static Map<String, String> allTestSecretTags;
+  private static Map<String, String> testSecretSingleTag;
+  private static Map<String, String> testSecretMultipleTags;
+  private static Map<String, String> testSecretSingleSharedTag;
+  private static Map<String, String> testSecretMultipleSharedTags;
 
   private static final String SECRET_VALUE =
       "{\"crypto\": {\"kdf\": {\"function\": \"scrypt\", \"params\": {\"dklen\": 32, \"n\": 262144, \"r\": 8, \"p\": 1, \"salt\": \"3d9b30b612f4f5e9423dc43c0490396798a179d35dd58d48dc1f5d6d42b07ab6\"}, \"message\": \"\"}, \"checksum\": {\"function\": \"sha256\", \"params\": {}, \"message\": \"c762b7453eab3332cda31d9dee1894cf541373617e591a8e7ab8f14f5830f723\"}, \"cipher\": {\"function\": \"aes-128-ctr\", \"params\": {\"iv\": \"095f79f6bb5daab60355ab6aa894b3c8\"}, \"message\": \"4ca342a769ec1c00d6a6d69e18cdf821f42849d4431da7df827b01ba162ed763\"}}, \"description\": \"\", \"pubkey\": \"8fb7c68f3291b8db46ef86a8b9544cad7052dd7cf817862063d1f151f3c443cd3907830b09a86fe0513f0e863beccf25\", \"path\": \"m/12381/3600/0/0/0\", \"uuid\": \"88fc9701-8670-4378-a3ba-00be25c1330c\", \"version\": 4}";
 
-  @BeforeAll
   static void verifyEnvironmentVariables() {
     Assumptions.assumeTrue(
         RW_AWS_ACCESS_KEY_ID != null, "Set RW_AWS_ACCESS_KEY_ID environment variable");
@@ -78,8 +78,9 @@ class AwsSecretsManagerTest {
 
   @BeforeAll
   static void setup() {
+    verifyEnvironmentVariables();
     initAwsSecretsManagers();
-    initTestSecretsManager();
+    initTestSecretsManagerClient();
     initTestVariables();
     createTestSecrets();
   }
@@ -89,7 +90,7 @@ class AwsSecretsManagerTest {
     if (awsSecretsManagerDefault != null
         || awsSecretsManagerExplicit != null
         || testSecretsManagerClient != null) {
-      deleteSecrets();
+      deleteTestSecrets();
       closeClients();
     }
   }
@@ -181,9 +182,6 @@ class AwsSecretsManagerTest {
   @Test
   void throwsAwayObjectsThatFailMapper() {
     final String failEntryName = testSecretNames.get(1);
-    final HashMap<String, String> testTags = new HashMap<>();
-    testTags.putAll(allTestSecretTags);
-    testTags.remove(failEntryName);
 
     Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
@@ -196,7 +194,7 @@ class AwsSecretsManagerTest {
               return new AbstractMap.SimpleEntry<>(name, value);
             });
 
-    validateMappedSecret(secretEntries, testTags);
+    validateMappedSecret(secretEntries, allTestSecretTags);
     final Optional<AbstractMap.SimpleEntry<String, String>> failEntry =
         secretEntries.stream().filter(e -> e.getKey().equals(failEntryName)).findAny();
     assertThat(failEntry).isEmpty();
@@ -205,9 +203,6 @@ class AwsSecretsManagerTest {
   @Test
   void throwsAwayObjectsWhichMapToNull() {
     final String nullEntryName = testSecretNames.get(1);
-    final HashMap<String, String> testTags = new HashMap<>();
-    testTags.putAll(allTestSecretTags);
-    testTags.remove(nullEntryName);
 
     Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
@@ -220,7 +215,7 @@ class AwsSecretsManagerTest {
               return new AbstractMap.SimpleEntry<>(name, value);
             });
 
-    validateMappedSecret(secretEntries, testTags);
+    validateMappedSecret(secretEntries, allTestSecretTags);
     final Optional<AbstractMap.SimpleEntry<String, String>> nullEntry =
         secretEntries.stream().filter(e -> e.getKey().equals("MyBls")).findAny();
     assertThat(nullEntry).isEmpty();
@@ -235,7 +230,7 @@ class AwsSecretsManagerTest {
         AwsSecretsManager.createAwsSecretsManager("invalid", "invalid", AWS_REGION);
   }
 
-  private static void initTestSecretsManager() {
+  private static void initTestSecretsManagerClient() {
     awsBasicCredentials =
         AwsBasicCredentials.create(RW_AWS_ACCESS_KEY_ID, RW_AWS_SECRET_ACCESS_KEY);
     credentialsProvider = StaticCredentialsProvider.create(awsBasicCredentials);
@@ -270,21 +265,8 @@ class AwsSecretsManagerTest {
     closeTestSecretsManager();
   }
 
-  private static void createSecret(final boolean multipleTags, final boolean sharedTags) {
-    testSecretNamePrefix = "signers-aws-integration/";
+  private static void createSecret(final List<Tag> tags) {
     testSecretName = testSecretNamePrefix + UUID.randomUUID();
-
-    final List<Tag> tags = new ArrayList<>();
-    tags.add(createTag(testSecretName, testSecretNamePrefix));
-
-    if (multipleTags) {
-      tags.add(
-          createTag(
-              testSecretNamePrefix + UUID.randomUUID(), testSecretNamePrefix + UUID.randomUUID()));
-    }
-    if (sharedTags) {
-      allTestSecretTags.forEach((key, value) -> tags.add(createTag(key, value)));
-    }
 
     final CreateSecretRequest secretRequest =
         CreateSecretRequest.builder()
@@ -295,18 +277,27 @@ class AwsSecretsManagerTest {
 
     testSecretsManagerClient.createSecret(secretRequest).join();
     testSecretNames.add(testSecretName);
-    updateTestTags(tags, multipleTags, sharedTags);
     waitUntilSecretAvailable(testSecretName);
   }
 
-  private static void createTestSecrets() {
-    createSecret(false, false);
-    createSecret(true, false);
-    createSecret(false, true);
-    createSecret(true, true);
+  private static void createTestSecret(final boolean hasMultipleTags, final boolean hasSharedTags) {
+    testSecretNamePrefix = "signers-aws-integration/";
+    testSecretName = testSecretNamePrefix + UUID.randomUUID();
+
+    final List<Tag> testSecretTags =
+        createTestSecretTags(testSecretName, hasMultipleTags, hasSharedTags);
+    updateTestTags(testSecretTags, hasMultipleTags, hasSharedTags);
+    createSecret(testSecretTags);
   }
 
-  private static void deleteSecrets() {
+  private static void createTestSecrets() {
+    createTestSecret(false, false);
+    createTestSecret(true, false);
+    createTestSecret(false, true);
+    createTestSecret(true, true);
+  }
+
+  private static void deleteTestSecrets() {
     testSecretNames.forEach(
         name -> {
           final DeleteSecretRequest deleteSecretRequest =
@@ -323,6 +314,19 @@ class AwsSecretsManagerTest {
 
   private static Tag createTag(final String key, final String value) {
     return Tag.builder().key(key).value(value).build();
+  }
+
+  private static List<Tag> createTestSecretTags(
+      final String secretName, final boolean hasMultipleTags, final boolean hasSharedTags) {
+    final List<Tag> testSecretTags = new ArrayList<>();
+    testSecretTags.add(createTag(secretName, secretName));
+    if (hasMultipleTags) {
+      testSecretTags.add(createTag(secretName + "/multiple", "multiple"));
+    }
+    if (hasSharedTags) {
+      allTestSecretTags.forEach((key, value) -> testSecretTags.add(createTag(key, "shared")));
+    }
+    return testSecretTags;
   }
 
   private static void updateTestTags(
@@ -354,7 +358,7 @@ class AwsSecretsManagerTest {
 
   private void validateMappedSecret(
       final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries,
-      final AbstractMap<String, String> testTags) {
+      final Map<String, String> testTags) {
     testTags.keySet().stream()
         .filter(tagKey -> testSecretNames.contains(tagKey))
         .collect(Collectors.toList())
