@@ -361,13 +361,8 @@ class AwsSecretsManagerTest {
       final Map<String, String> testTags) {
     testTags.keySet().stream()
         .filter(tagKey -> testSecretNames.contains(tagKey))
-        .collect(Collectors.toList())
-        .forEach(
-            tagKey ->
-                assertThat(tagKey)
-                    .isIn(
-                        secretEntries.stream()
-                            .map(entry -> entry.getKey())
-                            .collect(Collectors.toList())));
+        .forEach(tagKey ->
+            assertThat(tagKey).isIn(secretEntries.stream().map(e -> e.getKey()))
+        );
   }
 }
