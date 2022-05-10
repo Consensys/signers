@@ -121,6 +121,26 @@ class AwsSecretsManagerTest {
   }
 
   @Test
+  void listAndMapSecretsWithMatchingKeysAreReturned() {
+
+  }
+
+  @Test
+  void secretsWithMatchingValuesAreReturned() {
+
+  }
+
+  @Test
+  void secretsWithMatchingKeysOrValuesAreReturned() {
+
+  }
+
+  @Test
+  void emptyTagFiltersReturnAllKeys() {
+
+  }
+
+  @Test
   void listAndMapSingleSecretWithSingleTag() {
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
