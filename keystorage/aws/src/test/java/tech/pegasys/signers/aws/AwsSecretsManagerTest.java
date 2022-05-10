@@ -121,24 +121,16 @@ class AwsSecretsManagerTest {
   }
 
   @Test
-  void listAndMapSecretsWithMatchingKeysAreReturned() {
-
-  }
+  void listAndMapSecretsWithMatchingKeysAreReturned() {}
 
   @Test
-  void secretsWithMatchingValuesAreReturned() {
-
-  }
+  void secretsWithMatchingValuesAreReturned() {}
 
   @Test
-  void secretsWithMatchingKeysOrValuesAreReturned() {
-
-  }
+  void secretsWithMatchingKeysOrValuesAreReturned() {}
 
   @Test
-  void emptyTagFiltersReturnAllKeys() {
-
-  }
+  void emptyTagFiltersReturnAllKeys() {}
 
   @Test
   void listAndMapSingleSecretWithSingleTag() {
