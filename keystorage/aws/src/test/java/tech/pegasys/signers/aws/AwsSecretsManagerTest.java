@@ -324,4 +324,152 @@ class AwsSecretsManagerTest {
         secretEntries.stream().filter(e -> e.getKey().equals("MyBls")).findAny();
     assertThat(nullEntry).isEmpty();
   }
+<<<<<<< HEAD
+=======
+
+  private static void initAwsSecretsManagers() {
+    awsSecretsManagerDefault = AwsSecretsManager.createAwsSecretsManager();
+    awsSecretsManagerExplicit =
+        AwsSecretsManager.createAwsSecretsManager(
+            RO_AWS_ACCESS_KEY_ID, RO_AWS_SECRET_ACCESS_KEY, AWS_REGION);
+    awsSecretsManagerInvalidCredentials =
+        AwsSecretsManager.createAwsSecretsManager("invalid", "invalid", AWS_REGION);
+  }
+
+  private static void initTestSecretsManagerClient() {
+    awsBasicCredentials =
+        AwsBasicCredentials.create(RW_AWS_ACCESS_KEY_ID, RW_AWS_SECRET_ACCESS_KEY);
+    credentialsProvider = StaticCredentialsProvider.create(awsBasicCredentials);
+    testSecretsManagerClient =
+        SecretsManagerAsyncClient.builder()
+            .credentialsProvider(credentialsProvider)
+            .region(Region.of(AWS_REGION))
+            .build();
+  }
+
+  private static void initTestVariables() {
+    testSecretNames = new ArrayList<>();
+    allTestSecretTags = new HashMap<>();
+    testSecretSingleTag = new HashMap<>();
+    testSecretMultipleTags = new HashMap<>();
+    testSecretSingleSharedTag = new HashMap<>();
+    testSecretMultipleSharedTags = new HashMap<>();
+  }
+
+  private static void closeTestSecretsManager() {
+    testSecretsManagerClient.close();
+  }
+
+  private static void closeAwsSecretsManagers() {
+    awsSecretsManagerDefault.close();
+    awsSecretsManagerExplicit.close();
+    awsSecretsManagerInvalidCredentials.close();
+  }
+
+  private static void closeClients() {
+    closeAwsSecretsManagers();
+    closeTestSecretsManager();
+  }
+
+  private static void createSecret(final List<Tag> tags) {
+    testSecretName = testSecretNamePrefix + UUID.randomUUID();
+
+    final CreateSecretRequest secretRequest =
+        CreateSecretRequest.builder()
+            .name(testSecretName)
+            .secretString(SECRET_VALUE)
+            .tags(tags)
+            .build();
+
+    testSecretsManagerClient.createSecret(secretRequest).join();
+    testSecretNames.add(testSecretName);
+    waitUntilSecretAvailable(testSecretName);
+  }
+
+  private static void createTestSecret(final boolean hasMultipleTags, final boolean hasSharedTags) {
+    testSecretNamePrefix = "signers-aws-integration/";
+    testSecretName = testSecretNamePrefix + UUID.randomUUID();
+
+    final List<Tag> testSecretTags =
+        createTestSecretTags(testSecretName, hasMultipleTags, hasSharedTags);
+    updateTestTags(testSecretTags, hasMultipleTags, hasSharedTags);
+    createSecret(testSecretTags);
+  }
+
+  private static void createTestSecrets() {
+    createTestSecret(false, false);
+    createTestSecret(true, false);
+    createTestSecret(false, true);
+    createTestSecret(true, true);
+  }
+
+  private static void deleteTestSecrets() {
+    testSecretNames.forEach(
+        name -> {
+          final DeleteSecretRequest deleteSecretRequest =
+              DeleteSecretRequest.builder().secretId(name).build();
+          testSecretsManagerClient.deleteSecret(deleteSecretRequest).join();
+        });
+    testSecretNames.clear();
+    allTestSecretTags.clear();
+    testSecretSingleTag.clear();
+    testSecretMultipleTags.clear();
+    testSecretSingleSharedTag.clear();
+    testSecretMultipleSharedTags.clear();
+  }
+
+  private static Tag createTag(final String key, final String value) {
+    return Tag.builder().key(key).value(value).build();
+  }
+
+  private static List<Tag> createTestSecretTags(
+      final String secretName, final boolean hasMultipleTags, final boolean hasSharedTags) {
+    final List<Tag> testSecretTags = new ArrayList<>();
+    testSecretTags.add(createTag(secretName, secretName));
+    if (hasMultipleTags) {
+      testSecretTags.add(createTag(secretName + "/multiple", "multiple"));
+    }
+    if (hasSharedTags) {
+      allTestSecretTags.forEach((key, value) -> testSecretTags.add(createTag(key, "shared")));
+    }
+    return testSecretTags;
+  }
+
+  private static void updateTestTags(
+      final List<Tag> tags, final boolean multipleTags, final boolean sharedTags) {
+    tags.forEach(
+        tag -> {
+          if (!multipleTags && !sharedTags) {
+            testSecretSingleTag.put(tag.key(), tag.value());
+          } else if (multipleTags && sharedTags) {
+            testSecretMultipleTags.put(tag.key(), tag.value());
+          } else if (!multipleTags) {
+            testSecretSingleSharedTag.put(tag.key(), tag.value());
+          } else {
+            testSecretMultipleSharedTags.put(tag.key(), tag.value());
+          }
+        });
+    allTestSecretTags = new HashMap<>();
+    allTestSecretTags.putAll(testSecretSingleTag);
+    allTestSecretTags.putAll(testSecretMultipleTags);
+    allTestSecretTags.putAll(testSecretSingleSharedTag);
+    allTestSecretTags.putAll(testSecretMultipleSharedTags);
+  }
+
+  private static void waitUntilSecretAvailable(final String secretName) {
+    testSecretsManagerClient
+        .getSecretValue(GetSecretValueRequest.builder().secretId(secretName).build())
+        .join();
+  }
+
+  private void validateMappedSecret(
+      final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries,
+      final Map<String, String> testTags) {
+    testTags.keySet().stream()
+        .filter(tagKey -> testSecretNames.contains(tagKey))
+        .forEach(tagKey ->
+            assertThat(tagKey).isIn(secretEntries.stream().map(e -> e.getKey()))
+        );
+  }
+>>>>>>> e917f7a... Update keystorage/aws/src/test/java/tech/pegasys/signers/aws/AwsSecretsManagerTest.java
 }
