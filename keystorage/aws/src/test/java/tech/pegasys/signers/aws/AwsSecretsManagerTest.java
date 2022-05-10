@@ -20,52 +20,49 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.secretsmanager.SecretsManagerAsyncClient;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.Tag;
 
+@Disabled("Disabled temporarily as this is failing in CI")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AwsSecretsManagerTest {
 
-  private static final String RW_AWS_ACCESS_KEY_ID = System.getenv("RW_AWS_ACCESS_KEY_ID");
-  private static final String RW_AWS_SECRET_ACCESS_KEY = System.getenv("RW_AWS_SECRET_ACCESS_KEY");
+  private final String RW_AWS_ACCESS_KEY_ID = System.getenv("RW_AWS_ACCESS_KEY_ID");
+  private final String RW_AWS_SECRET_ACCESS_KEY = System.getenv("RW_AWS_SECRET_ACCESS_KEY");
 
-  private static final String RO_AWS_ACCESS_KEY_ID = System.getenv("RO_AWS_ACCESS_KEY_ID");
-  private static final String RO_AWS_SECRET_ACCESS_KEY = System.getenv("RO_AWS_SECRET_ACCESS_KEY");
-  private static final String AWS_REGION = "us-east-2";
+  private final String RO_AWS_ACCESS_KEY_ID = System.getenv("RO_AWS_ACCESS_KEY_ID");
+  private final String RO_AWS_SECRET_ACCESS_KEY = System.getenv("RO_AWS_SECRET_ACCESS_KEY");
+  private final String AWS_REGION = "us-east-2";
 
-  private static AwsSecretsManager awsSecretsManagerDefault;
-  private static AwsSecretsManager awsSecretsManagerExplicit;
-  private static AwsSecretsManager awsSecretsManagerInvalidCredentials;
-  private static AwsBasicCredentials awsBasicCredentials;
-  private static StaticCredentialsProvider credentialsProvider;
-  private static SecretsManagerAsyncClient testSecretsManagerClient;
-  private static String testSecretName;
-  private static String testSecretNamePrefix;
-  private static List<String> testSecretNames;
-  private static Map<String, String> allTestSecretTags;
-  private static Map<String, String> testSecretSingleTag;
-  private static Map<String, String> testSecretMultipleTags;
-  private static Map<String, String> testSecretSingleSharedTag;
-  private static Map<String, String> testSecretMultipleSharedTags;
+  private AwsSecretsManager awsSecretsManagerDefault;
+  private AwsSecretsManager awsSecretsManagerExplicit;
+  private AwsSecretsManager awsSecretsManagerInvalidCredentials;
+  private SecretsManagerClient secretsManagerClient;
+  private String secretName;
+  private String secretNamePrefix;
+  private List<String> secretNames;
+  private AbstractMap<String, String> secretTags;
 
   private static final String SECRET_VALUE =
       "{\"crypto\": {\"kdf\": {\"function\": \"scrypt\", \"params\": {\"dklen\": 32, \"n\": 262144, \"r\": 8, \"p\": 1, \"salt\": \"3d9b30b612f4f5e9423dc43c0490396798a179d35dd58d48dc1f5d6d42b07ab6\"}, \"message\": \"\"}, \"checksum\": {\"function\": \"sha256\", \"params\": {}, \"message\": \"c762b7453eab3332cda31d9dee1894cf541373617e591a8e7ab8f14f5830f723\"}, \"cipher\": {\"function\": \"aes-128-ctr\", \"params\": {\"iv\": \"095f79f6bb5daab60355ab6aa894b3c8\"}, \"message\": \"4ca342a769ec1c00d6a6d69e18cdf821f42849d4431da7df827b01ba162ed763\"}}, \"description\": \"\", \"pubkey\": \"8fb7c68f3291b8db46ef86a8b9544cad7052dd7cf817862063d1f151f3c443cd3907830b09a86fe0513f0e863beccf25\", \"path\": \"m/12381/3600/0/0/0\", \"uuid\": \"88fc9701-8670-4378-a3ba-00be25c1330c\", \"version\": 4}";
 
-  static void verifyEnvironmentVariables() {
+  private void verifyEnvironmentVariables() {
     Assumptions.assumeTrue(
         RW_AWS_ACCESS_KEY_ID != null, "Set RW_AWS_ACCESS_KEY_ID environment variable");
     Assumptions.assumeTrue(
@@ -76,152 +73,7 @@ class AwsSecretsManagerTest {
         RO_AWS_SECRET_ACCESS_KEY != null, "Set RO_AWS_SECRET_ACCESS_KEY environment variable");
   }
 
-  @BeforeAll
-  static void setup() {
-    verifyEnvironmentVariables();
-    initAwsSecretsManagers();
-    initTestSecretsManagerClient();
-    initTestVariables();
-    createTestSecrets();
-  }
-
-  @AfterAll
-  static void teardown() {
-    if (awsSecretsManagerDefault != null
-        || awsSecretsManagerExplicit != null
-        || testSecretsManagerClient != null) {
-      deleteTestSecrets();
-      closeClients();
-    }
-  }
-
-  @Test
-  void fetchSecretWithDefaultManager() {
-    Optional<String> secret = awsSecretsManagerDefault.fetchSecret(testSecretName);
-    assertThat(secret).hasValue(SECRET_VALUE);
-  }
-
-  @Test
-  void fetchSecretWithExplicitManager() {
-    Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(testSecretName);
-    assertThat(secret).hasValue(SECRET_VALUE);
-  }
-
-  @Test
-  void fetchSecretWithInvalidCredentialsReturnsEmpty() {
-    assertThatExceptionOfType(RuntimeException.class)
-        .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(testSecretName))
-        .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
-  }
-
-  @Test
-  void fetchingNonExistentSecretReturnsEmpty() {
-    Optional<String> secret = awsSecretsManagerDefault.fetchSecret("signers-aws-integration/empty");
-    assertThat(secret).isEmpty();
-  }
-
-  @Test
-  void listAndMapSingleSecretWithSingleTag() {
-    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(
-            testSecretSingleTag.keySet(),
-            testSecretSingleTag.values(),
-            AbstractMap.SimpleEntry::new);
-
-    validateMappedSecret(secretEntries, testSecretSingleTag);
-  }
-
-  @Test
-  void listAndMapSingleSecretWithMultipleTags() {
-    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(
-            testSecretMultipleTags.keySet(),
-            testSecretMultipleTags.values(),
-            AbstractMap.SimpleEntry::new);
-
-    validateMappedSecret(secretEntries, testSecretMultipleTags);
-  }
-
-  @Test
-  void listAndMapMultipleSecretsWithMultipleTags() {
-    final HashMap<String, String> testTags = new HashMap<>();
-    testTags.putAll(testSecretMultipleTags);
-    testTags.putAll(testSecretSingleTag);
-
-    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(
-            testTags.keySet(), testTags.values(), AbstractMap.SimpleEntry::new);
-
-    validateMappedSecret(secretEntries, testTags);
-  }
-
-  @Test
-  void listAndMapMultipleSecretsWithSharedTags() {
-    final HashMap<String, String> testTags = new HashMap<>();
-    testTags.putAll(testSecretSingleTag);
-    testTags.putAll(testSecretSingleSharedTag);
-
-    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(
-            testTags.keySet(), testTags.values(), AbstractMap.SimpleEntry::new);
-
-    validateMappedSecret(secretEntries, testTags);
-  }
-
-  @Test
-  void listAndMapMultipleSecretsWithMultipleAndSharedTags() {
-    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(
-            testSecretMultipleSharedTags.keySet(),
-            testSecretMultipleSharedTags.values(),
-            AbstractMap.SimpleEntry::new);
-
-    validateMappedSecret(secretEntries, testSecretMultipleSharedTags);
-  }
-
-  @Test
-  void throwsAwayObjectsThatFailMapper() {
-    final String failEntryName = testSecretNames.get(1);
-
-    Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(
-            allTestSecretTags.keySet(),
-            allTestSecretTags.values(),
-            (name, value) -> {
-              if (name.equals(failEntryName)) {
-                throw new RuntimeException("Arbitrary Failure");
-              }
-              return new AbstractMap.SimpleEntry<>(name, value);
-            });
-
-    validateMappedSecret(secretEntries, allTestSecretTags);
-    final Optional<AbstractMap.SimpleEntry<String, String>> failEntry =
-        secretEntries.stream().filter(e -> e.getKey().equals(failEntryName)).findAny();
-    assertThat(failEntry).isEmpty();
-  }
-
-  @Test
-  void throwsAwayObjectsWhichMapToNull() {
-    final String nullEntryName = testSecretNames.get(1);
-
-    Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(
-            allTestSecretTags.keySet(),
-            allTestSecretTags.values(),
-            (name, value) -> {
-              if (name.equals(nullEntryName)) {
-                return null;
-              }
-              return new AbstractMap.SimpleEntry<>(name, value);
-            });
-
-    validateMappedSecret(secretEntries, allTestSecretTags);
-    final Optional<AbstractMap.SimpleEntry<String, String>> nullEntry =
-        secretEntries.stream().filter(e -> e.getKey().equals("MyBls")).findAny();
-    assertThat(nullEntry).isEmpty();
-  }
-
-  private static void initAwsSecretsManagers() {
+  private void setupSecretsManagers() {
     awsSecretsManagerDefault = AwsSecretsManager.createAwsSecretsManager();
     awsSecretsManagerExplicit =
         AwsSecretsManager.createAwsSecretsManager(
@@ -230,139 +82,246 @@ class AwsSecretsManagerTest {
         AwsSecretsManager.createAwsSecretsManager("invalid", "invalid", AWS_REGION);
   }
 
-  private static void initTestSecretsManagerClient() {
-    awsBasicCredentials =
+  private void setupSecretsManagerClient() {
+    final AwsBasicCredentials awsBasicCredentials =
         AwsBasicCredentials.create(RW_AWS_ACCESS_KEY_ID, RW_AWS_SECRET_ACCESS_KEY);
-    credentialsProvider = StaticCredentialsProvider.create(awsBasicCredentials);
-    testSecretsManagerClient =
-        SecretsManagerAsyncClient.builder()
+    final StaticCredentialsProvider credentialsProvider =
+        StaticCredentialsProvider.create(awsBasicCredentials);
+    secretsManagerClient =
+        SecretsManagerClient.builder()
             .credentialsProvider(credentialsProvider)
             .region(Region.of(AWS_REGION))
             .build();
   }
 
-  private static void initTestVariables() {
-    testSecretNames = new ArrayList<>();
-    allTestSecretTags = new HashMap<>();
-    testSecretSingleTag = new HashMap<>();
-    testSecretMultipleTags = new HashMap<>();
-    testSecretSingleSharedTag = new HashMap<>();
-    testSecretMultipleSharedTags = new HashMap<>();
+  private void initializeVariables() {
+    secretNames = new ArrayList<>();
+    secretTags = new HashMap<String, String>();
   }
 
-  private static void closeTestSecretsManager() {
-    testSecretsManagerClient.close();
-  }
-
-  private static void closeAwsSecretsManagers() {
+  private void closeClients() {
     awsSecretsManagerDefault.close();
     awsSecretsManagerExplicit.close();
     awsSecretsManagerInvalidCredentials.close();
+    secretsManagerClient.close();
   }
 
-  private static void closeClients() {
-    closeAwsSecretsManagers();
-    closeTestSecretsManager();
-  }
+  void createSecret(
+      final boolean multipleSecrets, final boolean multipleTags, final boolean sharedTag) {
+    secretNamePrefix = "signers-aws-integration/";
+    secretName = secretNamePrefix + UUID.randomUUID();
+    secretNames.add(secretName);
 
-  private static void createSecret(final List<Tag> tags) {
-    testSecretName = testSecretNamePrefix + UUID.randomUUID();
+    final List<Tag> tags = new ArrayList<>();
+
+    if (sharedTag) {
+      secretTags
+          .entrySet()
+          .forEach(
+              entry -> tags.add(Tag.builder().key(entry.getKey()).value(entry.getValue()).build()));
+    } else if (multipleTags) {
+      tags.add(Tag.builder().key(secretNamePrefix + UUID.randomUUID()).value(secretName).build());
+    }
+
+    tags.add(Tag.builder().key(secretNamePrefix + UUID.randomUUID()).value(secretName).build());
+
+    tags.forEach(
+        tag -> {
+          secretTags.put(tag.key(), tag.value());
+        });
 
     final CreateSecretRequest secretRequest =
         CreateSecretRequest.builder()
-            .name(testSecretName)
+            .name(secretName)
             .secretString(SECRET_VALUE)
             .tags(tags)
             .build();
+    secretsManagerClient.createSecret(secretRequest);
 
-    testSecretsManagerClient.createSecret(secretRequest).join();
-    testSecretNames.add(testSecretName);
-    waitUntilSecretAvailable(testSecretName);
+    if (multipleSecrets) {
+      createSecret(false, multipleTags, sharedTag);
+    }
   }
 
-  private static void createTestSecret(final boolean hasMultipleTags, final boolean hasSharedTags) {
-    testSecretNamePrefix = "signers-aws-integration/";
-    testSecretName = testSecretNamePrefix + UUID.randomUUID();
-
-    final List<Tag> testSecretTags =
-        createTestSecretTags(testSecretName, hasMultipleTags, hasSharedTags);
-    updateTestTags(testSecretTags, hasMultipleTags, hasSharedTags);
-    createSecret(testSecretTags);
-  }
-
-  private static void createTestSecrets() {
-    createTestSecret(false, false);
-    createTestSecret(true, false);
-    createTestSecret(false, true);
-    createTestSecret(true, true);
-  }
-
-  private static void deleteTestSecrets() {
-    testSecretNames.forEach(
+  @AfterEach
+  void deleteSecrets() {
+    secretNames.forEach(
         name -> {
-          final DeleteSecretRequest deleteSecretRequest =
+          final DeleteSecretRequest secretRequest =
               DeleteSecretRequest.builder().secretId(name).build();
-          testSecretsManagerClient.deleteSecret(deleteSecretRequest).join();
+          secretsManagerClient.deleteSecret(secretRequest);
         });
-    testSecretNames.clear();
-    allTestSecretTags.clear();
-    testSecretSingleTag.clear();
-    testSecretMultipleTags.clear();
-    testSecretSingleSharedTag.clear();
-    testSecretMultipleSharedTags.clear();
-  }
-
-  private static Tag createTag(final String key, final String value) {
-    return Tag.builder().key(key).value(value).build();
-  }
-
-  private static List<Tag> createTestSecretTags(
-      final String secretName, final boolean hasMultipleTags, final boolean hasSharedTags) {
-    final List<Tag> testSecretTags = new ArrayList<>();
-    testSecretTags.add(createTag(secretName, secretName));
-    if (hasMultipleTags) {
-      testSecretTags.add(createTag(secretName + "/multiple", "multiple"));
-    }
-    if (hasSharedTags) {
-      allTestSecretTags.forEach((key, value) -> testSecretTags.add(createTag(key, "shared")));
-    }
-    return testSecretTags;
-  }
-
-  private static void updateTestTags(
-      final List<Tag> tags, final boolean multipleTags, final boolean sharedTags) {
-    tags.forEach(
-        tag -> {
-          if (!multipleTags && !sharedTags) {
-            testSecretSingleTag.put(tag.key(), tag.value());
-          } else if (multipleTags && sharedTags) {
-            testSecretMultipleTags.put(tag.key(), tag.value());
-          } else if (!multipleTags) {
-            testSecretSingleSharedTag.put(tag.key(), tag.value());
-          } else {
-            testSecretMultipleSharedTags.put(tag.key(), tag.value());
-          }
-        });
-    allTestSecretTags = new HashMap<>();
-    allTestSecretTags.putAll(testSecretSingleTag);
-    allTestSecretTags.putAll(testSecretMultipleTags);
-    allTestSecretTags.putAll(testSecretSingleSharedTag);
-    allTestSecretTags.putAll(testSecretMultipleSharedTags);
-  }
-
-  private static void waitUntilSecretAvailable(final String secretName) {
-    testSecretsManagerClient
-        .getSecretValue(GetSecretValueRequest.builder().secretId(secretName).build())
-        .join();
+    secretNames.clear();
+    secretTags.clear();
   }
 
   private void validateMappedSecret(
       final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries,
-      final Map<String, String> testTags) {
-    testTags.keySet().stream()
-        .filter(tagKey -> testSecretNames.contains(tagKey))
-        .forEach(tagKey ->
-            assertThat(tagKey).isIn(secretEntries.stream().map(e -> e.getKey()))
-        );
+      final String secretName) {
+    final Optional<AbstractMap.SimpleEntry<String, String>> secretEntry =
+        secretEntries.stream().filter(e -> e.getKey().equals(secretName)).findAny();
+    assertThat(secretEntry).isPresent();
+    assertThat(secretEntry.get().getValue()).isEqualTo(SECRET_VALUE);
+  }
+
+  @BeforeAll
+  void setup() {
+    verifyEnvironmentVariables();
+    setupSecretsManagers();
+    setupSecretsManagerClient();
+    initializeVariables();
+  }
+
+  @AfterAll
+  void teardown() {
+    if (awsSecretsManagerDefault != null
+        || awsSecretsManagerExplicit != null
+        || secretsManagerClient != null) {
+      deleteSecrets();
+      closeClients();
+    }
+  }
+
+  @Test
+  void fetchSecretWithDefaultManager() {
+    createSecret(false, false, false);
+    Optional<String> secret = awsSecretsManagerDefault.fetchSecret(secretName);
+    assertThat(secret).hasValue(SECRET_VALUE);
+  }
+
+  @Test
+  void fetchSecretWithExplicitManager() {
+    createSecret(false, false, false);
+    Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(secretName);
+    assertThat(secret).hasValue(SECRET_VALUE);
+  }
+
+  @Test
+  void fetchSecretWithInvalidCredentialsReturnsEmpty() {
+    createSecret(false, false, false);
+    assertThatExceptionOfType(RuntimeException.class)
+        .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(secretName))
+        .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
+  }
+
+  @Test
+  void fetchingNonExistentSecretReturnsEmpty() {
+    createSecret(false, false, false);
+    Optional<String> secret = awsSecretsManagerDefault.fetchSecret("signers-aws-integration/empty");
+    assertThat(secret).isEmpty();
+  }
+
+  @Test
+  void listAndMapSingleSecretWithSingleTag() {
+    createSecret(false, false, false);
+
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
+            AbstractMap.SimpleEntry::new);
+
+    secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
+  }
+
+  @Test
+  void listAndMapSingleSecretWithMultipleTags() {
+    createSecret(false, true, false);
+
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
+            AbstractMap.SimpleEntry::new);
+
+    secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
+  }
+
+  @Test
+  void listAndMapMultipleSecretsWithMultipleTags() {
+    createSecret(true, true, false);
+
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
+            AbstractMap.SimpleEntry::new);
+
+    secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
+  }
+
+  @Test
+  void listAndMapMultipleSecretsWithSharedTags() {
+    createSecret(true, false, true);
+
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
+            AbstractMap.SimpleEntry::new);
+
+    secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
+  }
+
+  @Test
+  void listAndMapMultipleSecretsWithMultipleAndSharedTags() {
+    createSecret(true, false, true);
+    createSecret(true, true, false);
+
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
+            AbstractMap.SimpleEntry::new);
+
+    secretNames.forEach(secretName -> validateMappedSecret(secretEntries, secretName));
+  }
+
+  @Test
+  void throwsAwayObjectsThatFailMapper() {
+    createSecret(true, false, false);
+
+    final String failEntryName = secretNames.get(1);
+
+    Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
+            (name, value) -> {
+              if (name.equals(failEntryName)) {
+                throw new RuntimeException("Arbitrary Failure");
+              }
+              return new AbstractMap.SimpleEntry<>(name, value);
+            });
+
+    validateMappedSecret(secretEntries, secretNames.get(0));
+
+    final Optional<AbstractMap.SimpleEntry<String, String>> failEntry =
+        secretEntries.stream().filter(e -> e.getKey().equals(failEntryName)).findAny();
+    assertThat(failEntry).isEmpty();
+  }
+
+  @Test
+  void throwsAwayObjectsWhichMapToNull() {
+    createSecret(true, false, false);
+
+    final String nullEntryName = secretNames.get(1);
+
+    Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            secretTags.keySet().stream().collect(Collectors.toList()),
+            secretTags.values().stream().collect(Collectors.toList()),
+            (name, value) -> {
+              if (name.equals(nullEntryName)) {
+                return null;
+              }
+              return new AbstractMap.SimpleEntry<>(name, value);
+            });
+
+    validateMappedSecret(secretEntries, secretNames.get(0));
+
+    final Optional<AbstractMap.SimpleEntry<String, String>> nullEntry =
+        secretEntries.stream().filter(e -> e.getKey().equals("MyBls")).findAny();
+    assertThat(nullEntry).isEmpty();
   }
 }

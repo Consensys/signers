@@ -36,6 +36,7 @@ dependencies {
   implementation 'software.amazon.awssdk:secretsmanager'
   implementation 'com.google.guava:guava'
   implementation 'org.apache.logging.log4j:log4j-api'
+  runtimeOnly 'software.amazon.awssdk:sts'
 
   testImplementation 'org.assertj:assertj-core'
   testImplementation 'org.junit.jupiter:junit-jupiter-engine'
