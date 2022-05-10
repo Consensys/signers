@@ -18,9 +18,8 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -54,13 +53,12 @@ class AwsSecretsManagerTest {
   private static AwsBasicCredentials awsBasicCredentials;
   private static StaticCredentialsProvider credentialsProvider;
   private static SecretsManagerAsyncClient testSecretsManagerClient;
-  private static String testSecretName;
-  private static List<String> testSecretNames;
-  private static Map<String, String> allTestSecretTags;
-  private static Map<String, String> testSecretSingleTag;
-  private static Map<String, String> testSecretMultipleTags;
-  private static Map<String, String> testSecretSingleSharedTag;
-  private static Map<String, String> testSecretMultipleSharedTags;
+
+  private static List<String> testSecretNames = new ArrayList<>();
+  private static String secretName1;
+  private static String secretName2;
+  private static String secretName3;
+  private static String secretName4;
 
   private static final String SECRET_VALUE =
       "{\"crypto\": {\"kdf\": {\"function\": \"scrypt\", \"params\": {\"dklen\": 32, \"n\": 262144, \"r\": 8, \"p\": 1, \"salt\": \"3d9b30b612f4f5e9423dc43c0490396798a179d35dd58d48dc1f5d6d42b07ab6\"}, \"message\": \"\"}, \"checksum\": {\"function\": \"sha256\", \"params\": {}, \"message\": \"c762b7453eab3332cda31d9dee1894cf541373617e591a8e7ab8f14f5830f723\"}, \"cipher\": {\"function\": \"aes-128-ctr\", \"params\": {\"iv\": \"095f79f6bb5daab60355ab6aa894b3c8\"}, \"message\": \"4ca342a769ec1c00d6a6d69e18cdf821f42849d4431da7df827b01ba162ed763\"}}, \"description\": \"\", \"pubkey\": \"8fb7c68f3291b8db46ef86a8b9544cad7052dd7cf817862063d1f151f3c443cd3907830b09a86fe0513f0e863beccf25\", \"path\": \"m/12381/3600/0/0/0\", \"uuid\": \"88fc9701-8670-4378-a3ba-00be25c1330c\", \"version\": 4}";
@@ -81,7 +79,6 @@ class AwsSecretsManagerTest {
     verifyEnvironmentVariables();
     initAwsSecretsManagers();
     initTestSecretsManagerClient();
-    initTestVariables();
     createTestSecrets();
   }
 
@@ -97,20 +94,20 @@ class AwsSecretsManagerTest {
 
   @Test
   void fetchSecretWithDefaultManager() {
-    Optional<String> secret = awsSecretsManagerDefault.fetchSecret(testSecretName);
+    Optional<String> secret = awsSecretsManagerDefault.fetchSecret(secretName1);
     assertThat(secret).hasValue(SECRET_VALUE);
   }
 
   @Test
   void fetchSecretWithExplicitManager() {
-    Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(testSecretName);
+    Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(secretName1);
     assertThat(secret).hasValue(SECRET_VALUE);
   }
 
   @Test
   void fetchSecretWithInvalidCredentialsReturnsEmpty() {
     assertThatExceptionOfType(RuntimeException.class)
-        .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(testSecretName))
+        .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(secretName1))
         .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
   }
 
@@ -120,174 +117,97 @@ class AwsSecretsManagerTest {
     assertThat(secret).isEmpty();
   }
 
-  private static void createSecret(final String secretName, final Tag tag) {
-    //  signers/secret1/12039741209371290
-    final String testSecretName = testSecretNamePrefix + secretName + "/" + UUID.randomUUID();
-
-    final CreateSecretRequest secretRequest =
-        CreateSecretRequest.builder().name(secretName).secretString(SECRET_VALUE).tags(tag).build();
-
-    testSecretsManagerClient.createSecret(secretRequest).join();
-    waitUntilSecretAvailable(testSecretName);
-  }
-
-  private static Tag createTag(final String key, final String value) {
-    return Tag.builder().key(key).value(value).build();
-  }
-
-  private static void createTestSecret(
-      final String testSecretName, final String tagKey, final String tagVal) {
-    final Tag testSecretTag = createTag(tagKey, tagVal);
-    createSecret(testSecretName, testSecretTag);
-  }
-
-  // create test secrets
-
-  // secretWithNoTags: no tags
   // secret1: tag(k1, vA)
   // secret2: tag(k1, vB)
   // secret3: tag(k2, vC)
   // secret4: tag(k2, vB)
+  private static void createTestSecrets() {
+    secretName1 = createTestSecret("secret1", "tagKey1", "tagValA");
+    secretName2 = createTestSecret("secret2", "tagKey1", "tagValB");
+    secretName3 = createTestSecret("secret3", "tagKey2", "tagValC");
+    secretName4 = createTestSecret("secret4", "tagKey2", "tagValB");
+    testSecretNames.addAll(List.of(secretName1, secretName2, secretName3, secretName4));
+  }
 
-  // test cases
+  // emptyTagFiltersReturnAllKeys: search([], []) returns all secrets
+  @Test
+  void emptyTagFiltersReturnAllKeys() {
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            Collections.emptyList(), Collections.emptyList(), AbstractMap.SimpleEntry::new);
 
-  // emptyTagFiltersReturnAllKeys: search([k1, k2], [vA, vB, vC]) (search all tagKeys and tagValues)
-  // does not contain secretWithNoTags
+    final List<String> secretNames =
+        secretEntries.stream()
+            .map(entry -> String.valueOf(entry.getKey()))
+            .collect(Collectors.toList());
+    assertThat(secretNames).contains(secretName1, secretName2, secretName3, secretName4);
+  }
 
-  //  secretsWithMatchingKeysAreReturned: search([k1, k2], []) returns [secret1, secret3]
-  // secret1: tag(k1, vA)
-  // secret2: tag(k1, vB)
+  // secretsWithMatchingKeysAreReturned: search([k1], []) returns [secret1, secret2]
+  @Test
+  void listAndMapSecretsWithMatchingKeysAreReturned() {
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            List.of("tagKey1"), Collections.emptyList(), AbstractMap.SimpleEntry::new);
+
+    final List<String> secretNames =
+        secretEntries.stream()
+            .map(entry -> String.valueOf(entry.getKey()))
+            .collect(Collectors.toList());
+    assertThat(secretNames)
+        .contains(secretName1, secretName2)
+        .doesNotContain(secretName3, secretName4);
+  }
 
   // secretsWithMatchingValuesAreReturned: search([], [vB, vC]) returns [secret2, secret3, secret4]
-  // secret2: tag(k1, vB)
-  // secret4: tag(k2, vB)
+  @Test
+  void secretsWithMatchingValuesAreReturned() {
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            Collections.emptyList(), List.of("tagValB", "tagValC"), AbstractMap.SimpleEntry::new);
 
-  // secretsWithMatchingKeysOrValuesAreReturned: search([k1, vB]) returns [secret1, secret2,
+    final List<String> secretNames =
+        secretEntries.stream()
+            .map(entry -> String.valueOf(entry.getKey()))
+            .collect(Collectors.toList());
+    assertThat(secretNames)
+        .contains(secretName2, secretName3, secretName4)
+        .doesNotContain(secretName1);
+  }
+
+  // secretsWithMatchingKeysOrValuesAreReturned: search([k1], [vB]) returns [secret1, secret2,
   // secret4]
-
-  //  @Test
-  //  void listAndMapSecretsWithMatchingKeysAreReturned() {
-  //
-  //    createTestSecret("secret1", "tagKey1", "tagValA");
-  //    createTestSecret("secret3", "tagKey2", "tagValC");
-  //
-  //    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-  //            awsSecretsManagerExplicit.mapSecrets(
-  //                    List.of("tagKey1", "tagKey2"),
-  //                    Collections.emptyList(),
-  //                    AbstractMap.SimpleEntry::new);
-  //
-  //    assertThat(secretEntries);
-  //
-  //  }
-
   @Test
-  void secretsWithMatchingValuesAreReturned() {}
-
-  @Test
-  void secretsWithMatchingKeysOrValuesAreReturned() {}
-
-  @Test
-  void emptyTagFiltersReturnAllKeys() {}
-
-  @Test
-  void listAndMapSingleSecretWithSingleTag() {
-    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(
-            testSecretSingleTag.keySet(),
-            testSecretSingleTag.values(),
-            AbstractMap.SimpleEntry::new);
-
-    validateMappedSecret(secretEntries, testSecretSingleTag);
-  }
-
-  @Test
-  void listAndMapSingleSecretWithMultipleTags() {
-    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(
-            testSecretMultipleTags.keySet(),
-            testSecretMultipleTags.values(),
-            AbstractMap.SimpleEntry::new);
-
-    validateMappedSecret(secretEntries, testSecretMultipleTags);
-  }
-
-  @Test
-  void listAndMapMultipleSecretsWithMultipleTags() {
-    final HashMap<String, String> testTags = new HashMap<>();
-    testTags.putAll(testSecretMultipleTags);
-    testTags.putAll(testSecretSingleTag);
+  void secretsWithMatchingKeysOrValuesAreReturned() {
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            testTags.keySet(), testTags.values(), AbstractMap.SimpleEntry::new);
+            List.of("tagKey1"), List.of("tagValB"), AbstractMap.SimpleEntry::new);
 
-    validateMappedSecret(secretEntries, testTags);
-  }
-
-  @Test
-  void listAndMapMultipleSecretsWithSharedTags() {
-    final HashMap<String, String> testTags = new HashMap<>();
-    testTags.putAll(testSecretSingleTag);
-    testTags.putAll(testSecretSingleSharedTag);
-
-    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(
-            testTags.keySet(), testTags.values(), AbstractMap.SimpleEntry::new);
-
-    validateMappedSecret(secretEntries, testTags);
-  }
-
-  @Test
-  void listAndMapMultipleSecretsWithMultipleAndSharedTags() {
-    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(
-            testSecretMultipleSharedTags.keySet(),
-            testSecretMultipleSharedTags.values(),
-            AbstractMap.SimpleEntry::new);
-
-    validateMappedSecret(secretEntries, testSecretMultipleSharedTags);
-  }
-
-  @Test
-  void throwsAwayObjectsThatFailMapper() {
-    final String failEntryName = testSecretNames.get(1);
-
-    Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(
-            allTestSecretTags.keySet(),
-            allTestSecretTags.values(),
-            (name, value) -> {
-              if (name.equals(failEntryName)) {
-                throw new RuntimeException("Arbitrary Failure");
-              }
-              return new AbstractMap.SimpleEntry<>(name, value);
-            });
-
-    validateMappedSecret(secretEntries, allTestSecretTags);
-    final Optional<AbstractMap.SimpleEntry<String, String>> failEntry =
-        secretEntries.stream().filter(e -> e.getKey().equals(failEntryName)).findAny();
-    assertThat(failEntry).isEmpty();
+    final List<String> secretNames =
+        secretEntries.stream()
+            .map(entry -> String.valueOf(entry.getKey()))
+            .collect(Collectors.toList());
+    assertThat(secretNames)
+        .contains(secretName1, secretName2, secretName4)
+        .doesNotContain(secretName3);
   }
 
   @Test
   void throwsAwayObjectsWhichMapToNull() {
-    final String nullEntryName = testSecretNames.get(1);
-
     Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            allTestSecretTags.keySet(),
-            allTestSecretTags.values(),
+            Collections.emptyList(),
+            Collections.emptyList(),
             (name, value) -> {
-              if (name.equals(nullEntryName)) {
+              if (name.equals(secretName1)) {
                 return null;
               }
               return new AbstractMap.SimpleEntry<>(name, value);
             });
 
-    validateMappedSecret(secretEntries, allTestSecretTags);
     final Optional<AbstractMap.SimpleEntry<String, String>> nullEntry =
-        secretEntries.stream().filter(e -> e.getKey().equals("MyBls")).findAny();
+        secretEntries.stream().filter(e -> e.getKey().equals(secretName1)).findAny();
     assertThat(nullEntry).isEmpty();
   }
 
@@ -311,15 +231,6 @@ class AwsSecretsManagerTest {
             .build();
   }
 
-  private static void initTestVariables() {
-    testSecretNames = new ArrayList<>();
-    allTestSecretTags = new HashMap<>();
-    testSecretSingleTag = new HashMap<>();
-    testSecretMultipleTags = new HashMap<>();
-    testSecretSingleSharedTag = new HashMap<>();
-    testSecretMultipleSharedTags = new HashMap<>();
-  }
-
   private static void closeTestSecretsManager() {
     testSecretsManagerClient.close();
   }
@@ -335,11 +246,35 @@ class AwsSecretsManagerTest {
     closeTestSecretsManager();
   }
 
-  private static void createTestSecrets() {
-    createTestSecret(false, false);
-    createTestSecret(true, false);
-    createTestSecret(false, true);
-    createTestSecret(true, true);
+  private static String createSecret(final String secretName, final Tag tag) {
+    final String testSecretName = testSecretNamePrefix + secretName + "/" + UUID.randomUUID();
+
+    final CreateSecretRequest secretRequest =
+        CreateSecretRequest.builder()
+            .name(testSecretName)
+            .secretString(SECRET_VALUE)
+            .tags(tag)
+            .build();
+
+    testSecretsManagerClient.createSecret(secretRequest).join();
+    waitUntilSecretAvailable(testSecretName);
+    return testSecretName;
+  }
+
+  private static Tag createTag(final String key, final String value) {
+    return Tag.builder().key(key).value(value).build();
+  }
+
+  private static String createTestSecret(
+      final String testSecretName, final String tagKey, final String tagVal) {
+    final Tag testSecretTag = createTag(tagKey, tagVal);
+    return createSecret(testSecretName, testSecretTag);
+  }
+
+  private static void waitUntilSecretAvailable(final String secretName) {
+    testSecretsManagerClient
+        .getSecretValue(GetSecretValueRequest.builder().secretId(secretName).build())
+        .join();
   }
 
   private static void deleteTestSecrets() {
@@ -350,52 +285,5 @@ class AwsSecretsManagerTest {
           testSecretsManagerClient.deleteSecret(deleteSecretRequest).join();
         });
     testSecretNames.clear();
-    allTestSecretTags.clear();
-    testSecretSingleTag.clear();
-    testSecretMultipleTags.clear();
-    testSecretSingleSharedTag.clear();
-    testSecretMultipleSharedTags.clear();
-  }
-
-  private static void updateTestTags(
-      final List<Tag> tags, final boolean multipleTags, final boolean sharedTags) {
-    tags.forEach(
-        tag -> {
-          if (!multipleTags && !sharedTags) {
-            testSecretSingleTag.put(tag.key(), tag.value());
-          } else if (multipleTags && sharedTags) {
-            testSecretMultipleTags.put(tag.key(), tag.value());
-          } else if (!multipleTags) {
-            testSecretSingleSharedTag.put(tag.key(), tag.value());
-          } else {
-            testSecretMultipleSharedTags.put(tag.key(), tag.value());
-          }
-        });
-    allTestSecretTags = new HashMap<>();
-    allTestSecretTags.putAll(testSecretSingleTag);
-    allTestSecretTags.putAll(testSecretMultipleTags);
-    allTestSecretTags.putAll(testSecretSingleSharedTag);
-    allTestSecretTags.putAll(testSecretMultipleSharedTags);
-  }
-
-  private static void waitUntilSecretAvailable(final String secretName) {
-    testSecretsManagerClient
-        .getSecretValue(GetSecretValueRequest.builder().secretId(secretName).build())
-        .join();
-  }
-
-  private void validateMappedSecret(
-      final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries,
-      final Map<String, String> testTags) {
-    testTags.keySet().stream()
-        .filter(tagKey -> testSecretNames.contains(tagKey))
-        .collect(Collectors.toList())
-        .forEach(
-            tagKey ->
-                assertThat(tagKey)
-                    .isIn(
-                        secretEntries.stream()
-                            .map(entry -> entry.getKey())
-                            .collect(Collectors.toList())));
   }
 }
