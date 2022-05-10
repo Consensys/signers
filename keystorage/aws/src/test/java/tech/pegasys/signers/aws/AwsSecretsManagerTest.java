@@ -46,6 +46,7 @@ class AwsSecretsManagerTest {
   private static final String RO_AWS_ACCESS_KEY_ID = System.getenv("RO_AWS_ACCESS_KEY_ID");
   private static final String RO_AWS_SECRET_ACCESS_KEY = System.getenv("RO_AWS_SECRET_ACCESS_KEY");
   private static final String AWS_REGION = "us-east-2";
+  private static final String testSecretNamePrefix = "signers-aws-integration/";
 
   private static AwsSecretsManager awsSecretsManagerDefault;
   private static AwsSecretsManager awsSecretsManagerExplicit;
@@ -54,7 +55,6 @@ class AwsSecretsManagerTest {
   private static StaticCredentialsProvider credentialsProvider;
   private static SecretsManagerAsyncClient testSecretsManagerClient;
   private static String testSecretName;
-  private static String testSecretNamePrefix;
   private static List<String> testSecretNames;
   private static Map<String, String> allTestSecretTags;
   private static Map<String, String> testSecretSingleTag;
@@ -120,8 +120,66 @@ class AwsSecretsManagerTest {
     assertThat(secret).isEmpty();
   }
 
-  @Test
-  void listAndMapSecretsWithMatchingKeysAreReturned() {}
+  private static void createSecret(final String secretName, final Tag tag) {
+    //  signers/secret1/12039741209371290
+    final String testSecretName = testSecretNamePrefix + secretName + "/" + UUID.randomUUID();
+
+    final CreateSecretRequest secretRequest =
+        CreateSecretRequest.builder().name(secretName).secretString(SECRET_VALUE).tags(tag).build();
+
+    testSecretsManagerClient.createSecret(secretRequest).join();
+    waitUntilSecretAvailable(testSecretName);
+  }
+
+  private static Tag createTag(final String key, final String value) {
+    return Tag.builder().key(key).value(value).build();
+  }
+
+  private static void createTestSecret(
+      final String testSecretName, final String tagKey, final String tagVal) {
+    final Tag testSecretTag = createTag(tagKey, tagVal);
+    createSecret(testSecretName, testSecretTag);
+  }
+
+  // create test secrets
+
+  // secretWithNoTags: no tags
+  // secret1: tag(k1, vA)
+  // secret2: tag(k1, vB)
+  // secret3: tag(k2, vC)
+  // secret4: tag(k2, vB)
+
+  // test cases
+
+  // emptyTagFiltersReturnAllKeys: search([k1, k2], [vA, vB, vC]) (search all tagKeys and tagValues)
+  // does not contain secretWithNoTags
+
+  //  secretsWithMatchingKeysAreReturned: search([k1, k2], []) returns [secret1, secret3]
+  // secret1: tag(k1, vA)
+  // secret2: tag(k1, vB)
+
+  // secretsWithMatchingValuesAreReturned: search([], [vB, vC]) returns [secret2, secret3, secret4]
+  // secret2: tag(k1, vB)
+  // secret4: tag(k2, vB)
+
+  // secretsWithMatchingKeysOrValuesAreReturned: search([k1, vB]) returns [secret1, secret2,
+  // secret4]
+
+  //  @Test
+  //  void listAndMapSecretsWithMatchingKeysAreReturned() {
+  //
+  //    createTestSecret("secret1", "tagKey1", "tagValA");
+  //    createTestSecret("secret3", "tagKey2", "tagValC");
+  //
+  //    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+  //            awsSecretsManagerExplicit.mapSecrets(
+  //                    List.of("tagKey1", "tagKey2"),
+  //                    Collections.emptyList(),
+  //                    AbstractMap.SimpleEntry::new);
+  //
+  //    assertThat(secretEntries);
+  //
+  //  }
 
   @Test
   void secretsWithMatchingValuesAreReturned() {}
@@ -277,31 +335,6 @@ class AwsSecretsManagerTest {
     closeTestSecretsManager();
   }
 
-  private static void createSecret(final List<Tag> tags) {
-    testSecretName = testSecretNamePrefix + UUID.randomUUID();
-
-    final CreateSecretRequest secretRequest =
-        CreateSecretRequest.builder()
-            .name(testSecretName)
-            .secretString(SECRET_VALUE)
-            .tags(tags)
-            .build();
-
-    testSecretsManagerClient.createSecret(secretRequest).join();
-    testSecretNames.add(testSecretName);
-    waitUntilSecretAvailable(testSecretName);
-  }
-
-  private static void createTestSecret(final boolean hasMultipleTags, final boolean hasSharedTags) {
-    testSecretNamePrefix = "signers-aws-integration/";
-    testSecretName = testSecretNamePrefix + UUID.randomUUID();
-
-    final List<Tag> testSecretTags =
-        createTestSecretTags(testSecretName, hasMultipleTags, hasSharedTags);
-    updateTestTags(testSecretTags, hasMultipleTags, hasSharedTags);
-    createSecret(testSecretTags);
-  }
-
   private static void createTestSecrets() {
     createTestSecret(false, false);
     createTestSecret(true, false);
@@ -322,23 +355,6 @@ class AwsSecretsManagerTest {
     testSecretMultipleTags.clear();
     testSecretSingleSharedTag.clear();
     testSecretMultipleSharedTags.clear();
-  }
-
-  private static Tag createTag(final String key, final String value) {
-    return Tag.builder().key(key).value(value).build();
-  }
-
-  private static List<Tag> createTestSecretTags(
-      final String secretName, final boolean hasMultipleTags, final boolean hasSharedTags) {
-    final List<Tag> testSecretTags = new ArrayList<>();
-    testSecretTags.add(createTag(secretName, secretName));
-    if (hasMultipleTags) {
-      testSecretTags.add(createTag(secretName + "/multiple", "multiple"));
-    }
-    if (hasSharedTags) {
-      allTestSecretTags.forEach((key, value) -> testSecretTags.add(createTag(key, "shared")));
-    }
-    return testSecretTags;
   }
 
   private static void updateTestTags(
