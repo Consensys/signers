@@ -45,23 +45,20 @@ class AwsSecretsManagerTest {
   private static final String RO_AWS_ACCESS_KEY_ID = System.getenv("RO_AWS_ACCESS_KEY_ID");
   private static final String RO_AWS_SECRET_ACCESS_KEY = System.getenv("RO_AWS_SECRET_ACCESS_KEY");
   private static final String AWS_REGION = "us-east-2";
+
   private static final String testSecretNamePrefix = "signers-aws-integration/";
+  private static final String SECRET_VALUE = "secret-value";
 
   private static AwsSecretsManager awsSecretsManagerDefault;
   private static AwsSecretsManager awsSecretsManagerExplicit;
   private static AwsSecretsManager awsSecretsManagerInvalidCredentials;
-  private static AwsBasicCredentials awsBasicCredentials;
-  private static StaticCredentialsProvider credentialsProvider;
   private static SecretsManagerAsyncClient testSecretsManagerClient;
 
-  private static List<String> testSecretNames = new ArrayList<>();
+  private static final List<String> testSecretNames = new ArrayList<>();
   private static String secretName1;
   private static String secretName2;
   private static String secretName3;
   private static String secretName4;
-
-  private static final String SECRET_VALUE =
-      "{\"crypto\": {\"kdf\": {\"function\": \"scrypt\", \"params\": {\"dklen\": 32, \"n\": 262144, \"r\": 8, \"p\": 1, \"salt\": \"3d9b30b612f4f5e9423dc43c0490396798a179d35dd58d48dc1f5d6d42b07ab6\"}, \"message\": \"\"}, \"checksum\": {\"function\": \"sha256\", \"params\": {}, \"message\": \"c762b7453eab3332cda31d9dee1894cf541373617e591a8e7ab8f14f5830f723\"}, \"cipher\": {\"function\": \"aes-128-ctr\", \"params\": {\"iv\": \"095f79f6bb5daab60355ab6aa894b3c8\"}, \"message\": \"4ca342a769ec1c00d6a6d69e18cdf821f42849d4431da7df827b01ba162ed763\"}}, \"description\": \"\", \"pubkey\": \"8fb7c68f3291b8db46ef86a8b9544cad7052dd7cf817862063d1f151f3c443cd3907830b09a86fe0513f0e863beccf25\", \"path\": \"m/12381/3600/0/0/0\", \"uuid\": \"88fc9701-8670-4378-a3ba-00be25c1330c\", \"version\": 4}";
 
   static void verifyEnvironmentVariables() {
     Assumptions.assumeTrue(
@@ -122,16 +119,16 @@ class AwsSecretsManagerTest {
   // secret3: tag(k2, vC)
   // secret4: tag(k2, vB)
   private static void createTestSecrets() {
-    secretName1 = createTestSecret("secret1", "tagKey1", "tagValA");
-    secretName2 = createTestSecret("secret2", "tagKey1", "tagValB");
-    secretName3 = createTestSecret("secret3", "tagKey2", "tagValC");
-    secretName4 = createTestSecret("secret4", "tagKey2", "tagValB");
+    secretName1 = createTestSecret("tagKey1", "tagValA");
+    secretName2 = createTestSecret("tagKey1", "tagValB");
+    secretName3 = createTestSecret("tagKey2", "tagValC");
+    secretName4 = createTestSecret("tagKey2", "tagValB");
     testSecretNames.addAll(List.of(secretName1, secretName2, secretName3, secretName4));
   }
 
   // emptyTagFiltersReturnAllKeys: search([], []) returns all secrets
   @Test
-  void emptyTagFiltersReturnAllKeys() {
+  void emptyTagFiltersReturnAllSecrets() {
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(), Collections.emptyList(), AbstractMap.SimpleEntry::new);
@@ -145,7 +142,7 @@ class AwsSecretsManagerTest {
 
   // secretsWithMatchingKeysAreReturned: search([k1], []) returns [secret1, secret2]
   @Test
-  void listAndMapSecretsWithMatchingKeysAreReturned() {
+  void listAndMapSecretsWithMatchingTagKeys() {
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
             List.of("tagKey1"), Collections.emptyList(), AbstractMap.SimpleEntry::new);
@@ -161,7 +158,7 @@ class AwsSecretsManagerTest {
 
   // secretsWithMatchingValuesAreReturned: search([], [vB, vC]) returns [secret2, secret3, secret4]
   @Test
-  void secretsWithMatchingValuesAreReturned() {
+  void listAndMapSecretsWithMatchingTagValues() {
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(), List.of("tagValB", "tagValC"), AbstractMap.SimpleEntry::new);
@@ -178,7 +175,7 @@ class AwsSecretsManagerTest {
   // secretsWithMatchingKeysOrValuesAreReturned: search([k1], [vB]) returns [secret1, secret2,
   // secret4]
   @Test
-  void secretsWithMatchingKeysOrValuesAreReturned() {
+  void listAndMapSecretsWithMatchingTagKeysOrValues() {
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
@@ -221,9 +218,10 @@ class AwsSecretsManagerTest {
   }
 
   private static void initTestSecretsManagerClient() {
-    awsBasicCredentials =
+    AwsBasicCredentials awsBasicCredentials =
         AwsBasicCredentials.create(RW_AWS_ACCESS_KEY_ID, RW_AWS_SECRET_ACCESS_KEY);
-    credentialsProvider = StaticCredentialsProvider.create(awsBasicCredentials);
+    StaticCredentialsProvider credentialsProvider =
+        StaticCredentialsProvider.create(awsBasicCredentials);
     testSecretsManagerClient =
         SecretsManagerAsyncClient.builder()
             .credentialsProvider(credentialsProvider)
@@ -246,8 +244,8 @@ class AwsSecretsManagerTest {
     closeTestSecretsManager();
   }
 
-  private static String createSecret(final String secretName, final Tag tag) {
-    final String testSecretName = testSecretNamePrefix + secretName + "/" + UUID.randomUUID();
+  private static String createSecret(final Tag tag) {
+    final String testSecretName = testSecretNamePrefix + "/" + UUID.randomUUID();
 
     final CreateSecretRequest secretRequest =
         CreateSecretRequest.builder()
@@ -265,10 +263,9 @@ class AwsSecretsManagerTest {
     return Tag.builder().key(key).value(value).build();
   }
 
-  private static String createTestSecret(
-      final String testSecretName, final String tagKey, final String tagVal) {
+  private static String createTestSecret(final String tagKey, final String tagVal) {
     final Tag testSecretTag = createTag(tagKey, tagVal);
-    return createSecret(testSecretName, testSecretTag);
+    return createSecret(testSecretTag);
   }
 
   private static void waitUntilSecretAvailable(final String secretName) {
