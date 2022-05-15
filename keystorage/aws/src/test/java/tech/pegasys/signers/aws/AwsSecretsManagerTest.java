@@ -28,6 +28,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -37,30 +38,31 @@ import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.Tag;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AwsSecretsManagerTest {
 
-  private static final String RW_AWS_ACCESS_KEY_ID = System.getenv("RW_AWS_ACCESS_KEY_ID");
-  private static final String RW_AWS_SECRET_ACCESS_KEY = System.getenv("RW_AWS_SECRET_ACCESS_KEY");
+  private final String RW_AWS_ACCESS_KEY_ID = System.getenv("RW_AWS_ACCESS_KEY_ID");
+  private final String RW_AWS_SECRET_ACCESS_KEY = System.getenv("RW_AWS_SECRET_ACCESS_KEY");
 
-  private static final String RO_AWS_ACCESS_KEY_ID = System.getenv("RO_AWS_ACCESS_KEY_ID");
-  private static final String RO_AWS_SECRET_ACCESS_KEY = System.getenv("RO_AWS_SECRET_ACCESS_KEY");
-  private static final String AWS_REGION = "us-east-2";
+  private final String RO_AWS_ACCESS_KEY_ID = System.getenv("RO_AWS_ACCESS_KEY_ID");
+  private final String RO_AWS_SECRET_ACCESS_KEY = System.getenv("RO_AWS_SECRET_ACCESS_KEY");
+  private final String AWS_REGION = "us-east-2";
 
-  private static final String testSecretNamePrefix = "signers-aws-integration/";
-  private static final String SECRET_VALUE = "secret-value";
+  private final String SECRET_NAME_PREFIX = "signers-aws-integration/";
+  private final String SECRET_VALUE = "secret-value";
 
-  private static AwsSecretsManager awsSecretsManagerDefault;
-  private static AwsSecretsManager awsSecretsManagerExplicit;
-  private static AwsSecretsManager awsSecretsManagerInvalidCredentials;
-  private static SecretsManagerAsyncClient testSecretsManagerClient;
+  private AwsSecretsManager awsSecretsManagerDefault;
+  private AwsSecretsManager awsSecretsManagerExplicit;
+  private AwsSecretsManager awsSecretsManagerInvalidCredentials;
+  private SecretsManagerAsyncClient testSecretsManagerClient;
 
-  private static final List<String> testSecretNames = new ArrayList<>();
-  private static String secretName1;
-  private static String secretName2;
-  private static String secretName3;
-  private static String secretName4;
+  private List<String> testSecretNames;
+  private String secretName1;
+  private String secretName2;
+  private String secretName3;
+  private String secretName4;
 
-  static void verifyEnvironmentVariables() {
+  void verifyEnvironmentVariables() {
     Assumptions.assumeTrue(
         RW_AWS_ACCESS_KEY_ID != null, "Set RW_AWS_ACCESS_KEY_ID environment variable");
     Assumptions.assumeTrue(
@@ -72,7 +74,7 @@ class AwsSecretsManagerTest {
   }
 
   @BeforeAll
-  static void setup() {
+  void setup() {
     verifyEnvironmentVariables();
     initAwsSecretsManagers();
     initTestSecretsManagerClient();
@@ -80,7 +82,7 @@ class AwsSecretsManagerTest {
   }
 
   @AfterAll
-  static void teardown() {
+  void teardown() {
     if (awsSecretsManagerDefault != null
         || awsSecretsManagerExplicit != null
         || testSecretsManagerClient != null) {
@@ -112,18 +114,6 @@ class AwsSecretsManagerTest {
   void fetchingNonExistentSecretReturnsEmpty() {
     Optional<String> secret = awsSecretsManagerDefault.fetchSecret("signers-aws-integration/empty");
     assertThat(secret).isEmpty();
-  }
-
-  // secret1: tag(k1, vA)
-  // secret2: tag(k1, vB)
-  // secret3: tag(k2, vC)
-  // secret4: tag(k2, vB)
-  private static void createTestSecrets() {
-    secretName1 = createTestSecret("tagKey1", "tagValA");
-    secretName2 = createTestSecret("tagKey1", "tagValB");
-    secretName3 = createTestSecret("tagKey2", "tagValC");
-    secretName4 = createTestSecret("tagKey2", "tagValB");
-    testSecretNames.addAll(List.of(secretName1, secretName2, secretName3, secretName4));
   }
 
   // emptyTagFiltersReturnAllKeys: search([], []) returns all secrets
@@ -172,10 +162,9 @@ class AwsSecretsManagerTest {
         .doesNotContain(secretName1);
   }
 
-  // secretsWithMatchingKeysOrValuesAreReturned: search([k1], [vB]) returns [secret1, secret2,
-  // secret4]
+  // secretsWithMatchingKeysOrValuesAreReturned: search([k1], [vB]) returns [secret2]
   @Test
-  void listAndMapSecretsWithMatchingTagKeysOrValues() {
+  void listAndMapSecretsWithMatchingTagKeysAndValues() {
 
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
@@ -186,8 +175,8 @@ class AwsSecretsManagerTest {
             .map(entry -> String.valueOf(entry.getKey()))
             .collect(Collectors.toList());
     assertThat(secretNames)
-        .contains(secretName1, secretName2, secretName4)
-        .doesNotContain(secretName3);
+        .contains(secretName2)
+        .doesNotContain(secretName1, secretName3, secretName4);
   }
 
   @Test
@@ -208,7 +197,7 @@ class AwsSecretsManagerTest {
     assertThat(nullEntry).isEmpty();
   }
 
-  private static void initAwsSecretsManagers() {
+  private void initAwsSecretsManagers() {
     awsSecretsManagerDefault = AwsSecretsManager.createAwsSecretsManager();
     awsSecretsManagerExplicit =
         AwsSecretsManager.createAwsSecretsManager(
@@ -217,7 +206,7 @@ class AwsSecretsManagerTest {
         AwsSecretsManager.createAwsSecretsManager("invalid", "invalid", AWS_REGION);
   }
 
-  private static void initTestSecretsManagerClient() {
+  private void initTestSecretsManagerClient() {
     AwsBasicCredentials awsBasicCredentials =
         AwsBasicCredentials.create(RW_AWS_ACCESS_KEY_ID, RW_AWS_SECRET_ACCESS_KEY);
     StaticCredentialsProvider credentialsProvider =
@@ -229,23 +218,23 @@ class AwsSecretsManagerTest {
             .build();
   }
 
-  private static void closeTestSecretsManager() {
+  private void closeTestSecretsManager() {
     testSecretsManagerClient.close();
   }
 
-  private static void closeAwsSecretsManagers() {
+  private void closeAwsSecretsManagers() {
     awsSecretsManagerDefault.close();
     awsSecretsManagerExplicit.close();
     awsSecretsManagerInvalidCredentials.close();
   }
 
-  private static void closeClients() {
+  private void closeClients() {
     closeAwsSecretsManagers();
     closeTestSecretsManager();
   }
 
-  private static String createSecret(final Tag tag) {
-    final String testSecretName = testSecretNamePrefix + "/" + UUID.randomUUID();
+  private String createSecret(final Tag tag) {
+    final String testSecretName = SECRET_NAME_PREFIX + "/" + UUID.randomUUID();
 
     final CreateSecretRequest secretRequest =
         CreateSecretRequest.builder()
@@ -259,22 +248,27 @@ class AwsSecretsManagerTest {
     return testSecretName;
   }
 
-  private static Tag createTag(final String key, final String value) {
-    return Tag.builder().key(key).value(value).build();
-  }
-
-  private static String createTestSecret(final String tagKey, final String tagVal) {
-    final Tag testSecretTag = createTag(tagKey, tagVal);
+  private String createTestSecret(final String tagKey, final String tagVal) {
+    final Tag testSecretTag = Tag.builder().key(tagKey).value(tagVal).build();
     return createSecret(testSecretTag);
   }
 
-  private static void waitUntilSecretAvailable(final String secretName) {
+  private void createTestSecrets() {
+    secretName1 = createTestSecret("tagKey1", "tagValA");
+    secretName2 = createTestSecret("tagKey1", "tagValB");
+    secretName3 = createTestSecret("tagKey2", "tagValC");
+    secretName4 = createTestSecret("tagKey2", "tagValB");
+    testSecretNames = new ArrayList<>();
+    testSecretNames.addAll(List.of(secretName1, secretName2, secretName3, secretName4));
+  }
+
+  private void waitUntilSecretAvailable(final String secretName) {
     testSecretsManagerClient
         .getSecretValue(GetSecretValueRequest.builder().secretId(secretName).build())
         .join();
   }
 
-  private static void deleteTestSecrets() {
+  private void deleteTestSecrets() {
     testSecretNames.forEach(
         name -> {
           final DeleteSecretRequest deleteSecretRequest =
