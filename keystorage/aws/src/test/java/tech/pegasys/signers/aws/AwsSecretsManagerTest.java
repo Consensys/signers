@@ -25,7 +25,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
@@ -126,11 +125,7 @@ class AwsSecretsManagerTest {
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(), Collections.emptyList(), AbstractMap.SimpleEntry::new);
 
-    final List<String> secretNames =
-        secretEntries.stream()
-            .map(entry -> String.valueOf(entry.getKey()))
-            .collect(Collectors.toList());
-    assertThat(secretNames)
+    assertThat(secretEntries.stream().map(e -> e.getKey()))
         .contains(
             secretName1WithTagKey1ValA,
             secretName2WithTagKey1ValB,
@@ -146,11 +141,7 @@ class AwsSecretsManagerTest {
             List.of("nonexistent-tag-value"),
             AbstractMap.SimpleEntry::new);
 
-    final List<String> secretNames =
-        secretEntries.stream()
-            .map(entry -> String.valueOf(entry.getKey()))
-            .collect(Collectors.toList());
-    assertThat(secretNames).isEmpty();
+    assertThat(secretEntries).isEmpty();
   }
 
   @Test
@@ -159,18 +150,10 @@ class AwsSecretsManagerTest {
         awsSecretsManagerExplicit.mapSecrets(
             List.of("tagKey1"), Collections.emptyList(), AbstractMap.SimpleEntry::new);
 
-    final List<String> secretNames =
-        secretEntries.stream()
-            .map(entry -> String.valueOf(entry.getKey()))
-            .collect(Collectors.toList());
-    final List<String> secretValues =
-        secretEntries.stream()
-            .map(entry -> String.valueOf(entry.getValue()))
-            .collect(Collectors.toList());
-    assertThat(secretNames)
+    assertThat(secretEntries.stream().map(e -> e.getKey()))
         .contains(secretName1WithTagKey1ValA, secretName2WithTagKey1ValB)
         .doesNotContain(secretName3WithTagKey2ValC, secretName4WithTagKey2ValB);
-    assertThat(secretValues).contains(SECRET_VALUE);
+    assertThat(secretEntries.stream().map(e -> e.getValue())).contains(SECRET_VALUE);
   }
 
   @Test
@@ -179,31 +162,24 @@ class AwsSecretsManagerTest {
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(), List.of("tagValB", "tagValC"), AbstractMap.SimpleEntry::new);
 
-    final List<String> secretNames =
-        secretEntries.stream()
-            .map(entry -> String.valueOf(entry.getKey()))
-            .collect(Collectors.toList());
-    assertThat(secretNames)
+    assertThat(secretEntries.stream().map(e -> e.getKey()))
         .contains(
             secretName2WithTagKey1ValB, secretName3WithTagKey2ValC, secretName4WithTagKey2ValB)
         .doesNotContain(secretName1WithTagKey1ValA);
+    assertThat(secretEntries.stream().map(e -> e.getValue())).contains(SECRET_VALUE);
   }
 
   @Test
   void listAndMapSecretsWithMatchingTagKeysAndValues() {
-
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
             List.of("tagKey1"), List.of("tagValB"), AbstractMap.SimpleEntry::new);
 
-    final List<String> secretNames =
-        secretEntries.stream()
-            .map(entry -> String.valueOf(entry.getKey()))
-            .collect(Collectors.toList());
-    assertThat(secretNames)
+    assertThat(secretEntries.stream().map(e -> e.getKey()))
         .contains(secretName2WithTagKey1ValB)
         .doesNotContain(
             secretName1WithTagKey1ValA, secretName3WithTagKey2ValC, secretName4WithTagKey2ValB);
+    assertThat(secretEntries.stream().map(e -> e.getValue())).contains(SECRET_VALUE);
   }
 
   @Test
@@ -219,9 +195,8 @@ class AwsSecretsManagerTest {
               return new AbstractMap.SimpleEntry<>(name, value);
             });
 
-    final Optional<AbstractMap.SimpleEntry<String, String>> nullEntry =
-        secretEntries.stream().filter(e -> e.getKey().equals(secretName1WithTagKey1ValA)).findAny();
-    assertThat(nullEntry).isEmpty();
+    assertThat(secretEntries.stream().map(e -> e.getKey()))
+        .doesNotContain(secretName1WithTagKey1ValA);
   }
 
   private void initAwsSecretsManagers() {
@@ -262,7 +237,7 @@ class AwsSecretsManagerTest {
 
   private String createSecret(final Tag tag)
       throws ExecutionException, InterruptedException, TimeoutException {
-    final String testSecretName = SECRET_NAME_PREFIX + "/" + UUID.randomUUID();
+    final String testSecretName = SECRET_NAME_PREFIX + UUID.randomUUID();
 
     final CreateSecretRequest secretRequest =
         CreateSecretRequest.builder()
