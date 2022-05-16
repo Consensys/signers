@@ -205,6 +205,27 @@ class AwsSecretsManagerTest {
             });
 
     assertThat(secretEntries.stream().map(e -> e.getKey()))
+        .contains(
+            secretName2WithTagKey1ValB, secretName3WithTagKey2ValC, secretName4WithTagKey2ValB)
+        .doesNotContain(secretName1WithTagKey1ValA);
+  }
+
+  @Test
+  void throwsAwayObjectsThatFailMapper() {
+    final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            Collections.emptyList(),
+            Collections.emptyList(),
+            (name, value) -> {
+              if (name.equals(secretName1WithTagKey1ValA)) {
+                throw new RuntimeException("Arbitrary Failure");
+              }
+              return new AbstractMap.SimpleEntry<>(name, value);
+            });
+
+    assertThat(secretEntries.stream().map(e -> e.getKey()))
+        .contains(
+            secretName2WithTagKey1ValB, secretName3WithTagKey2ValC, secretName4WithTagKey2ValB)
         .doesNotContain(secretName1WithTagKey1ValA);
   }
 
