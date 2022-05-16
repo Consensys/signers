@@ -51,7 +51,10 @@ class AwsSecretsManagerTest {
   private static final String AWS_REGION = "us-east-2";
 
   private static final String SECRET_NAME_PREFIX = "signers-aws-integration/";
-  private static final String SECRET_VALUE = "secret-value";
+  private static final String SECRET_VALUE1 = "secret-value1";
+  private static final String SECRET_VALUE2 = "secret-value2";
+  private static final String SECRET_VALUE3 = "secret-value3";
+  private static final String SECRET_VALUE4 = "secret-value4";
 
   private AwsSecretsManager awsSecretsManagerDefault;
   private AwsSecretsManager awsSecretsManagerExplicit;
@@ -96,13 +99,13 @@ class AwsSecretsManagerTest {
   @Test
   void fetchSecretWithDefaultManager() {
     Optional<String> secret = awsSecretsManagerDefault.fetchSecret(secretName1WithTagKey1ValA);
-    assertThat(secret).hasValue(SECRET_VALUE);
+    assertThat(secret).hasValue(SECRET_VALUE1);
   }
 
   @Test
   void fetchSecretWithExplicitManager() {
     Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(secretName1WithTagKey1ValA);
-    assertThat(secret).hasValue(SECRET_VALUE);
+    assertThat(secret).hasValue(SECRET_VALUE1);
   }
 
   @Test
@@ -153,7 +156,9 @@ class AwsSecretsManagerTest {
     assertThat(secretEntries.stream().map(e -> e.getKey()))
         .contains(secretName1WithTagKey1ValA, secretName2WithTagKey1ValB)
         .doesNotContain(secretName3WithTagKey2ValC, secretName4WithTagKey2ValB);
-    assertThat(secretEntries.stream().map(e -> e.getValue())).contains(SECRET_VALUE);
+    assertThat(secretEntries.stream().map(e -> e.getValue()))
+        .contains(SECRET_VALUE1, SECRET_VALUE2)
+        .doesNotContain(SECRET_VALUE3, SECRET_VALUE4);
   }
 
   @Test
@@ -166,7 +171,9 @@ class AwsSecretsManagerTest {
         .contains(
             secretName2WithTagKey1ValB, secretName3WithTagKey2ValC, secretName4WithTagKey2ValB)
         .doesNotContain(secretName1WithTagKey1ValA);
-    assertThat(secretEntries.stream().map(e -> e.getValue())).contains(SECRET_VALUE);
+    assertThat(secretEntries.stream().map(e -> e.getValue()))
+        .contains(SECRET_VALUE2, SECRET_VALUE3, SECRET_VALUE4)
+        .doesNotContain(SECRET_VALUE1);
   }
 
   @Test
@@ -179,7 +186,9 @@ class AwsSecretsManagerTest {
         .contains(secretName2WithTagKey1ValB)
         .doesNotContain(
             secretName1WithTagKey1ValA, secretName3WithTagKey2ValC, secretName4WithTagKey2ValB);
-    assertThat(secretEntries.stream().map(e -> e.getValue())).contains(SECRET_VALUE);
+    assertThat(secretEntries.stream().map(e -> e.getValue()))
+        .contains(SECRET_VALUE2)
+        .doesNotContain(SECRET_VALUE1, SECRET_VALUE3, SECRET_VALUE4);
   }
 
   @Test
@@ -235,14 +244,14 @@ class AwsSecretsManagerTest {
     closeTestSecretsManager();
   }
 
-  private String createSecret(final Tag tag)
+  private String createSecret(final Tag tag, String secretValue)
       throws ExecutionException, InterruptedException, TimeoutException {
     final String testSecretName = SECRET_NAME_PREFIX + UUID.randomUUID();
 
     final CreateSecretRequest secretRequest =
         CreateSecretRequest.builder()
             .name(testSecretName)
-            .secretString(SECRET_VALUE)
+            .secretString(secretValue)
             .tags(tag)
             .build();
 
@@ -251,20 +260,21 @@ class AwsSecretsManagerTest {
     return testSecretName;
   }
 
-  private String createTestSecret(final String tagKey, final String tagVal) throws Exception {
+  private String createTestSecret(
+      final String tagKey, final String tagVal, final String secretValue) throws Exception {
     final Tag testSecretTag = Tag.builder().key(tagKey).value(tagVal).build();
     try {
-      return createSecret(testSecretTag);
+      return createSecret(testSecretTag, secretValue);
     } catch (Exception e) {
       throw new Exception(e.getMessage());
     }
   }
 
   private void createTestSecrets() throws Exception {
-    secretName1WithTagKey1ValA = createTestSecret("tagKey1", "tagValA");
-    secretName2WithTagKey1ValB = createTestSecret("tagKey1", "tagValB");
-    secretName3WithTagKey2ValC = createTestSecret("tagKey2", "tagValC");
-    secretName4WithTagKey2ValB = createTestSecret("tagKey2", "tagValB");
+    secretName1WithTagKey1ValA = createTestSecret("tagKey1", "tagValA", SECRET_VALUE1);
+    secretName2WithTagKey1ValB = createTestSecret("tagKey1", "tagValB", SECRET_VALUE2);
+    secretName3WithTagKey2ValC = createTestSecret("tagKey2", "tagValC", SECRET_VALUE3);
+    secretName4WithTagKey2ValB = createTestSecret("tagKey2", "tagValB", SECRET_VALUE4);
     testSecretNames = new ArrayList<>();
     testSecretNames.addAll(
         List.of(
