@@ -64,7 +64,6 @@ class AwsSecretsManagerTest {
   private String secretName2WithTagKey1ValB;
   private String secretName3WithTagKey2ValC;
   private String secretName4WithTagKey2ValB;
-  private String secretName5WithEmptyValue;
 
   void verifyEnvironmentVariables() {
     Assumptions.assumeTrue(
@@ -121,7 +120,6 @@ class AwsSecretsManagerTest {
     assertThat(secret).isEmpty();
   }
 
-  // emptyTagFiltersReturnAllKeys: search([], []) returns all secrets
   @Test
   void emptyTagFiltersReturnAllSecrets() {
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
@@ -155,7 +153,6 @@ class AwsSecretsManagerTest {
     assertThat(secretNames).isEmpty();
   }
 
-  // secretsWithMatchingKeysAreReturned: search([k1], []) returns [secret1, secret2]
   @Test
   void listAndMapSecretsWithMatchingTagKeys() {
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
@@ -176,7 +173,6 @@ class AwsSecretsManagerTest {
     assertThat(secretValues).contains(SECRET_VALUE);
   }
 
-  // secretsWithMatchingValuesAreReturned: search([], [vB, vC]) returns [secret2, secret3, secret4]
   @Test
   void listAndMapSecretsWithMatchingTagValues() {
     final Collection<AbstractMap.SimpleEntry<String, String>> secretEntries =
@@ -193,7 +189,6 @@ class AwsSecretsManagerTest {
         .doesNotContain(secretName1WithTagKey1ValA);
   }
 
-  // secretsWithMatchingKeysOrValuesAreReturned: search([k1], [vB]) returns [secret2]
   @Test
   void listAndMapSecretsWithMatchingTagKeysAndValues() {
 
