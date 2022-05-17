@@ -13,7 +13,9 @@
 package tech.pegasys.signers.aws;
 
 import java.io.Closeable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -83,15 +85,15 @@ public class AwsSecretsManager implements Closeable {
   private ListSecretsIterable listSecrets(
       final Collection<String> tagKeys, final Collection<String> tagValues) {
     final ListSecretsRequest.Builder listSecretsRequestBuilder = ListSecretsRequest.builder();
+    final List<Filter> filters = new ArrayList<>();
     if (!tagKeys.isEmpty()) {
-      listSecretsRequestBuilder.filters(
-          Filter.builder().key(FilterNameStringType.TAG_KEY).values(tagKeys).build());
+      filters.add(Filter.builder().key(FilterNameStringType.TAG_KEY).values(tagKeys).build());
     }
     if (!tagValues.isEmpty()) {
-      listSecretsRequestBuilder.filters(
-          Filter.builder().key(FilterNameStringType.TAG_VALUE).values(tagValues).build());
+      filters.add(Filter.builder().key(FilterNameStringType.TAG_VALUE).values(tagValues).build());
     }
-    return secretsManagerClient.listSecretsPaginator(listSecretsRequestBuilder.build());
+    return secretsManagerClient.listSecretsPaginator(
+        listSecretsRequestBuilder.filters(filters).build());
   }
 
   public <R> Collection<R> mapSecrets(
