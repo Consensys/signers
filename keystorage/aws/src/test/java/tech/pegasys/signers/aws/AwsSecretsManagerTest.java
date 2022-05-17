@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -36,8 +35,11 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerAsyncClient;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
-import software.amazon.awssdk.services.secretsmanager.model.DeleteSecretRequest;
+import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretRequest;
+import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretResponse;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.secretsmanager.model.Tag;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -87,11 +89,10 @@ class AwsSecretsManagerTest {
   }
 
   @AfterAll
-  void teardown() throws Exception {
+  void teardown() {
     if (awsSecretsManagerDefault != null
         || awsSecretsManagerExplicit != null
         || testSecretsManagerClient != null) {
-      deleteTestSecrets();
       closeClients();
     }
   }
@@ -265,9 +266,36 @@ class AwsSecretsManagerTest {
     closeTestSecretsManager();
   }
 
-  private String createSecret(final Tag tag, String secretValue)
+  private boolean checkTestSecretExists(
+      final String testSecretName, final Tag tag, final String secretValue) {
+    try {
+      final GetSecretValueResponse getSecretValueResponse =
+          testSecretsManagerClient
+              .getSecretValue(GetSecretValueRequest.builder().secretId(testSecretName).build())
+              .get(30, TimeUnit.SECONDS);
+      final DescribeSecretResponse describeSecretResponse =
+          testSecretsManagerClient
+              .describeSecret(DescribeSecretRequest.builder().secretId(testSecretName).build())
+              .get();
+      return getSecretValueResponse.name().equals(testSecretName)
+          && getSecretValueResponse.secretString().equals(secretValue)
+          && describeSecretResponse.hasTags()
+          && describeSecretResponse.tags().get(0).key().equals(tag.key())
+          && describeSecretResponse.tags().get(0).value().equals(tag.value());
+    } catch (ResourceNotFoundException e) {
+      return false;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private String createSecret(final String secretName, final Tag tag, String secretValue)
       throws ExecutionException, InterruptedException, TimeoutException {
-    final String testSecretName = SECRET_NAME_PREFIX + UUID.randomUUID();
+    final String testSecretName = SECRET_NAME_PREFIX + secretName;
+
+    if (checkTestSecretExists(testSecretName, tag, secretValue)) {
+      return testSecretName;
+    }
 
     final CreateSecretRequest secretRequest =
         CreateSecretRequest.builder()
@@ -282,20 +310,20 @@ class AwsSecretsManagerTest {
   }
 
   private String createTestSecret(
-      final String tagKey, final String tagVal, final String secretValue) throws Exception {
-    final Tag testSecretTag = Tag.builder().key(tagKey).value(tagVal).build();
+      final String secretName, final String tagKey, final String tagVal, final String secretValue)
+      throws Exception {
     try {
-      return createSecret(testSecretTag, secretValue);
+      return createSecret(secretName, Tag.builder().key(tagKey).value(tagVal).build(), secretValue);
     } catch (Exception e) {
       throw new Exception(e.getMessage());
     }
   }
 
   private void createTestSecrets() throws Exception {
-    secretName1WithTagKey1ValA = createTestSecret("tagKey1", "tagValA", SECRET_VALUE1);
-    secretName2WithTagKey1ValB = createTestSecret("tagKey1", "tagValB", SECRET_VALUE2);
-    secretName3WithTagKey2ValC = createTestSecret("tagKey2", "tagValC", SECRET_VALUE3);
-    secretName4WithTagKey2ValB = createTestSecret("tagKey2", "tagValB", SECRET_VALUE4);
+    secretName1WithTagKey1ValA = createTestSecret("secret1", "tagKey1", "tagValA", SECRET_VALUE1);
+    secretName2WithTagKey1ValB = createTestSecret("secret2", "tagKey1", "tagValB", SECRET_VALUE2);
+    secretName3WithTagKey2ValC = createTestSecret("secret3", "tagKey2", "tagValC", SECRET_VALUE3);
+    secretName4WithTagKey2ValB = createTestSecret("secret4", "tagKey2", "tagValB", SECRET_VALUE4);
     testSecretNames = new ArrayList<>();
     testSecretNames.addAll(
         List.of(
@@ -310,14 +338,5 @@ class AwsSecretsManagerTest {
     testSecretsManagerClient
         .getSecretValue(GetSecretValueRequest.builder().secretId(secretName).build())
         .get(30, TimeUnit.SECONDS);
-  }
-
-  private void deleteTestSecrets() throws Exception {
-    for (String name : testSecretNames) {
-      final DeleteSecretRequest deleteSecretRequest =
-          DeleteSecretRequest.builder().secretId(name).build();
-      testSecretsManagerClient.deleteSecret(deleteSecretRequest).get(30, TimeUnit.SECONDS);
-    }
-    testSecretNames.clear();
   }
 }
