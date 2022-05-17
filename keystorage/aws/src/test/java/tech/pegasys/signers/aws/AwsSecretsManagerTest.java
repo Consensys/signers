@@ -16,7 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -63,7 +62,6 @@ class AwsSecretsManagerTest {
   private AwsSecretsManager awsSecretsManagerInvalidCredentials;
   private SecretsManagerAsyncClient testSecretsManagerClient;
 
-  private List<String> testSecretNames;
   private String secretName1WithTagKey1ValA;
   private String secretName2WithTagKey1ValB;
   private String secretName3WithTagKey2ValC;
@@ -324,13 +322,6 @@ class AwsSecretsManagerTest {
     secretName2WithTagKey1ValB = createTestSecret("secret2", "tagKey1", "tagValB", SECRET_VALUE2);
     secretName3WithTagKey2ValC = createTestSecret("secret3", "tagKey2", "tagValC", SECRET_VALUE3);
     secretName4WithTagKey2ValB = createTestSecret("secret4", "tagKey2", "tagValB", SECRET_VALUE4);
-    testSecretNames = new ArrayList<>();
-    testSecretNames.addAll(
-        List.of(
-            secretName1WithTagKey1ValA,
-            secretName2WithTagKey1ValB,
-            secretName3WithTagKey2ValC,
-            secretName4WithTagKey2ValB));
   }
 
   private void waitUntilSecretAvailable(final String secretName)
