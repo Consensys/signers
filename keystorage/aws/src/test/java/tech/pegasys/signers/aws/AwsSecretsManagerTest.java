@@ -38,7 +38,6 @@ import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretReques
 import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretResponse;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
-import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.secretsmanager.model.Tag;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -274,14 +273,12 @@ class AwsSecretsManagerTest {
       final DescribeSecretResponse describeSecretResponse =
           testSecretsManagerClient
               .describeSecret(DescribeSecretRequest.builder().secretId(testSecretName).build())
-              .get();
+              .get(30, TimeUnit.SECONDS);
       return getSecretValueResponse.name().equals(testSecretName)
           && getSecretValueResponse.secretString().equals(secretValue)
           && describeSecretResponse.hasTags()
           && describeSecretResponse.tags().get(0).key().equals(tag.key())
           && describeSecretResponse.tags().get(0).value().equals(tag.value());
-    } catch (ResourceNotFoundException e) {
-      return false;
     } catch (Exception e) {
       return false;
     }
