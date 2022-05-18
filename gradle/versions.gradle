@@ -23,7 +23,7 @@ dependencyManagement {
     }
     dependency 'com.google.guava:guava:31.1-jre'
 
-    dependencySet(group: 'com.azure', version: '4.3.8') {
+    dependencySet(group: 'com.azure', version: '4.4.2') {
       entry 'azure-security-keyvault-secrets'
       entry 'azure-security-keyvault-keys'
     }
@@ -35,7 +35,7 @@ dependencyManagement {
 
     dependency 'io.rest-assured:rest-assured:4.4.0'
 
-    dependencySet(group: 'io.vertx', version: '4.2.6') {
+    dependencySet(group: 'io.vertx', version: '4.2.7') {
       entry 'vertx-codegen'
       entry 'vertx-core'
       entry 'vertx-unit'
@@ -94,6 +94,19 @@ dependencyManagement {
       entry 'auth'
       entry 'secretsmanager'
       entry 'sts'
+    }
+
+    // explicit declaring to override transitive dependencies with vulnerabilities
+    // addressing CVE-2022-24823
+    dependencySet(group: 'io.netty', version: '4.1.77.Final') {
+      entry 'netty-codec-http2'
+      entry 'netty-handler-proxy'
+      entry 'netty-resolver-dns'
+      entry 'netty-resolver-dns-native-macos'
+      entry 'netty-transport-native-epoll'
+      entry 'netty-transport-native-kqueue'
+      entry 'netty-transport-native-unix-common'
+      entry 'netty-transport-classes-epoll'
     }
   }
 }
