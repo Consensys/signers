@@ -39,6 +39,9 @@ import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretRespon
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 import software.amazon.awssdk.services.secretsmanager.model.Tag;
+import software.amazon.awssdk.services.secretsmanager.model.TagResourceRequest;
+import software.amazon.awssdk.services.secretsmanager.model.UntagResourceRequest;
+import software.amazon.awssdk.services.secretsmanager.model.UpdateSecretRequest;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AwsSecretsManagerTest {
@@ -82,7 +85,7 @@ class AwsSecretsManagerTest {
   }
 
   @BeforeAll
-  void setup() throws Exception {
+  void setup() {
     verifyEnvironmentVariables();
     initAwsSecretsManagers();
     initTestSecretsManagerClient();
@@ -252,6 +255,11 @@ class AwsSecretsManagerTest {
             .build();
   }
 
+  private void closeClients() {
+    closeAwsSecretsManagers();
+    closeTestSecretsManager();
+  }
+
   private void closeTestSecretsManager() {
     testSecretsManagerClient.close();
   }
@@ -262,28 +270,24 @@ class AwsSecretsManagerTest {
     awsSecretsManagerInvalidCredentials.close();
   }
 
-  private void closeClients() {
-    closeAwsSecretsManagers();
-    closeTestSecretsManager();
+  private void createTestSecrets() throws RuntimeException {
+    secretName1WithTagKey1ValA =
+        createTestSecret(SECRET_NAME1, "tagKey1", "tagValA", SECRET_VALUE1);
+    secretName2WithTagKey1ValB =
+        createTestSecret(SECRET_NAME2, "tagKey1", "tagValB", SECRET_VALUE2);
+    secretName3WithTagKey2ValC =
+        createTestSecret(SECRET_NAME3, "tagKey2", "tagValC", SECRET_VALUE3);
+    secretName4WithTagKey2ValB =
+        createTestSecret(SECRET_NAME4, "tagKey2", "tagValB", SECRET_VALUE4);
   }
 
-  private boolean checkTestSecretExists(
-      final String testSecretName, final Tag tag, final String secretValue) {
+  private String createTestSecret(
+      final String secretName, final String tagKey, final String tagVal, final String secretValue)
+      throws RuntimeException {
     try {
-      final GetSecretValueResponse getSecretValueResponse =
-          testSecretsManagerClient
-              .getSecretValue(GetSecretValueRequest.builder().secretId(testSecretName).build())
-              .get(30, TimeUnit.SECONDS);
-      final DescribeSecretResponse describeSecretResponse =
-          testSecretsManagerClient
-              .describeSecret(DescribeSecretRequest.builder().secretId(testSecretName).build())
-              .get(30, TimeUnit.SECONDS);
-      return getSecretValueResponse.secretString().equals(secretValue)
-          && describeSecretResponse.hasTags()
-          && describeSecretResponse.tags().get(0).key().equals(tag.key())
-          && describeSecretResponse.tags().get(0).value().equals(tag.value());
+      return createSecret(secretName, Tag.builder().key(tagKey).value(tagVal).build(), secretValue);
     } catch (Exception e) {
-      return false;
+      throw new RuntimeException(e.getMessage());
     }
   }
 
@@ -291,7 +295,7 @@ class AwsSecretsManagerTest {
       throws ExecutionException, InterruptedException, TimeoutException {
     final String testSecretName = SECRET_NAME_PREFIX + secretName;
 
-    if (checkTestSecretExists(testSecretName, tag, secretValue)) {
+    if (checkTestSecretExistsAndUpdateIfUnmatched(testSecretName, tag, secretValue)) {
       return testSecretName;
     }
 
@@ -307,25 +311,49 @@ class AwsSecretsManagerTest {
     return testSecretName;
   }
 
-  private String createTestSecret(
-      final String secretName, final String tagKey, final String tagVal, final String secretValue)
-      throws RuntimeException {
+  private boolean checkTestSecretExistsAndUpdateIfUnmatched(
+      final String testSecretName, final Tag tag, final String secretValue) {
     try {
-      return createSecret(secretName, Tag.builder().key(tagKey).value(tagVal).build(), secretValue);
+      final GetSecretValueResponse getSecretValueResponse =
+          testSecretsManagerClient
+              .getSecretValue(GetSecretValueRequest.builder().secretId(testSecretName).build())
+              .get(30, TimeUnit.SECONDS);
+      final DescribeSecretResponse describeSecretResponse =
+          testSecretsManagerClient
+              .describeSecret(DescribeSecretRequest.builder().secretId(testSecretName).build())
+              .get(30, TimeUnit.SECONDS);
+      if (!getSecretValueResponse.secretString().equals(secretValue)
+          && describeSecretResponse.hasTags()
+          && !describeSecretResponse.tags().get(0).equals(tag)) {
+        updateSecret(testSecretName, secretValue, describeSecretResponse.tags().get(0), tag);
+      }
+      return true;
     } catch (Exception e) {
-      throw new RuntimeException(e.getMessage());
+      return false;
     }
   }
 
-  private void createTestSecrets() throws RuntimeException {
-    secretName1WithTagKey1ValA =
-        createTestSecret(SECRET_NAME1, "tagKey1", "tagValA", SECRET_VALUE1);
-    secretName2WithTagKey1ValB =
-        createTestSecret(SECRET_NAME2, "tagKey1", "tagValB", SECRET_VALUE2);
-    secretName3WithTagKey2ValC =
-        createTestSecret(SECRET_NAME3, "tagKey2", "tagValC", SECRET_VALUE3);
-    secretName4WithTagKey2ValB =
-        createTestSecret(SECRET_NAME4, "tagKey2", "tagValB", SECRET_VALUE4);
+  private void updateSecret(
+      final String testSecretName, final String secretValue, final Tag oldTag, final Tag newTag)
+      throws RuntimeException {
+    try {
+      testSecretsManagerClient
+          .updateSecret(
+              UpdateSecretRequest.builder()
+                  .secretId(testSecretName)
+                  .secretString(secretValue)
+                  .build())
+          .get(30, TimeUnit.SECONDS);
+      testSecretsManagerClient
+          .untagResource(
+              UntagResourceRequest.builder().secretId(testSecretName).tagKeys(oldTag.key()).build())
+          .get(30, TimeUnit.SECONDS);
+      testSecretsManagerClient
+          .tagResource(TagResourceRequest.builder().secretId(testSecretName).tags(newTag).build())
+          .get(30, TimeUnit.SECONDS);
+    } catch (final Exception e) {
+      throw new RuntimeException(e.getMessage());
+    }
   }
 
   private void waitUntilSecretAvailable(final String secretName)
