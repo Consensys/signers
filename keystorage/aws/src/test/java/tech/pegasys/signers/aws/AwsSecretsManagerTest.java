@@ -20,9 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
@@ -38,6 +36,7 @@ import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretReques
 import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretResponse;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.secretsmanager.model.Tag;
 import software.amazon.awssdk.services.secretsmanager.model.TagResourceRequest;
 import software.amazon.awssdk.services.secretsmanager.model.UntagResourceRequest;
@@ -271,44 +270,42 @@ class AwsSecretsManagerTest {
   }
 
   private void createTestSecrets() throws RuntimeException {
-    secretName1WithTagKey1ValA =
-        createTestSecret(SECRET_NAME1, "tagKey1", "tagValA", SECRET_VALUE1);
-    secretName2WithTagKey1ValB =
-        createTestSecret(SECRET_NAME2, "tagKey1", "tagValB", SECRET_VALUE2);
-    secretName3WithTagKey2ValC =
-        createTestSecret(SECRET_NAME3, "tagKey2", "tagValC", SECRET_VALUE3);
-    secretName4WithTagKey2ValB =
-        createTestSecret(SECRET_NAME4, "tagKey2", "tagValB", SECRET_VALUE4);
+    try {
+      secretName1WithTagKey1ValA =
+          createTestSecret(SECRET_NAME1, "tagKey1", "tagValA", SECRET_VALUE1);
+      secretName2WithTagKey1ValB =
+          createTestSecret(SECRET_NAME2, "tagKey1", "tagValB", SECRET_VALUE2);
+      secretName3WithTagKey2ValC =
+          createTestSecret(SECRET_NAME3, "tagKey2", "tagValC", SECRET_VALUE3);
+      secretName4WithTagKey2ValB =
+          createTestSecret(SECRET_NAME4, "tagKey2", "tagValB", SECRET_VALUE4);
+    } catch (final Exception e) {
+      throw new RuntimeException(e.getMessage());
+    }
   }
 
   private String createTestSecret(
       final String secretName, final String tagKey, final String tagVal, final String secretValue)
       throws RuntimeException {
-    try {
-      return createSecret(secretName, Tag.builder().key(tagKey).value(tagVal).build(), secretValue);
-    } catch (Exception e) {
-      throw new RuntimeException(e.getMessage());
-    }
-  }
-
-  private String createSecret(final String secretName, final Tag tag, String secretValue)
-      throws ExecutionException, InterruptedException, TimeoutException {
     final String testSecretName = SECRET_NAME_PREFIX + secretName;
-
-    if (checkTestSecretExistsAndUpdateIfUnmatched(testSecretName, tag, secretValue)) {
+    final Tag testSecretTag = Tag.builder().key(tagKey).value(tagVal).build();
+    if (checkTestSecretExistsAndUpdateIfUnmatched(testSecretName, testSecretTag, secretValue)) {
       return testSecretName;
     }
 
-    final CreateSecretRequest secretRequest =
-        CreateSecretRequest.builder()
-            .name(testSecretName)
-            .secretString(secretValue)
-            .tags(tag)
-            .build();
-
-    testSecretsManagerClient.createSecret(secretRequest).get(30, TimeUnit.SECONDS);
-    waitUntilSecretAvailable(testSecretName);
-    return testSecretName;
+    try {
+      final CreateSecretRequest secretRequest =
+          CreateSecretRequest.builder()
+              .name(testSecretName)
+              .secretString(secretValue)
+              .tags(testSecretTag)
+              .build();
+      testSecretsManagerClient.createSecret(secretRequest).get(30, TimeUnit.SECONDS);
+      waitUntilSecretAvailable(testSecretName);
+      return testSecretName;
+    } catch (final Exception e) {
+      throw new RuntimeException(e.getMessage());
+    }
   }
 
   private boolean checkTestSecretExistsAndUpdateIfUnmatched(
@@ -328,8 +325,10 @@ class AwsSecretsManagerTest {
         updateSecret(testSecretName, secretValue, describeSecretResponse.tags().get(0), tag);
       }
       return true;
-    } catch (Exception e) {
+    } catch (final ResourceNotFoundException e) {
       return false;
+    } catch (final Exception e) {
+      throw new RuntimeException(e.getMessage());
     }
   }
 
@@ -356,10 +355,13 @@ class AwsSecretsManagerTest {
     }
   }
 
-  private void waitUntilSecretAvailable(final String secretName)
-      throws ExecutionException, InterruptedException, TimeoutException {
-    testSecretsManagerClient
-        .getSecretValue(GetSecretValueRequest.builder().secretId(secretName).build())
-        .get(30, TimeUnit.SECONDS);
+  private void waitUntilSecretAvailable(final String secretName) throws RuntimeException {
+    try {
+      testSecretsManagerClient
+          .getSecretValue(GetSecretValueRequest.builder().secretId(secretName).build())
+          .get(30, TimeUnit.SECONDS);
+    } catch (final Exception e) {
+      throw new RuntimeException(e.getMessage());
+    }
   }
 }
