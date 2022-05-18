@@ -98,15 +98,15 @@ dependencyManagement {
 
     // explicit declaring to override transitive dependencies with vulnerabilities
     // addressing CVE-2022-24823
-//    dependencySet(group: 'io.netty', version: '4.1.77.Final') {
-//      entry 'netty-codec-http2'
-//      entry 'netty-handler-proxy'
-//      entry 'netty-resolver-dns'
-//      entry 'netty-resolver-dns-native-macos'
-//      entry 'netty-transport-native-epoll'
-//      entry 'netty-transport-native-kqueue'
-//      entry 'netty-transport-native-unix-common'
-//      entry 'netty-transport-classes-epoll'
-//    }
+    dependencySet(group: 'io.netty', version: '4.1.77.Final') {
+      entry 'netty-codec-http2'
+      entry 'netty-handler-proxy'
+      entry 'netty-resolver-dns'
+      entry 'netty-resolver-dns-native-macos'
+      entry 'netty-transport-native-epoll'
+      entry 'netty-transport-native-kqueue'
+      entry 'netty-transport-native-unix-common'
+      entry 'netty-transport-classes-epoll'
+    }
   }
 }
