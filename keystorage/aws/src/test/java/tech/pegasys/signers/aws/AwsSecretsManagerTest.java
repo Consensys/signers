@@ -51,6 +51,10 @@ class AwsSecretsManagerTest {
   private static final String AWS_REGION = "us-east-2";
 
   private static final String SECRET_NAME_PREFIX = "signers-aws-integration/";
+  private static final String SECRET_NAME1 = "secret1";
+  private static final String SECRET_NAME2 = "secret2";
+  private static final String SECRET_NAME3 = "secret3";
+  private static final String SECRET_NAME4 = "secret4";
   private static final String SECRET_VALUE1 = "secret-value1";
   private static final String SECRET_VALUE2 = "secret-value2";
   private static final String SECRET_VALUE3 = "secret-value3";
@@ -274,8 +278,7 @@ class AwsSecretsManagerTest {
           testSecretsManagerClient
               .describeSecret(DescribeSecretRequest.builder().secretId(testSecretName).build())
               .get(30, TimeUnit.SECONDS);
-      return getSecretValueResponse.name().equals(testSecretName)
-          && getSecretValueResponse.secretString().equals(secretValue)
+      return getSecretValueResponse.secretString().equals(secretValue)
           && describeSecretResponse.hasTags()
           && describeSecretResponse.tags().get(0).key().equals(tag.key())
           && describeSecretResponse.tags().get(0).value().equals(tag.value());
@@ -306,19 +309,23 @@ class AwsSecretsManagerTest {
 
   private String createTestSecret(
       final String secretName, final String tagKey, final String tagVal, final String secretValue)
-      throws Exception {
+      throws RuntimeException {
     try {
       return createSecret(secretName, Tag.builder().key(tagKey).value(tagVal).build(), secretValue);
     } catch (Exception e) {
-      throw new Exception(e.getMessage());
+      throw new RuntimeException(e.getMessage());
     }
   }
 
-  private void createTestSecrets() throws Exception {
-    secretName1WithTagKey1ValA = createTestSecret("secret1", "tagKey1", "tagValA", SECRET_VALUE1);
-    secretName2WithTagKey1ValB = createTestSecret("secret2", "tagKey1", "tagValB", SECRET_VALUE2);
-    secretName3WithTagKey2ValC = createTestSecret("secret3", "tagKey2", "tagValC", SECRET_VALUE3);
-    secretName4WithTagKey2ValB = createTestSecret("secret4", "tagKey2", "tagValB", SECRET_VALUE4);
+  private void createTestSecrets() throws RuntimeException {
+    secretName1WithTagKey1ValA =
+        createTestSecret(SECRET_NAME1, "tagKey1", "tagValA", SECRET_VALUE1);
+    secretName2WithTagKey1ValB =
+        createTestSecret(SECRET_NAME2, "tagKey1", "tagValB", SECRET_VALUE2);
+    secretName3WithTagKey2ValC =
+        createTestSecret(SECRET_NAME3, "tagKey2", "tagValC", SECRET_VALUE3);
+    secretName4WithTagKey2ValB =
+        createTestSecret(SECRET_NAME4, "tagKey2", "tagValB", SECRET_VALUE4);
   }
 
   private void waitUntilSecretAvailable(final String secretName)
