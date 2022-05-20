@@ -270,20 +270,8 @@ class AwsSecretsManagerTest {
       final String secretValue) {
     final Tag testSecretTag = Tag.builder().key(tagKey).value(tagVal).build();
     try {
-      final GetSecretValueResponse getSecretValueResponse =
-          testSecretsManagerClient.getSecretValue(
-              GetSecretValueRequest.builder().secretId(testSecretName).build());
-      final DescribeSecretResponse describeSecretResponse =
-          testSecretsManagerClient.describeSecret(
-              DescribeSecretRequest.builder().secretId(testSecretName).build());
-      final boolean hasDifferentSecretValue =
-          !getSecretValueResponse.secretString().equals(secretValue);
-      final boolean doesNotHaveTags = !describeSecretResponse.hasTags();
-      final boolean hasDifferentSecretTag = !describeSecretResponse.tags().contains(testSecretTag);
-      if (hasDifferentSecretValue || doesNotHaveTags || hasDifferentSecretTag) {
-        updateSecret(
-            testSecretName, secretValue, describeSecretResponse.tags().get(0), testSecretTag);
-      }
+      updateIfDifferentSecretValue(testSecretName, secretValue);
+      updateIfDifferentSecretTag(testSecretName, testSecretTag);
     } catch (final ResourceNotFoundException e) {
       createTestSecret(testSecretName, testSecretTag, secretValue);
     }
@@ -295,13 +283,32 @@ class AwsSecretsManagerTest {
     testSecretsManagerClient.createSecret(secretRequest);
   }
 
-  private void updateSecret(
-      final String testSecretName, final String secretValue, final Tag oldTag, final Tag newTag) {
-    testSecretsManagerClient.updateSecret(
-        UpdateSecretRequest.builder().secretId(testSecretName).secretString(secretValue).build());
-    testSecretsManagerClient.untagResource(
-        UntagResourceRequest.builder().secretId(testSecretName).tagKeys(oldTag.key()).build());
-    testSecretsManagerClient.tagResource(
-        TagResourceRequest.builder().secretId(testSecretName).tags(newTag).build());
+  private void updateIfDifferentSecretTag(final String secretName, final Tag newTag) {
+    final DescribeSecretResponse describeSecretResponse =
+        testSecretsManagerClient.describeSecret(
+            DescribeSecretRequest.builder().secretId(secretName).build());
+    final boolean hasDifferentSecretTag =
+        !describeSecretResponse.hasTags() || !describeSecretResponse.tags().contains(newTag);
+    if (hasDifferentSecretTag) {
+      testSecretsManagerClient.untagResource(
+          UntagResourceRequest.builder()
+              .secretId(secretName)
+              .tagKeys(describeSecretResponse.tags().get(0).key())
+              .build());
+      testSecretsManagerClient.tagResource(
+          TagResourceRequest.builder().secretId(secretName).tags(newTag).build());
+    }
+  }
+
+  private void updateIfDifferentSecretValue(final String secretName, final String secretValue) {
+    final GetSecretValueResponse getSecretValueResponse =
+        testSecretsManagerClient.getSecretValue(
+            GetSecretValueRequest.builder().secretId(secretName).build());
+    final boolean hasDifferentSecretValue =
+        !getSecretValueResponse.secretString().equals(secretValue);
+    if (hasDifferentSecretValue) {
+      testSecretsManagerClient.updateSecret(
+          UpdateSecretRequest.builder().secretId(secretName).secretString(secretValue).build());
+    }
   }
 }
