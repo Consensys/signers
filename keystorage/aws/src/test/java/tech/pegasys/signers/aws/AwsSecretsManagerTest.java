@@ -276,9 +276,12 @@ class AwsSecretsManagerTest {
       final DescribeSecretResponse describeSecretResponse =
           testSecretsManagerClient.describeSecret(
               DescribeSecretRequest.builder().secretId(testSecretName).build());
-      if (!getSecretValueResponse.secretString().equals(secretValue)
-          && describeSecretResponse.hasTags()
-          && !describeSecretResponse.tags().get(0).equals(testSecretTag)) {
+      final boolean hasDifferentSecretValue =
+          !getSecretValueResponse.secretString().equals(secretValue);
+      final boolean hasDifferentSecretTag =
+          describeSecretResponse.hasTags()
+              && !describeSecretResponse.tags().get(0).equals(testSecretTag);
+      if (hasDifferentSecretValue || hasDifferentSecretTag) {
         updateSecret(
             testSecretName, secretValue, describeSecretResponse.tags().get(0), testSecretTag);
       }
