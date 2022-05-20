@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
@@ -288,12 +289,13 @@ class AwsSecretsManagerTest {
         testSecretsManagerClient.describeSecret(
             DescribeSecretRequest.builder().secretId(secretName).build());
     final boolean hasDifferentSecretTag =
-        !describeSecretResponse.hasTags() || !describeSecretResponse.tags().contains(newTag);
+        !describeSecretResponse.hasTags() || !describeSecretResponse.tags().equals(List.of(newTag));
     if (hasDifferentSecretTag) {
       testSecretsManagerClient.untagResource(
           UntagResourceRequest.builder()
               .secretId(secretName)
-              .tagKeys(describeSecretResponse.tags().get(0).key())
+              .tagKeys(
+                  describeSecretResponse.tags().stream().map(Tag::key).collect(Collectors.toList()))
               .build());
       testSecretsManagerClient.tagResource(
           TagResourceRequest.builder().secretId(secretName).tags(newTag).build());
