@@ -291,7 +291,6 @@ class AwsSecretsManagerTest {
     final CreateSecretRequest secretRequest =
         CreateSecretRequest.builder().name(secretName).secretString(secretValue).tags(tag).build();
     testSecretsManagerClient.createSecret(secretRequest);
-    waitUntilSecretAvailable(secretName);
   }
 
   private void updateSecret(
@@ -302,10 +301,5 @@ class AwsSecretsManagerTest {
         UntagResourceRequest.builder().secretId(testSecretName).tagKeys(oldTag.key()).build());
     testSecretsManagerClient.tagResource(
         TagResourceRequest.builder().secretId(testSecretName).tags(newTag).build());
-  }
-
-  private void waitUntilSecretAvailable(final String secretName) {
-    testSecretsManagerClient.getSecretValue(
-        GetSecretValueRequest.builder().secretId(secretName).build());
   }
 }
