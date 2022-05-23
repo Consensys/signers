@@ -124,7 +124,10 @@ class AwsSecretsManagerTest {
   void emptyTagFiltersReturnAllSecrets() {
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            Collections.emptyList(), Collections.emptyList(), SimpleEntry::new);
+            Collections.emptyList(),
+            Collections.emptyList(),
+            Collections.emptyList(),
+            SimpleEntry::new);
 
     assertThat(secretEntries.stream().map(SimpleEntry::getKey))
         .contains(
@@ -138,16 +141,70 @@ class AwsSecretsManagerTest {
   void nonExistentTagFiltersReturnsEmpty() {
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            List.of("nonexistent-tag-key"), List.of("nonexistent-tag-value"), SimpleEntry::new);
+            Collections.emptyList(),
+            List.of("nonexistent-tag-key"),
+            List.of("nonexistent-tag-value"),
+            SimpleEntry::new);
 
     assertThat(secretEntries).isEmpty();
+  }
+
+  @Test
+  void emptyPrefixFiltersReturnAllSecrets() {
+    final Collection<SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            Collections.emptyList(),
+            Collections.emptyList(),
+            Collections.emptyList(),
+            SimpleEntry::new);
+
+    assertThat(secretEntries.stream().map(SimpleEntry::getKey))
+        .contains(
+            SECRET_NAME1_KEY1_VALA,
+            SECRET_NAME2_KEY1_VALB,
+            SECRET_NAME3_KEY2_VALC,
+            SECRET_NAME4_KEY2_VALB);
+    assertThat(secretEntries.stream().map(SimpleEntry::getValue))
+        .contains(SECRET_VALUE1, SECRET_VALUE2, SECRET_VALUE3, SECRET_VALUE4);
+  }
+
+  @Test
+  void nonExistentPrefixFilterReturnsEmpty() {
+    final Collection<SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            List.of("nonexistent-secret-prefix"),
+            Collections.emptyList(),
+            Collections.emptyList(),
+            SimpleEntry::new);
+
+    assertThat(secretEntries).isEmpty();
+  }
+
+  @Test
+  void listAndMapSecretsWithPrefix() {
+    final Collection<SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            List.of(SECRET_NAME_PREFIX),
+            Collections.emptyList(),
+            Collections.emptyList(),
+            SimpleEntry::new);
+
+    assertThat(secretEntries.stream().map(SimpleEntry::getKey))
+        .contains(
+            SECRET_NAME1_KEY1_VALA,
+            SECRET_NAME2_KEY1_VALB,
+            SECRET_NAME3_KEY2_VALC,
+            SECRET_NAME4_KEY2_VALB)
+        .allMatch(name -> name.startsWith(SECRET_NAME_PREFIX));
+    assertThat(secretEntries.stream().map(SimpleEntry::getValue))
+        .contains(SECRET_VALUE1, SECRET_VALUE2, SECRET_VALUE3, SECRET_VALUE4);
   }
 
   @Test
   void listAndMapSecretsWithMatchingTagKeys() {
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            List.of("tagKey1"), Collections.emptyList(), SimpleEntry::new);
+            Collections.emptyList(), List.of("tagKey1"), Collections.emptyList(), SimpleEntry::new);
 
     assertThat(secretEntries.stream().map(SimpleEntry::getKey))
         .contains(SECRET_NAME1_KEY1_VALA, SECRET_NAME2_KEY1_VALB)
@@ -161,7 +218,10 @@ class AwsSecretsManagerTest {
   void listAndMapSecretsWithMatchingTagValues() {
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            Collections.emptyList(), List.of("tagValB", "tagValC"), SimpleEntry::new);
+            Collections.emptyList(),
+            Collections.emptyList(),
+            List.of("tagValB", "tagValC"),
+            SimpleEntry::new);
 
     assertThat(secretEntries.stream().map(SimpleEntry::getKey))
         .contains(SECRET_NAME2_KEY1_VALB, SECRET_NAME3_KEY2_VALC, SECRET_NAME4_KEY2_VALB)
@@ -175,7 +235,7 @@ class AwsSecretsManagerTest {
   void listAndMapSecretsWithMatchingTagKeysAndValues() {
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            List.of("tagKey1"), List.of("tagValB"), SimpleEntry::new);
+            Collections.emptyList(), List.of("tagKey1"), List.of("tagValB"), SimpleEntry::new);
 
     assertThat(secretEntries.stream().map(SimpleEntry::getKey))
         .contains(SECRET_NAME2_KEY1_VALB)
@@ -189,6 +249,7 @@ class AwsSecretsManagerTest {
   void throwsAwayObjectsWhichMapToNull() {
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
+            Collections.emptyList(),
             Collections.emptyList(),
             Collections.emptyList(),
             (name, value) -> {
@@ -207,6 +268,7 @@ class AwsSecretsManagerTest {
   void throwsAwayObjectsThatFailMapper() {
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
+            Collections.emptyList(),
             Collections.emptyList(),
             Collections.emptyList(),
             (name, value) -> {
