@@ -83,7 +83,7 @@ dependencyManagement {
       entry 'mockito-junit-jupiter'
     }
 
-    dependency 'org.web3j:core:4.9.0'
+    dependency 'org.web3j:core:4.9.2'
 
     dependency 'org.zeroturnaround:zt-exec:1.12'
 
@@ -108,5 +108,10 @@ dependencyManagement {
       entry 'netty-transport-native-unix-common'
       entry 'netty-transport-classes-epoll'
     }
+    /*
+      com.squareup.okhttp3:logging-interceptor:4.9.0 // CVE-2021-0341
+      \--- org.web3j:core:4.9.2
+     */
+    dependency 'com.squareup.okhttp3:logging-interceptor:4.9.3'
   }
 }
