@@ -83,9 +83,14 @@ public class AwsSecretsManager implements Closeable {
   }
 
   private ListSecretsIterable listSecrets(
-      final Collection<String> tagKeys, final Collection<String> tagValues) {
+      final Collection<String> namePrefixes,
+      final Collection<String> tagKeys,
+      final Collection<String> tagValues) {
     final ListSecretsRequest.Builder listSecretsRequestBuilder = ListSecretsRequest.builder();
     final List<Filter> filters = new ArrayList<>();
+    if (!namePrefixes.isEmpty()) {
+      filters.add(Filter.builder().key(FilterNameStringType.NAME).values(namePrefixes).build());
+    }
     if (!tagKeys.isEmpty()) {
       filters.add(Filter.builder().key(FilterNameStringType.TAG_KEY).values(tagKeys).build());
     }
@@ -97,11 +102,12 @@ public class AwsSecretsManager implements Closeable {
   }
 
   public <R> Collection<R> mapSecrets(
+      final Collection<String> namePrefixes,
       final Collection<String> tagKeys,
       final Collection<String> tagValues,
       final BiFunction<String, String, R> mapper) {
     final Set<R> result = ConcurrentHashMap.newKeySet();
-    listSecrets(tagKeys, tagValues)
+    listSecrets(namePrefixes, tagKeys, tagValues)
         .iterator()
         .forEachRemaining(
             listSecretsResponse -> {
@@ -128,8 +134,9 @@ public class AwsSecretsManager implements Closeable {
                           }
                         } catch (final Exception e) {
                           LOG.warn(
-                              "Failed to map secret '{}' to requested object type.",
-                              secretEntry.name());
+                              "Failed to map secret '{}' to requested object type due to: {}.",
+                              secretEntry.name(),
+                              e.getMessage());
                         }
                       });
             });
