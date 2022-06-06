@@ -210,6 +210,20 @@ class AwsSecretsManagerTest {
   }
 
   @Test
+  void listAndMapSecretsWithPrefixAndTags() {
+    final Collection<SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            List.of(SECRET_NAME_PREFIX),
+            List.of("tagKey1"),
+            Collections.emptyList(),
+            SimpleEntry::new);
+
+    assertThat(secretEntries.stream().map(SimpleEntry::getKey))
+        .contains(SECRET_NAME1_KEY1_VALA, SECRET_NAME2_KEY1_VALB)
+        .allMatch(name -> name.startsWith(SECRET_NAME_PREFIX));
+  }
+
+  @Test
   void listAndMapSecretsWithMatchingTagKeys() {
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
