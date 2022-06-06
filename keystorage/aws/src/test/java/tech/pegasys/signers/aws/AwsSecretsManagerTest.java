@@ -23,10 +23,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -43,14 +43,35 @@ import software.amazon.awssdk.services.secretsmanager.model.UntagResourceRequest
 import software.amazon.awssdk.services.secretsmanager.model.UpdateSecretRequest;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@EnabledIfEnvironmentVariable(
+    named = "RW_AWS_ACCESS_KEY_ID",
+    matches = ".*",
+    disabledReason = "RW_AWS_ACCESS_KEY_ID env variable is required")
+@EnabledIfEnvironmentVariable(
+    named = "RW_AWS_SECRET_ACCESS_KEY",
+    matches = ".*",
+    disabledReason = "RW_AWS_SECRET_ACCESS_KEY env variable is required")
+@EnabledIfEnvironmentVariable(
+    named = "AWS_ACCESS_KEY_ID",
+    matches = ".*",
+    disabledReason = "AWS_ACCESS_KEY_ID env variable is required")
+@EnabledIfEnvironmentVariable(
+    named = "AWS_SECRET_ACCESS_KEY",
+    matches = ".*",
+    disabledReason = "AWS_SECRET_ACCESS_KEY env variable is required")
+@EnabledIfEnvironmentVariable(
+    named = "AWS_REGION",
+    matches = ".*",
+    disabledReason = "AWS_REGION env variable is required")
 class AwsSecretsManagerTest {
 
   private static final String RW_AWS_ACCESS_KEY_ID = System.getenv("RW_AWS_ACCESS_KEY_ID");
   private static final String RW_AWS_SECRET_ACCESS_KEY = System.getenv("RW_AWS_SECRET_ACCESS_KEY");
 
-  private static final String RO_AWS_ACCESS_KEY_ID = System.getenv("RO_AWS_ACCESS_KEY_ID");
-  private static final String RO_AWS_SECRET_ACCESS_KEY = System.getenv("RO_AWS_SECRET_ACCESS_KEY");
-  private static final String AWS_REGION = "us-east-2";
+  private static final String RO_AWS_ACCESS_KEY_ID = System.getenv("AWS_ACCESS_KEY_ID");
+  private static final String RO_AWS_SECRET_ACCESS_KEY = System.getenv("AWS_SECRET_ACCESS_KEY");
+  private static final String AWS_REGION =
+      Optional.ofNullable(System.getenv("AWS_REGION")).orElse("us-east-2");
 
   private static final String SECRET_NAME_PREFIX = "signers-aws-integration/";
   private static final String SECRET_NAME1_KEY1_VALA = SECRET_NAME_PREFIX + "secret1";
@@ -67,20 +88,8 @@ class AwsSecretsManagerTest {
   private AwsSecretsManager awsSecretsManagerInvalidCredentials;
   private SecretsManagerClient testSecretsManagerClient;
 
-  void verifyEnvironmentVariables() {
-    Assumptions.assumeTrue(
-        RW_AWS_ACCESS_KEY_ID != null, "Set RW_AWS_ACCESS_KEY_ID environment variable");
-    Assumptions.assumeTrue(
-        RW_AWS_SECRET_ACCESS_KEY != null, "Set RW_AWS_SECRET_ACCESS_KEY environment variable");
-    Assumptions.assumeTrue(
-        RO_AWS_ACCESS_KEY_ID != null, "Set RO_AWS_ACCESS_KEY_ID environment variable");
-    Assumptions.assumeTrue(
-        RO_AWS_SECRET_ACCESS_KEY != null, "Set RO_AWS_SECRET_ACCESS_KEY environment variable");
-  }
-
   @BeforeAll
   void setup() {
-    verifyEnvironmentVariables();
     initAwsSecretsManagers();
     initTestSecretsManagerClient();
     createTestSecrets();
