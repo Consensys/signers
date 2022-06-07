@@ -14,12 +14,17 @@ package tech.pegasys.signers.aws;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static tech.pegasys.signers.aws.SecretsMaps.SECRET_NAME_PREFIX_A;
+import static tech.pegasys.signers.aws.SecretsMaps.computeMapAKey;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterAll;
@@ -73,26 +78,30 @@ class AwsSecretsManagerTest {
   private static final String AWS_REGION =
       Optional.ofNullable(System.getenv("AWS_REGION")).orElse("us-east-2");
 
-  private static final String SECRET_NAME_PREFIX = "signers-aws-integration/";
-  private static final String SECRET_NAME1_KEY1_VALA = SECRET_NAME_PREFIX + "secret1";
-  private static final String SECRET_NAME2_KEY1_VALB = SECRET_NAME_PREFIX + "secret2";
-  private static final String SECRET_NAME3_KEY2_VALC = SECRET_NAME_PREFIX + "secret3";
-  private static final String SECRET_NAME4_KEY2_VALB = SECRET_NAME_PREFIX + "secret4";
-  private static final String SECRET_VALUE1 = "secret-value1";
-  private static final String SECRET_VALUE2 = "secret-value2";
-  private static final String SECRET_VALUE3 = "secret-value3";
-  private static final String SECRET_VALUE4 = "secret-value4";
-
   private AwsSecretsManager awsSecretsManagerDefault;
   private AwsSecretsManager awsSecretsManagerExplicit;
   private AwsSecretsManager awsSecretsManagerInvalidCredentials;
   private SecretsManagerClient testSecretsManagerClient;
+
+  private final SecretsMaps secretsMaps = new SecretsMaps();
 
   @BeforeAll
   void setup() {
     initAwsSecretsManagers();
     initTestSecretsManagerClient();
     createTestSecrets();
+  }
+
+  private void createTestSecrets() {
+    secretsMaps
+        .getAllSecretsMap()
+        .forEach(
+            (key, secretValue) ->
+                createOrUpdateSecret(
+                    key,
+                    secretValue.getTagKey(),
+                    secretValue.getTagValue(),
+                    secretValue.getSecretValue()));
   }
 
   @AfterAll
@@ -106,31 +115,37 @@ class AwsSecretsManagerTest {
 
   @Test
   void fetchSecretWithDefaultManager() {
-    Optional<String> secret = awsSecretsManagerDefault.fetchSecret(SECRET_NAME1_KEY1_VALA);
-    assertThat(secret).hasValue(SECRET_VALUE1);
+    final String key = computeMapAKey(1);
+    final SecretValue secretValue = secretsMaps.getAllSecretsMap().get(key);
+    Optional<String> secret = awsSecretsManagerDefault.fetchSecret(key);
+    assertThat(secret).hasValue(secretValue.getSecretValue());
   }
 
   @Test
   void fetchSecretWithExplicitManager() {
-    Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(SECRET_NAME1_KEY1_VALA);
-    assertThat(secret).hasValue(SECRET_VALUE1);
+    final String key = computeMapAKey(1);
+    final SecretValue secretValue = secretsMaps.getAllSecretsMap().get(key);
+
+    Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(key);
+    assertThat(secret).hasValue(secretValue.getSecretValue());
   }
 
   @Test
   void fetchSecretWithInvalidCredentialsReturnsEmpty() {
+    final String key = computeMapAKey(1);
     assertThatExceptionOfType(RuntimeException.class)
-        .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(SECRET_NAME1_KEY1_VALA))
+        .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(key))
         .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
   }
 
   @Test
   void fetchingNonExistentSecretReturnsEmpty() {
-    Optional<String> secret = awsSecretsManagerDefault.fetchSecret("signers-aws-integration/empty");
+    Optional<String> secret = awsSecretsManagerDefault.fetchSecret(SECRET_NAME_PREFIX_A + "empty");
     assertThat(secret).isEmpty();
   }
 
   @Test
-  void emptyTagFiltersReturnAllSecrets() {
+  void emptyFiltersReturnAllSecrets() {
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(),
@@ -138,12 +153,10 @@ class AwsSecretsManagerTest {
             Collections.emptyList(),
             SimpleEntry::new);
 
-    assertThat(secretEntries.stream().map(SimpleEntry::getKey))
-        .contains(
-            SECRET_NAME1_KEY1_VALA,
-            SECRET_NAME2_KEY1_VALB,
-            SECRET_NAME3_KEY2_VALC,
-            SECRET_NAME4_KEY2_VALB);
+    final Set<String> fetchedKeys =
+        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
+
+    assertThat(fetchedKeys).containsAll(secretsMaps.getAllSecretsMap().keySet());
   }
 
   @Test
@@ -156,25 +169,6 @@ class AwsSecretsManagerTest {
             SimpleEntry::new);
 
     assertThat(secretEntries).isEmpty();
-  }
-
-  @Test
-  void emptyPrefixFiltersReturnAllSecrets() {
-    final Collection<SimpleEntry<String, String>> secretEntries =
-        awsSecretsManagerExplicit.mapSecrets(
-            Collections.emptyList(),
-            Collections.emptyList(),
-            Collections.emptyList(),
-            SimpleEntry::new);
-
-    assertThat(secretEntries.stream().map(SimpleEntry::getKey))
-        .contains(
-            SECRET_NAME1_KEY1_VALA,
-            SECRET_NAME2_KEY1_VALB,
-            SECRET_NAME3_KEY2_VALC,
-            SECRET_NAME4_KEY2_VALB);
-    assertThat(secretEntries.stream().map(SimpleEntry::getValue))
-        .contains(SECRET_VALUE1, SECRET_VALUE2, SECRET_VALUE3, SECRET_VALUE4);
   }
 
   @Test
@@ -193,117 +187,181 @@ class AwsSecretsManagerTest {
   void listAndMapSecretsWithPrefix() {
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            List.of(SECRET_NAME_PREFIX),
+            List.of(SECRET_NAME_PREFIX_A),
             Collections.emptyList(),
             Collections.emptyList(),
             SimpleEntry::new);
 
-    assertThat(secretEntries.stream().map(SimpleEntry::getKey))
-        .contains(
-            SECRET_NAME1_KEY1_VALA,
-            SECRET_NAME2_KEY1_VALB,
-            SECRET_NAME3_KEY2_VALC,
-            SECRET_NAME4_KEY2_VALB)
-        .allMatch(name -> name.startsWith(SECRET_NAME_PREFIX));
-    assertThat(secretEntries.stream().map(SimpleEntry::getValue))
-        .contains(SECRET_VALUE1, SECRET_VALUE2, SECRET_VALUE3, SECRET_VALUE4);
+    final Set<String> fetchedKeys =
+        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
+
+    assertThat(fetchedKeys).containsAll(secretsMaps.getPrefixASecretsMap().keySet());
+    assertThat(fetchedKeys)
+        .doesNotContainAnyElementsOf(secretsMaps.getPrefixBSecretsMap().keySet());
   }
 
   @Test
   void listAndMapSecretsWithPrefixAndTags() {
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            List.of(SECRET_NAME_PREFIX),
+            List.of(SECRET_NAME_PREFIX_A),
             List.of("tagKey1"),
             Collections.emptyList(),
             SimpleEntry::new);
 
-    assertThat(secretEntries.stream().map(SimpleEntry::getKey))
-        .contains(SECRET_NAME1_KEY1_VALA, SECRET_NAME2_KEY1_VALB)
-        .allMatch(name -> name.startsWith(SECRET_NAME_PREFIX));
+    final Set<String> fetchedKeys =
+        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
+
+    final Set<String> expectedKeys =
+        secretsMaps.getPrefixASecretsMap().entrySet().stream()
+            .filter(v -> Objects.equals("tagKey1", v.getValue().getTagKey()))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toSet());
+
+    final Set<String> nonExpectedKeys =
+        secretsMaps.getPrefixASecretsMap().entrySet().stream()
+            .filter(v -> !Objects.equals("tagKey1", v.getValue().getTagKey()))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toSet());
+
+    assertThat(fetchedKeys).containsAll(expectedKeys);
+    assertThat(fetchedKeys).doesNotContainAnyElementsOf(nonExpectedKeys);
+    assertThat(fetchedKeys)
+        .doesNotContainAnyElementsOf(secretsMaps.getPrefixBSecretsMap().keySet());
   }
 
   @Test
   void listAndMapSecretsWithMatchingTagKeys() {
+    final Set<String> expectedTagKeys = Set.of("tagKey1");
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            Collections.emptyList(), List.of("tagKey1"), Collections.emptyList(), SimpleEntry::new);
+            Collections.emptyList(), expectedTagKeys, Collections.emptyList(), SimpleEntry::new);
 
-    assertThat(secretEntries.stream().map(SimpleEntry::getKey))
-        .contains(SECRET_NAME1_KEY1_VALA, SECRET_NAME2_KEY1_VALB)
-        .doesNotContain(SECRET_NAME3_KEY2_VALC, SECRET_NAME4_KEY2_VALB);
-    assertThat(secretEntries.stream().map(SimpleEntry::getValue))
-        .contains(SECRET_VALUE1, SECRET_VALUE2)
-        .doesNotContain(SECRET_VALUE3, SECRET_VALUE4);
+    final Set<String> fetchedKeys =
+        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
+
+    // tagKey1 keys from both maps should have returned
+    final Set<String> expectedKeys =
+        secretsMaps.getAllSecretsMap().entrySet().stream()
+            .filter(v -> expectedTagKeys.contains(v.getValue().getTagKey()))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toSet());
+    assertThat(fetchedKeys).containsAll(expectedKeys);
+
+    // non-tagKey1 keys should not have been returned
+    final Set<String> notExpectedKeys =
+        secretsMaps.getAllSecretsMap().entrySet().stream()
+            .filter(v -> !expectedTagKeys.contains(v.getValue().getTagKey()))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toSet());
+    assertThat(fetchedKeys).doesNotContainAnyElementsOf(notExpectedKeys);
   }
 
   @Test
   void listAndMapSecretsWithMatchingTagValues() {
+    final Set<String> expectedTagValues = Set.of("tagValB", "tagValC");
+
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            Collections.emptyList(),
-            Collections.emptyList(),
-            List.of("tagValB", "tagValC"),
-            SimpleEntry::new);
+            Collections.emptyList(), Collections.emptyList(), expectedTagValues, SimpleEntry::new);
+    final Set<String> fetchedKeys =
+        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
-    assertThat(secretEntries.stream().map(SimpleEntry::getKey))
-        .contains(SECRET_NAME2_KEY1_VALB, SECRET_NAME3_KEY2_VALC, SECRET_NAME4_KEY2_VALB)
-        .doesNotContain(SECRET_NAME1_KEY1_VALA);
-    assertThat(secretEntries.stream().map(SimpleEntry::getValue))
-        .contains(SECRET_VALUE2, SECRET_VALUE3, SECRET_VALUE4)
-        .doesNotContain(SECRET_VALUE1);
+    // expected tag values from both maps should have returned
+    final Set<String> expectedKeys =
+        secretsMaps.getAllSecretsMap().entrySet().stream()
+            .filter(v -> expectedTagValues.contains(v.getValue().getTagValue()))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toSet());
+    assertThat(fetchedKeys).containsAll(expectedKeys);
+
+    final Set<String> notExpectedKeys =
+        secretsMaps.getAllSecretsMap().entrySet().stream()
+            .filter(v -> !expectedTagValues.contains(v.getValue().getTagValue()))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toSet());
+    assertThat(fetchedKeys).doesNotContainAnyElementsOf(notExpectedKeys);
   }
 
   @Test
   void listAndMapSecretsWithMatchingTagKeysAndValues() {
+    final Set<String> expectedTagKeys = Set.of("tagKey1");
+    final Set<String> expectedTagValues = Set.of("tagValB");
+
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
-            Collections.emptyList(), List.of("tagKey1"), List.of("tagValB"), SimpleEntry::new);
+            Collections.emptyList(), expectedTagKeys, expectedTagValues, SimpleEntry::new);
+    final Set<String> fetchedKeys =
+        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
-    assertThat(secretEntries.stream().map(SimpleEntry::getKey))
-        .contains(SECRET_NAME2_KEY1_VALB)
-        .doesNotContain(SECRET_NAME1_KEY1_VALA, SECRET_NAME3_KEY2_VALC, SECRET_NAME4_KEY2_VALB);
-    assertThat(secretEntries.stream().map(SimpleEntry::getValue))
-        .contains(SECRET_VALUE2)
-        .doesNotContain(SECRET_VALUE1, SECRET_VALUE3, SECRET_VALUE4);
+    final Set<String> expectedKeys =
+        secretsMaps.getAllSecretsMap().entrySet().stream()
+            .filter(
+                v ->
+                    expectedTagKeys.contains(v.getValue().getTagKey())
+                        && expectedTagValues.contains(v.getValue().getTagValue()))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toSet());
+    assertThat(fetchedKeys).containsAll(expectedKeys);
+
+    final Set<String> notExpectedKeys =
+        secretsMaps.getAllSecretsMap().keySet().stream()
+            .filter(key -> !expectedKeys.contains(key))
+            .collect(Collectors.toSet());
+    assertThat(fetchedKeys).doesNotContainAnyElementsOf(notExpectedKeys);
   }
 
   @Test
   void throwsAwayObjectsWhichMapToNull() {
+    String expectedKey = computeMapAKey(1);
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(),
             Collections.emptyList(),
             Collections.emptyList(),
             (name, value) -> {
-              if (name.equals(SECRET_NAME1_KEY1_VALA)) {
+              if (name.equals(expectedKey)) {
                 return null;
               }
               return new SimpleEntry<>(name, value);
             });
+    final Set<String> fetchedKeys =
+        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
-    assertThat(secretEntries.stream().map(SimpleEntry::getKey))
-        .contains(SECRET_NAME2_KEY1_VALB, SECRET_NAME3_KEY2_VALC, SECRET_NAME4_KEY2_VALB)
-        .doesNotContain(SECRET_NAME1_KEY1_VALA);
+    final Set<String> expectedKeys =
+        secretsMaps.getAllSecretsMap().keySet().stream()
+            .filter(secretValue -> !Objects.equals(expectedKey, secretValue))
+            .collect(Collectors.toSet());
+
+    assertThat(fetchedKeys).containsAll(expectedKeys);
+    assertThat(fetchedKeys).doesNotContain(expectedKey);
   }
 
   @Test
   void throwsAwayObjectsThatFailMapper() {
+    final String expectedKey = computeMapAKey(1);
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(),
             Collections.emptyList(),
             Collections.emptyList(),
             (name, value) -> {
-              if (name.equals(SECRET_NAME1_KEY1_VALA)) {
+              if (name.equals(expectedKey)) {
                 throw new RuntimeException("Arbitrary Failure");
               }
               return new SimpleEntry<>(name, value);
             });
 
-    assertThat(secretEntries.stream().map(SimpleEntry::getKey))
-        .contains(SECRET_NAME2_KEY1_VALB, SECRET_NAME3_KEY2_VALC, SECRET_NAME4_KEY2_VALB)
-        .doesNotContain(SECRET_NAME1_KEY1_VALA);
+    final Set<String> fetchedKeys =
+        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
+
+    final Set<String> expectedKeys =
+        secretsMaps.getAllSecretsMap().keySet().stream()
+            .filter(secretValue -> !Objects.equals(expectedKey, secretValue))
+            .collect(Collectors.toSet());
+
+    assertThat(fetchedKeys).containsAll(expectedKeys);
+    assertThat(fetchedKeys).doesNotContain(expectedKey);
   }
 
   private void initAwsSecretsManagers() {
@@ -340,13 +398,6 @@ class AwsSecretsManagerTest {
     awsSecretsManagerDefault.close();
     awsSecretsManagerExplicit.close();
     awsSecretsManagerInvalidCredentials.close();
-  }
-
-  private void createTestSecrets() {
-    createOrUpdateSecret(SECRET_NAME1_KEY1_VALA, "tagKey1", "tagValA", SECRET_VALUE1);
-    createOrUpdateSecret(SECRET_NAME2_KEY1_VALB, "tagKey1", "tagValB", SECRET_VALUE2);
-    createOrUpdateSecret(SECRET_NAME3_KEY2_VALC, "tagKey2", "tagValC", SECRET_VALUE3);
-    createOrUpdateSecret(SECRET_NAME4_KEY2_VALB, "tagKey2", "tagValB", SECRET_VALUE4);
   }
 
   private void createOrUpdateSecret(
