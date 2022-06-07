@@ -54,15 +54,15 @@ public class SecretsMaps {
     return allSecretsMap;
   }
 
-  public static String computeMapAKey(final int i) {
+  private static String computeMapAKey(final int i) {
     return String.format("%ssecret%d", SECRET_NAME_PREFIX_A, i);
   }
 
-  public static String computeMapBKey(final int i) {
+  private static String computeMapBKey(final int i) {
     return String.format("%ssecret%d", SECRET_NAME_PREFIX_B, i);
   }
 
-  public static SecretValue computeSecretValue(final int i) {
+  private static SecretValue computeSecretValue(final int i) {
     final String value = String.format("secret-value%d", i);
     final SecretValue secretValue;
     // due to past test values setup ...

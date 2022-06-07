@@ -15,7 +15,6 @@ package tech.pegasys.signers.aws;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static tech.pegasys.signers.aws.SecretsMaps.SECRET_NAME_PREFIX_A;
-import static tech.pegasys.signers.aws.SecretsMaps.computeMapAKey;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
@@ -115,24 +114,25 @@ class AwsSecretsManagerTest {
 
   @Test
   void fetchSecretWithDefaultManager() {
-    final String key = computeMapAKey(1);
-    final SecretValue secretValue = secretsMaps.getAllSecretsMap().get(key);
-    Optional<String> secret = awsSecretsManagerDefault.fetchSecret(key);
-    assertThat(secret).hasValue(secretValue.getSecretValue());
+    final Map<String, SecretValue> secretsMap = secretsMaps.getAllSecretsMap();
+    final String key = secretsMap.keySet().stream().findAny().orElseThrow();
+    final Optional<String> secret = awsSecretsManagerDefault.fetchSecret(key);
+    assertThat(secret).hasValue(secretsMap.get(key).getSecretValue());
   }
 
   @Test
   void fetchSecretWithExplicitManager() {
-    final String key = computeMapAKey(1);
-    final SecretValue secretValue = secretsMaps.getAllSecretsMap().get(key);
+    final Map<String, SecretValue> secretsMap = secretsMaps.getAllSecretsMap();
+    final String key = secretsMap.keySet().stream().findAny().orElseThrow();
 
-    Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(key);
-    assertThat(secret).hasValue(secretValue.getSecretValue());
+    final Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(key);
+    assertThat(secret).hasValue(secretsMap.get(key).getSecretValue());
   }
 
   @Test
   void fetchSecretWithInvalidCredentialsReturnsEmpty() {
-    final String key = computeMapAKey(1);
+    final Map<String, SecretValue> secretsMap = secretsMaps.getAllSecretsMap();
+    final String key = secretsMap.keySet().stream().findAny().orElseThrow();
     assertThatExceptionOfType(RuntimeException.class)
         .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(key))
         .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
@@ -313,7 +313,9 @@ class AwsSecretsManagerTest {
 
   @Test
   void throwsAwayObjectsWhichMapToNull() {
-    String expectedKey = computeMapAKey(1);
+    final Map<String, SecretValue> secretsMap = secretsMaps.getAllSecretsMap();
+    final String expectedKey = secretsMap.keySet().stream().findAny().orElseThrow();
+
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(),
@@ -329,7 +331,7 @@ class AwsSecretsManagerTest {
         secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
     final Set<String> expectedKeys =
-        secretsMaps.getAllSecretsMap().keySet().stream()
+        secretsMap.keySet().stream()
             .filter(secretValue -> !Objects.equals(expectedKey, secretValue))
             .collect(Collectors.toSet());
 
@@ -339,7 +341,8 @@ class AwsSecretsManagerTest {
 
   @Test
   void throwsAwayObjectsThatFailMapper() {
-    final String expectedKey = computeMapAKey(1);
+    final Map<String, SecretValue> secretsMap = secretsMaps.getAllSecretsMap();
+    final String expectedKey = secretsMap.keySet().stream().findAny().orElseThrow();
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(),
@@ -356,7 +359,7 @@ class AwsSecretsManagerTest {
         secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
     final Set<String> expectedKeys =
-        secretsMaps.getAllSecretsMap().keySet().stream()
+        secretsMap.keySet().stream()
             .filter(secretValue -> !Objects.equals(expectedKey, secretValue))
             .collect(Collectors.toSet());
 
