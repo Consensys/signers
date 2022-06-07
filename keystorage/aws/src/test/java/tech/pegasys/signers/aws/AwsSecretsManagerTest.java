@@ -95,12 +95,12 @@ class AwsSecretsManagerTest {
     secretsMaps
         .getAllSecretsMap()
         .forEach(
-            (key, secretValue) ->
+            (key, awsSecret) ->
                 createOrUpdateSecret(
                     key,
-                    secretValue.getTagKey(),
-                    secretValue.getTagValue(),
-                    secretValue.getSecretValue()));
+                    awsSecret.getTagKey(),
+                    awsSecret.getTagValue(),
+                    awsSecret.getSecretValue()));
   }
 
   @AfterAll
@@ -114,7 +114,7 @@ class AwsSecretsManagerTest {
 
   @Test
   void fetchSecretWithDefaultManager() {
-    final Map<String, SecretValue> secretsMap = secretsMaps.getAllSecretsMap();
+    final Map<String, AwsSecret> secretsMap = secretsMaps.getAllSecretsMap();
     final String key = secretsMap.keySet().stream().findAny().orElseThrow();
     final Optional<String> secret = awsSecretsManagerDefault.fetchSecret(key);
     assertThat(secret).hasValue(secretsMap.get(key).getSecretValue());
@@ -122,7 +122,7 @@ class AwsSecretsManagerTest {
 
   @Test
   void fetchSecretWithExplicitManager() {
-    final Map<String, SecretValue> secretsMap = secretsMaps.getAllSecretsMap();
+    final Map<String, AwsSecret> secretsMap = secretsMaps.getAllSecretsMap();
     final String key = secretsMap.keySet().stream().findAny().orElseThrow();
 
     final Optional<String> secret = awsSecretsManagerExplicit.fetchSecret(key);
@@ -131,7 +131,7 @@ class AwsSecretsManagerTest {
 
   @Test
   void fetchSecretWithInvalidCredentialsReturnsEmpty() {
-    final Map<String, SecretValue> secretsMap = secretsMaps.getAllSecretsMap();
+    final Map<String, AwsSecret> secretsMap = secretsMaps.getAllSecretsMap();
     final String key = secretsMap.keySet().stream().findAny().orElseThrow();
     assertThatExceptionOfType(RuntimeException.class)
         .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(key))
@@ -325,7 +325,7 @@ class AwsSecretsManagerTest {
 
   @Test
   void throwsAwayObjectsWhichMapToNull() {
-    final Map<String, SecretValue> secretsMap = secretsMaps.getAllSecretsMap();
+    final Map<String, AwsSecret> secretsMap = secretsMaps.getAllSecretsMap();
     final String expectedKey = secretsMap.keySet().stream().findAny().orElseThrow();
 
     final Collection<SimpleEntry<String, String>> secretEntries =
@@ -353,7 +353,7 @@ class AwsSecretsManagerTest {
 
   @Test
   void throwsAwayObjectsThatFailMapper() {
-    final Map<String, SecretValue> secretsMap = secretsMaps.getAllSecretsMap();
+    final Map<String, AwsSecret> secretsMap = secretsMaps.getAllSecretsMap();
     final String expectedKey = secretsMap.keySet().stream().findAny().orElseThrow();
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(

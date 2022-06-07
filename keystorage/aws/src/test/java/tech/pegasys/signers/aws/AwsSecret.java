@@ -14,12 +14,12 @@ package tech.pegasys.signers.aws;
 
 import java.util.Objects;
 
-public class SecretValue {
+public class AwsSecret {
   private final String secretValue;
   private final String tagKey;
   private final String tagValue;
 
-  public SecretValue(final String secretValue, final String tagKey, final String tagValue) {
+  public AwsSecret(final String secretValue, final String tagKey, final String tagValue) {
     this.secretValue = secretValue;
     this.tagKey = tagKey;
     this.tagValue = tagValue;
@@ -41,7 +41,7 @@ public class SecretValue {
   public boolean equals(final Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    SecretValue that = (SecretValue) o;
+    AwsSecret that = (AwsSecret) o;
     return secretValue.equals(that.secretValue)
         && tagKey.equals(that.tagKey)
         && tagValue.equals(that.tagValue);

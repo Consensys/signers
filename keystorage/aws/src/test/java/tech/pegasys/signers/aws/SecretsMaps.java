@@ -20,19 +20,19 @@ public class SecretsMaps {
   static final String SECRET_NAME_PREFIX_A = "signers-aws-integration/a/";
   static final String SECRET_NAME_PREFIX_B = "signers-aws-integration/b/";
 
-  private final Map<String, SecretValue> prefixASecretsMap;
-  private final Map<String, SecretValue> prefixBSecretsMap;
-  private final Map<String, SecretValue> allSecretsMap;
+  private final Map<String, AwsSecret> prefixASecretsMap;
+  private final Map<String, AwsSecret> prefixBSecretsMap;
+  private final Map<String, AwsSecret> allSecretsMap;
 
   public SecretsMaps() {
-    final Map<String, SecretValue> secretMapA = new HashMap<>();
-    final Map<String, SecretValue> secretMapB = new HashMap<>();
-    final Map<String, SecretValue> allSecretsMap = new HashMap<>();
+    final Map<String, AwsSecret> secretMapA = new HashMap<>();
+    final Map<String, AwsSecret> secretMapB = new HashMap<>();
+    final Map<String, AwsSecret> allSecretsMap = new HashMap<>();
 
     for (int i = 1; i <= 4; i++) {
-      final SecretValue secretValue = computeSecretValue(i);
-      secretMapA.put(computeMapAKey(i), secretValue);
-      secretMapB.put(computeMapBKey(i), secretValue);
+      final AwsSecret awsSecret = computeSecretValue(i);
+      secretMapA.put(computeMapAKey(i), awsSecret);
+      secretMapB.put(computeMapBKey(i), awsSecret);
     }
     allSecretsMap.putAll(secretMapA);
     allSecretsMap.putAll(secretMapB);
@@ -42,15 +42,15 @@ public class SecretsMaps {
     this.allSecretsMap = Collections.unmodifiableMap(allSecretsMap);
   }
 
-  public Map<String, SecretValue> getPrefixASecretsMap() {
+  public Map<String, AwsSecret> getPrefixASecretsMap() {
     return prefixASecretsMap;
   }
 
-  public Map<String, SecretValue> getPrefixBSecretsMap() {
+  public Map<String, AwsSecret> getPrefixBSecretsMap() {
     return prefixBSecretsMap;
   }
 
-  public Map<String, SecretValue> getAllSecretsMap() {
+  public Map<String, AwsSecret> getAllSecretsMap() {
     return allSecretsMap;
   }
 
@@ -62,24 +62,23 @@ public class SecretsMaps {
     return String.format("%ssecret%d", SECRET_NAME_PREFIX_B, i);
   }
 
-  private static SecretValue computeSecretValue(final int i) {
+  private static AwsSecret computeSecretValue(final int i) {
     final String value = String.format("secret-value%d", i);
-    final SecretValue secretValue;
-    // due to past test values setup ...
+    final AwsSecret awsSecret;
     switch (i) {
       case 1:
-        secretValue = new SecretValue(value, "tagKey1", "tagValA");
+        awsSecret = new AwsSecret(value, "tagKey1", "tagValA");
         break;
       case 2:
-        secretValue = new SecretValue(value, "tagKey1", "tagValB");
+        awsSecret = new AwsSecret(value, "tagKey1", "tagValB");
         break;
       case 3:
-        secretValue = new SecretValue(value, "tagKey2", "tagValC");
+        awsSecret = new AwsSecret(value, "tagKey2", "tagValC");
         break;
       default:
-        secretValue = new SecretValue(value, "tagKey2", "tagValB");
+        awsSecret = new AwsSecret(value, "tagKey2", "tagValB");
         break;
     }
-    return secretValue;
+    return awsSecret;
   }
 }
