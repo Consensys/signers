@@ -184,6 +184,18 @@ class AwsSecretsManagerTest {
   }
 
   @Test
+  void nonExistentPrefixFilterWithTagFilterReturnsEmpty() {
+    final Collection<SimpleEntry<String, String>> secretEntries =
+        awsSecretsManagerExplicit.mapSecrets(
+            List.of("nonexistent-secret-prefix"),
+            List.of("tagKey1"),
+            Collections.emptyList(),
+            SimpleEntry::new);
+
+    assertThat(secretEntries).isEmpty();
+  }
+
+  @Test
   void listAndMapSecretsWithPrefix() {
     final Collection<SimpleEntry<String, String>> secretEntries =
         awsSecretsManagerExplicit.mapSecrets(
