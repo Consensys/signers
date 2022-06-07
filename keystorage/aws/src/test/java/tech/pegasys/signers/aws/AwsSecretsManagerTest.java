@@ -224,20 +224,22 @@ class AwsSecretsManagerTest {
     final Set<String> fetchedKeys =
         secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
-    final Set<String> expectedKeys =
+    final Map<Boolean, List<Map.Entry<String, AwsSecret>>> expectedSecrets =
         secretsMaps.getPrefixASecretsMap().entrySet().stream()
-            .filter(v -> Objects.equals("tagKey1", v.getValue().getTagKey()))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toSet());
+            .collect(
+                Collectors.partitioningBy(
+                    entry -> Objects.equals("tagKey1", entry.getValue().getTagKey())));
 
-    final Set<String> nonExpectedKeys =
-        secretsMaps.getPrefixASecretsMap().entrySet().stream()
-            .filter(v -> !Objects.equals("tagKey1", v.getValue().getTagKey()))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toSet());
-
-    assertThat(fetchedKeys).containsAll(expectedKeys);
-    assertThat(fetchedKeys).doesNotContainAnyElementsOf(nonExpectedKeys);
+    assertThat(fetchedKeys)
+        .containsAll(
+            expectedSecrets.get(Boolean.TRUE).stream()
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet()));
+    assertThat(fetchedKeys)
+        .doesNotContainAnyElementsOf(
+            expectedSecrets.get(Boolean.FALSE).stream()
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet()));
     assertThat(fetchedKeys)
         .doesNotContainAnyElementsOf(secretsMaps.getPrefixBSecretsMap().keySet());
   }
@@ -252,21 +254,22 @@ class AwsSecretsManagerTest {
     final Set<String> fetchedKeys =
         secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
-    // tagKey1 keys from both maps should have returned
-    final Set<String> expectedKeys =
+    final Map<Boolean, List<Map.Entry<String, AwsSecret>>> expectedSecrets =
         secretsMaps.getAllSecretsMap().entrySet().stream()
-            .filter(v -> expectedTagKeys.contains(v.getValue().getTagKey()))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toSet());
-    assertThat(fetchedKeys).containsAll(expectedKeys);
+            .collect(
+                Collectors.partitioningBy(
+                    entry -> expectedTagKeys.contains(entry.getValue().getTagKey())));
 
-    // non-tagKey1 keys should not have been returned
-    final Set<String> notExpectedKeys =
-        secretsMaps.getAllSecretsMap().entrySet().stream()
-            .filter(v -> !expectedTagKeys.contains(v.getValue().getTagKey()))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toSet());
-    assertThat(fetchedKeys).doesNotContainAnyElementsOf(notExpectedKeys);
+    assertThat(fetchedKeys)
+        .containsAll(
+            expectedSecrets.get(Boolean.TRUE).stream()
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet()));
+    assertThat(fetchedKeys)
+        .doesNotContainAnyElementsOf(
+            expectedSecrets.get(Boolean.FALSE).stream()
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet()));
   }
 
   @Test
@@ -280,19 +283,22 @@ class AwsSecretsManagerTest {
         secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
     // expected tag values from both maps should have returned
-    final Set<String> expectedKeys =
+    final Map<Boolean, List<Map.Entry<String, AwsSecret>>> expectedSecrets =
         secretsMaps.getAllSecretsMap().entrySet().stream()
-            .filter(v -> expectedTagValues.contains(v.getValue().getTagValue()))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toSet());
-    assertThat(fetchedKeys).containsAll(expectedKeys);
+            .collect(
+                Collectors.partitioningBy(
+                    entry -> expectedTagValues.contains(entry.getValue().getTagValue())));
 
-    final Set<String> notExpectedKeys =
-        secretsMaps.getAllSecretsMap().entrySet().stream()
-            .filter(v -> !expectedTagValues.contains(v.getValue().getTagValue()))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toSet());
-    assertThat(fetchedKeys).doesNotContainAnyElementsOf(notExpectedKeys);
+    assertThat(fetchedKeys)
+        .containsAll(
+            expectedSecrets.get(Boolean.TRUE).stream()
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet()));
+    assertThat(fetchedKeys)
+        .doesNotContainAnyElementsOf(
+            expectedSecrets.get(Boolean.FALSE).stream()
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet()));
   }
 
   @Test
@@ -306,21 +312,24 @@ class AwsSecretsManagerTest {
     final Set<String> fetchedKeys =
         secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
-    final Set<String> expectedKeys =
+    final Map<Boolean, List<Map.Entry<String, AwsSecret>>> expectedSecrets =
         secretsMaps.getAllSecretsMap().entrySet().stream()
-            .filter(
-                v ->
-                    expectedTagKeys.contains(v.getValue().getTagKey())
-                        && expectedTagValues.contains(v.getValue().getTagValue()))
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toSet());
-    assertThat(fetchedKeys).containsAll(expectedKeys);
+            .collect(
+                Collectors.partitioningBy(
+                    entry ->
+                        expectedTagKeys.contains(entry.getValue().getTagKey())
+                            && expectedTagValues.contains(entry.getValue().getTagValue())));
 
-    final Set<String> notExpectedKeys =
-        secretsMaps.getAllSecretsMap().keySet().stream()
-            .filter(key -> !expectedKeys.contains(key))
-            .collect(Collectors.toSet());
-    assertThat(fetchedKeys).doesNotContainAnyElementsOf(notExpectedKeys);
+    assertThat(fetchedKeys)
+        .containsAll(
+            expectedSecrets.get(Boolean.TRUE).stream()
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet()));
+    assertThat(fetchedKeys)
+        .doesNotContainAnyElementsOf(
+            expectedSecrets.get(Boolean.FALSE).stream()
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet()));
   }
 
   @Test
