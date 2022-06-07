@@ -15,11 +15,11 @@ package tech.pegasys.signers.aws;
 import java.util.Objects;
 
 public class SecretValue {
-  private String secretValue;
-  private String tagKey;
-  private String tagValue;
+  private final String secretValue;
+  private final String tagKey;
+  private final String tagValue;
 
-  public SecretValue(String secretValue, String tagKey, String tagValue) {
+  public SecretValue(final String secretValue, final String tagKey, final String tagValue) {
     this.secretValue = secretValue;
     this.tagKey = tagKey;
     this.tagValue = tagValue;
@@ -38,7 +38,7 @@ public class SecretValue {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(final Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     SecretValue that = (SecretValue) o;
