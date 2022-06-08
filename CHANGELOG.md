@@ -1,12 +1,15 @@
 # Changelog
+## 2.2.3
+- Added support for prefix filter for AWS secrets manager
 
+---
 ## 2.2.2
 ### Features Added
  - Added support for bulk loading of secrets from AWS Secrets Manager
 
 ### Bugs Fixed
  - AWS secrets manager using environment config didn't work when using web identity tokens due to missing sts library.
-
+---
 ## 2.2.1
 ### Features Added
  - Update various dependent libraries versions
