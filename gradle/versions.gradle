@@ -23,7 +23,7 @@ dependencyManagement {
     }
     dependency 'com.google.guava:guava:31.1-jre'
 
-    dependencySet(group: 'com.azure', version: '4.4.2') {
+    dependencySet(group: 'com.azure', version: '4.5.1') {
       entry 'azure-security-keyvault-secrets'
       entry 'azure-security-keyvault-keys'
     }
@@ -122,5 +122,13 @@ dependencyManagement {
       \--- org.web3j:core:4.9.2
      */
     dependency 'com.squareup.okhttp3:logging-interceptor:4.9.3'
+
+    /*
+      io.projectreactor.netty:reactor-netty-core:1.0.23 // CVE-2022-31684
+      \--- io.projectreactor.netty:reactor-netty-http:1.0.23
+        \--- com.azure:azure-core-http-netty:1.12.6
+          +--- com.azure:azure-security-keyvault-secrets:4.5.1
+    */
+    dependency 'io.projectreactor.netty:reactor-netty-http:1.0.24'
   }
 }
