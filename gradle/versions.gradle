@@ -111,11 +111,11 @@ dependencyManagement {
     }
 
     /*
-     com.google.protobuf:protobuf-java:3.19.2 // CVE-2022-3171
+     com.google.protobuf:protobuf-java:3.21.9 // CVE-2022-3509
      \--- com.google.errorprone:error_prone_core:2.15.0
        \--- annotationProcessor (requested com.google.errorprone:error_prone_core)
     */
-    dependency 'com.google.protobuf:protobuf-java:3.19.6'
+    dependency 'com.google.protobuf:protobuf-java:3.21.9'
 
     /*
       com.squareup.okhttp3:logging-interceptor:4.9.0 // CVE-2021-0341
