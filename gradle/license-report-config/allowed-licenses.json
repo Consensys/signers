@@ -75,8 +75,12 @@
       "moduleName": "org.antlr:ST4"
     },
     {
-      "moduleName": "org.reactivestreams:reactive-streams",
-      "moduleLicense": "MIT-0"
+       "moduleName": "org.reactivestreams:reactive-streams",
+       "moduleLicense": "MIT-0"
+    },
+    {
+      "moduleLicense": "Prior BSD License",
+      "moduleName": "com.brsanthu:migbase64"
     }
   ],
   "overrideLicenses": [
@@ -139,6 +143,6 @@
     {
       "moduleName": "org.java-websocket:Java-WebSocket",
       "moduleLicense": "MIT License"
-    }  
+    }
   ]
 }
