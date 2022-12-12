@@ -43,6 +43,8 @@ dependencies {
   testImplementation project(':signing:secp256k1:api')
   testImplementation(testFixtures(project(":keystorage:hashicorp")))
   testImplementation(testFixtures(project(":signing:secp256k1:impl")))
+  testImplementation 'com.google.guava:guava'
+
 
   testFixturesImplementation 'org.apache.logging.log4j:log4j-api'
   testFixturesImplementation 'org.assertj:assertj-core'
