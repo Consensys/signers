@@ -97,6 +97,8 @@ allprojects {
   apply plugin: 'org.owasp.dependencycheck'
   apply from: "${rootDir}/gradle/versions.gradle"
 
+
+
   version = rootProject.version
 
   jacoco { toolVersion = '0.8.7' }
