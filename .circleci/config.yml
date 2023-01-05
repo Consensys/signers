@@ -179,5 +179,5 @@ workflows:
             - build
           context:
             - cloudsmith-protocols
-            - dockerhub-quorumengineering-rw
+            - protocols-dockerhub
 
