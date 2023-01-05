@@ -32,21 +32,21 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
     matches = ".*",
     disabledReason = "RW_AWS_SECRET_ACCESS_KEY env variable is required")
 @EnabledIfEnvironmentVariable(
-    named = "AWS_ACCESS_KEY_ID",
+    named = "RO_AWS_ACCESS_KEY_ID",
     matches = ".*",
-    disabledReason = "AWS_ACCESS_KEY_ID env variable is required")
+    disabledReason = "RO_AWS_ACCESS_KEY_ID env variable is required")
 @EnabledIfEnvironmentVariable(
-    named = "AWS_SECRET_ACCESS_KEY",
+    named = "RO_AWS_SECRET_ACCESS_KEY",
     matches = ".*",
-    disabledReason = "AWS_SECRET_ACCESS_KEY env variable is required")
+    disabledReason = "RO_AWS_SECRET_ACCESS_KEY env variable is required")
 @EnabledIfEnvironmentVariable(
     named = "AWS_REGION",
     matches = ".*",
     disabledReason = "AWS_REGION env variable is required")
 class AwsSecretsManagerProviderTest {
 
-  private final String AWS_ACCESS_KEY_ID = System.getenv("AWS_ACCESS_KEY_ID");
-  private final String AWS_SECRET_ACCESS_KEY = System.getenv("AWS_SECRET_ACCESS_KEY");
+  private final String AWS_ACCESS_KEY_ID = System.getenv("RO_AWS_ACCESS_KEY_ID");
+  private final String AWS_SECRET_ACCESS_KEY = System.getenv("RO_AWS_SECRET_ACCESS_KEY");
   private final String AWS_REGION =
       Optional.ofNullable(System.getenv("AWS_REGION")).orElse("us-east-2");
   private final String DIFFERENT_AWS_ACCESS_KEY_ID = System.getenv("RW_AWS_ACCESS_KEY_ID");
