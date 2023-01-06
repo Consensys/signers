@@ -157,7 +157,7 @@ workflows:
     jobs:
       - build:
           context:
-            - dockerhub-quorumengineering-ro
+            - protocols-dockerhub
   default:
     jobs:
       - build:
@@ -165,7 +165,8 @@ workflows:
             tags: &filters-release-tags
               only: /^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?/
           context:
-            - dockerhub-quorumengineering-ro
+            - protocols-dockerhub
+            - protocols-signers
       - publish:
           filters:
             tags:
@@ -177,6 +178,6 @@ workflows:
           requires:
             - build
           context:
-            - cloudsmith-protocols
-            - dockerhub-quorumengineering-rw
+            - protocols-cloudsmith
+            - protocols-dockerhub
 
