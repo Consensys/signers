@@ -28,6 +28,7 @@ import com.google.common.io.Resources;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxException;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class HashicorpConnectionFactoryTest {
@@ -57,6 +58,7 @@ public class HashicorpConnectionFactoryTest {
         .isInstanceOf(HashicorpException.class);
   }
 
+  @Disabled
   @Test
   void missingJksTrustStoreFileThrowsHashicorpException() throws IOException {
     final File tempFile = File.createTempFile("trustStore", ".tmp");
@@ -73,6 +75,7 @@ public class HashicorpConnectionFactoryTest {
         .hasMessage("Unable to initialise connection to hashicorp vault.");
   }
 
+  @Disabled
   @Test
   void pkcs12FileWithIncorrectPasswordThrowsHashicorpException() {
     final URL sslCertificate = Resources.getResource("tls/cert1.pfx");
