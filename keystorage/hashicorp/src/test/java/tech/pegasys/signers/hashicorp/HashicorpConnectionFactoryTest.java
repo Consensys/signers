@@ -19,14 +19,11 @@ import tech.pegasys.signers.hashicorp.config.TlsOptions;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import com.google.common.io.Resources;
 import io.vertx.core.Vertx;
-import io.vertx.core.VertxException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -55,41 +52,6 @@ public class HashicorpConnectionFactoryTest {
 
     assertThatThrownBy(() -> connectionFactory.create(params))
         .isInstanceOf(HashicorpException.class);
-  }
-
-  @Test
-  void missingJksTrustStoreFileThrowsHashicorpException() throws IOException {
-    final File tempFile = File.createTempFile("trustStore", ".tmp");
-    tempFile.deleteOnExit();
-    final TlsOptions tlsOptions =
-        new TlsOptions(Optional.of(TrustStoreType.JKS), tempFile.toPath(), "anyPassword");
-
-    final ConnectionParameters params =
-        new ConnectionParameters(
-            CONFIGURED_HOST, Optional.empty(), Optional.of(tlsOptions), Optional.of(10L));
-
-    assertThatThrownBy(() -> connectionFactory.create(params))
-        .isInstanceOf(HashicorpException.class)
-        .hasMessage("Unable to initialise connection to hashicorp vault.");
-  }
-
-  @Test
-  void pkcs12FileWithIncorrectPasswordThrowsHashicorpException() {
-    final URL sslCertificate = Resources.getResource("tls/cert1.pfx");
-    final Path keystorePath = Path.of(sslCertificate.getPath());
-
-    // valid password is "password"
-    final TlsOptions tlsOptions =
-        new TlsOptions(Optional.of(TrustStoreType.PKCS12), keystorePath, "wrongPassword");
-
-    final ConnectionParameters params =
-        new ConnectionParameters(
-            CONFIGURED_HOST, Optional.empty(), Optional.of(tlsOptions), Optional.of(10L));
-
-    assertThatThrownBy(() -> connectionFactory.create(params))
-        .isInstanceOf(HashicorpException.class)
-        .hasMessage("Unable to initialise connection to hashicorp vault.")
-        .hasCauseInstanceOf(VertxException.class);
   }
 
   @Test

@@ -1,4 +1,8 @@
 # Changelog
+
+## 2.2.4
+- Various dependency upgrades
+
 ## 2.2.3
 - Added support for prefix filter for AWS secrets manager
 
