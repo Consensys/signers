@@ -158,6 +158,7 @@ workflows:
       - build:
           context:
             - protocols-dockerhub
+            - protocols-signers
   default:
     jobs:
       - build:
