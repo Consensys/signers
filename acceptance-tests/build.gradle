@@ -13,7 +13,7 @@
 
 plugins {
   id "de.undercouch.download" version "4.1.0"
-  id "com.google.osdetector" version "1.6.2"
+  id "com.google.osdetector" version "1.7.1"
 }
 
 apply plugin: 'java-library'
@@ -74,7 +74,14 @@ def vaultDownloadUrl() {
       return "${hashicorpVaultUrl}/${hashicorpVaultVersion}/vault_${hashicorpVaultVersion}_linux_amd64.zip"
       break
     case "osx":
-      return "${hashicorpVaultUrl}/${hashicorpVaultVersion}/vault_${hashicorpVaultVersion}_darwin_amd64.zip"
+      switch (osdetector.arch) {
+        case "x86_64":
+        return "${hashicorpVaultUrl}/${hashicorpVaultVersion}/vault_${hashicorpVaultVersion}_darwin_amd64.zip"
+        break
+        case "aarch_64":
+        return "${hashicorpVaultUrl}/${hashicorpVaultVersion}/vault_${hashicorpVaultVersion}_darwin_arm64.zip"
+        break
+      }
       break
   }
 }
