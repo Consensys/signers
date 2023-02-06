@@ -12,6 +12,8 @@
  */
 package tech.pegasys.signers.aws;
 
+import static tech.pegasys.signers.aws.SecretValueConverterUtil.mapSecretValue;
+
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -110,36 +112,30 @@ public class AwsSecretsManager implements Closeable {
     listSecrets(namePrefixes, tagKeys, tagValues)
         .iterator()
         .forEachRemaining(
-            listSecretsResponse -> {
-              listSecretsResponse
-                  .secretList()
-                  .parallelStream()
-                  .forEach(
-                      secretEntry -> {
-                        try {
-                          final Optional<String> secretValue = fetchSecret(secretEntry.name());
-                          if (secretValue.isEmpty()) {
-                            LOG.warn(
-                                "Failed to fetch secret value '{}', and was discarded",
-                                secretEntry.name());
-                          } else {
-                            final R obj = mapper.apply(secretEntry.name(), secretValue.get());
-                            if (obj == null) {
+            listSecretsResponse ->
+                listSecretsResponse
+                    .secretList()
+                    .parallelStream()
+                    .forEach(
+                        secretEntry -> {
+                          try {
+                            final Optional<String> secretValue = fetchSecret(secretEntry.name());
+                            if (secretValue.isEmpty()) {
                               LOG.warn(
-                                  "Mapped '{}' to a null object, and was discarded",
+                                  "Failed to fetch secret value '{}', and was discarded",
                                   secretEntry.name());
                             } else {
-                              result.add(obj);
+                              final Set<R> mappedValues =
+                                  mapSecretValue(mapper, secretEntry.name(), secretValue.get());
+                              result.addAll(mappedValues);
                             }
+                          } catch (final Exception e) {
+                            LOG.warn(
+                                "Failed to map secret '{}' to requested object type due to: {}.",
+                                secretEntry.name(),
+                                e.getMessage());
                           }
-                        } catch (final Exception e) {
-                          LOG.warn(
-                              "Failed to map secret '{}' to requested object type due to: {}.",
-                              secretEntry.name(),
-                              e.getMessage());
-                        }
-                      });
-            });
+                        }));
     return result;
   }
 
