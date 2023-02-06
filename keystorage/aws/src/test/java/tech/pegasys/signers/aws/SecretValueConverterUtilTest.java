@@ -43,6 +43,12 @@ class SecretValueConverterUtilTest {
   }
 
   @Test
+  void emptyLineTerminationsReturnsEmptyStrings() {
+    assertThat(mapSecretValue((k, v) -> v, "key", "\n")).containsOnly("");
+    assertThat(mapSecretValue((k, v) -> v, "key", "\nok\n\n")).containsOnly("", "ok");
+  }
+
+  @Test
   void nullMappedIsNotReturned() {
     Set<String> mappedValues =
         mapSecretValue(
