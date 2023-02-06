@@ -14,7 +14,7 @@ package tech.pegasys.signers.common;
 
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -25,18 +25,18 @@ public class SecretValueMapperUtil {
   private static final Logger LOG = LogManager.getLogger();
 
   public static <R> Set<R> mapSecretValue(
-      BiFunction<String, String, R> mapper, String propKey, String secretValue) {
-    final AtomicLong valuesIndex = new AtomicLong(0);
+      BiFunction<String, String, R> mapper, String secretName, String secretValue) {
+    final AtomicInteger valuesIndex = new AtomicInteger(0);
     return secretValue
         .lines()
         .map(
             v -> {
               long index = valuesIndex.getAndIncrement();
-              final R obj = mapper.apply(propKey, v);
+              final R obj = mapper.apply(secretName, v);
               if (obj == null) {
                 LOG.warn(
-                    "Value from Secret key {} at index {} was not mapped and discarded.",
-                    propKey,
+                    "Value from Secret name {} at index {} was not mapped and discarded.",
+                    secretName,
                     index);
               }
               return obj;
