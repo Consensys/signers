@@ -32,7 +32,7 @@ public class SecretValueMapperUtil {
               final R obj = mapper.apply(secretName, value);
               if (obj == null) {
                 LOG.warn(
-                    "Value from Secret name {} at index {} was not mapped and discarded.",
+                    "Value from secret name {} at index {} was not mapped and discarded.",
                     secretName,
                     index);
               }
