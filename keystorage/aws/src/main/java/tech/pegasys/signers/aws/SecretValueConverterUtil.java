@@ -26,27 +26,22 @@ public class SecretValueConverterUtil {
 
   public static <R> Set<R> mapSecretValue(
       BiFunction<String, String, R> mapper, String propKey, String secretValue) {
-    final AtomicLong discardedValues = new AtomicLong(0);
+    final AtomicLong valuesIndex = new AtomicLong(0);
     final Set<R> mappedValues =
         secretValue
             .lines()
             .map(
                 v -> {
+                  long index = valuesIndex.getAndIncrement();
                   final R obj = mapper.apply(propKey, v);
                   if (obj == null) {
-                    discardedValues.incrementAndGet();
+                    LOG.warn("Secret Value {}:{} was not mapped and discarded.", propKey, index);
                   }
                   return obj;
                 })
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
 
-    if (discardedValues.get() > 0) {
-      LOG.warn(
-          "AWS Secrets - {} values from property {} were not mapped and discarded.",
-          discardedValues.get(),
-          propKey);
-    }
     return mappedValues;
   }
 }
