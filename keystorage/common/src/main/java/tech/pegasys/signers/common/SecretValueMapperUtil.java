@@ -14,10 +14,10 @@ package tech.pegasys.signers.common;
 
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Streams;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,13 +26,10 @@ public class SecretValueMapperUtil {
 
   public static <R> Set<R> mapSecretValue(
       BiFunction<String, String, R> mapper, String secretName, String secretValue) {
-    final AtomicInteger valuesIndex = new AtomicInteger(0);
-    return secretValue
-        .lines()
-        .map(
-            v -> {
-              long index = valuesIndex.getAndIncrement();
-              final R obj = mapper.apply(secretName, v);
+    return Streams.mapWithIndex(
+            secretValue.lines(),
+            (value, index) -> {
+              final R obj = mapper.apply(secretName, value);
               if (obj == null) {
                 LOG.warn(
                     "Value from Secret name {} at index {} was not mapped and discarded.",
