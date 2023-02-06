@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.aws;
+package tech.pegasys.signers.common;
 
 import java.util.Objects;
 import java.util.Set;
@@ -27,21 +27,18 @@ public class SecretValueMapperUtil {
   public static <R> Set<R> mapSecretValue(
       BiFunction<String, String, R> mapper, String propKey, String secretValue) {
     final AtomicLong valuesIndex = new AtomicLong(0);
-    final Set<R> mappedValues =
-        secretValue
-            .lines()
-            .map(
-                v -> {
-                  long index = valuesIndex.getAndIncrement();
-                  final R obj = mapper.apply(propKey, v);
-                  if (obj == null) {
-                    LOG.warn("Secret Value {}:{} was not mapped and discarded.", propKey, index);
-                  }
-                  return obj;
-                })
-            .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
-
-    return mappedValues;
+    return secretValue
+        .lines()
+        .map(
+            v -> {
+              long index = valuesIndex.getAndIncrement();
+              final R obj = mapper.apply(propKey, v);
+              if (obj == null) {
+                LOG.warn("Secret Value {}:{} was not mapped and discarded.", propKey, index);
+              }
+              return obj;
+            })
+        .filter(Objects::nonNull)
+        .collect(Collectors.toSet());
   }
 }

@@ -10,16 +10,21 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package tech.pegasys.signers.aws;
+package tech.pegasys.signers.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static tech.pegasys.signers.aws.SecretValueMapperUtil.mapSecretValue;
+import static tech.pegasys.signers.common.SecretValueMapperUtil.mapSecretValue;
 
 import java.util.Set;
 
+import de.neuland.assertj.logging.ExpectedLogging;
+import de.neuland.assertj.logging.ExpectedLoggingAssertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class SecretValueMapperUtilTest {
+  @RegisterExtension
+  private final ExpectedLogging logging = ExpectedLogging.forSource(SecretValueMapperUtil.class);
 
   @Test
   void singleValueIsMapped() {
@@ -62,6 +67,11 @@ class SecretValueMapperUtilTest {
             "ok1\nerr1\nerr2\nok2");
 
     assertThat(mappedValues).containsOnly("ok1", "ok2");
+
+    ExpectedLoggingAssertions.assertThat(logging)
+        .hasWarningMessage("Secret Value key:1 was not mapped and discarded.");
+    ExpectedLoggingAssertions.assertThat(logging)
+        .hasWarningMessage("Secret Value key:2 was not mapped and discarded.");
   }
 
   @Test
