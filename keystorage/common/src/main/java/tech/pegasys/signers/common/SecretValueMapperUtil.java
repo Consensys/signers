@@ -34,7 +34,10 @@ public class SecretValueMapperUtil {
               long index = valuesIndex.getAndIncrement();
               final R obj = mapper.apply(propKey, v);
               if (obj == null) {
-                LOG.warn("Secret Value {}:{} was not mapped and discarded.", propKey, index);
+                LOG.warn(
+                    "Value from Secret key {} at index {} was not mapped and discarded.",
+                    propKey,
+                    index);
               }
               return obj;
             })

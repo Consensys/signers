@@ -63,15 +63,15 @@ class SecretValueMapperUtilTest {
               }
               return v;
             },
-            "key",
+            "0xabc",
             "ok1\nerr1\nerr2\nok2");
 
     assertThat(mappedValues).containsOnly("ok1", "ok2");
 
     ExpectedLoggingAssertions.assertThat(logging)
-        .hasWarningMessage("Secret Value key:1 was not mapped and discarded.");
+        .hasWarningMessage("Value from Secret key 0xabc at index 1 was not mapped and discarded.");
     ExpectedLoggingAssertions.assertThat(logging)
-        .hasWarningMessage("Secret Value key:2 was not mapped and discarded.");
+        .hasWarningMessage("Value from Secret key 0xabc at index 2 was not mapped and discarded.");
   }
 
   @Test
