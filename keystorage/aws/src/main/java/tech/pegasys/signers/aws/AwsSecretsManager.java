@@ -12,7 +12,7 @@
  */
 package tech.pegasys.signers.aws;
 
-import static tech.pegasys.signers.aws.SecretValueConverterUtil.mapSecretValue;
+import static tech.pegasys.signers.aws.SecretValueMapperUtil.mapSecretValue;
 
 import java.io.Closeable;
 import java.util.ArrayList;

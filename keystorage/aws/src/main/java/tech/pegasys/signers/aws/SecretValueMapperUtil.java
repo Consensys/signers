@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SecretValueConverterUtil {
+public class SecretValueMapperUtil {
   private static final Logger LOG = LogManager.getLogger();
 
   public static <R> Set<R> mapSecretValue(

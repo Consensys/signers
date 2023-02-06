@@ -13,13 +13,13 @@
 package tech.pegasys.signers.aws;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static tech.pegasys.signers.aws.SecretValueConverterUtil.mapSecretValue;
+import static tech.pegasys.signers.aws.SecretValueMapperUtil.mapSecretValue;
 
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-class SecretValueConverterUtilTest {
+class SecretValueMapperUtilTest {
 
   @Test
   void singleValueIsMapped() {
