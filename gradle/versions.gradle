@@ -13,8 +13,8 @@
 
 dependencyManagement {
   dependencies {
-    dependency 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
-    dependency 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.1'
+    dependency 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
+    dependency 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.2'
 
     dependencySet(group: 'com.google.errorprone', version: '2.17.0') {
       entry 'error_prone_annotation'
@@ -90,7 +90,7 @@ dependencyManagement {
 
     dependency 'org.xipki.iaik:sunpkcs11-wrapper:1.4.9'
 
-    dependencySet(group: 'software.amazon.awssdk', version: '2.19.8') {
+    dependencySet(group: 'software.amazon.awssdk', version: '2.20.1') {
       entry 'bom'
       entry 'auth'
       entry 'secretsmanager'
