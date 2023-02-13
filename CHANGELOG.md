@@ -1,8 +1,11 @@
 # Changelog
 
+## 2.2.6
+- Updating jackson and aws sdk versions
+---
 ## 2.2.5
 - AWS Secrets Manager - multiple values can be parsed from single secret name (line terminated values).
-
+---
 ## 2.2.4
 - Various dependency upgrades
 ---
