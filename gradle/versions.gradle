@@ -90,7 +90,7 @@ dependencyManagement {
 
     dependency 'org.xipki.iaik:sunpkcs11-wrapper:1.4.9'
 
-    dependencySet(group: 'software.amazon.awssdk', version: '2.20.1') {
+    dependencySet(group: 'software.amazon.awssdk', version: '2.20.12') {
       entry 'bom'
       entry 'auth'
       entry 'secretsmanager'
