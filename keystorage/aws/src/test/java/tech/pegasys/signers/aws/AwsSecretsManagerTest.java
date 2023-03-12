@@ -16,8 +16,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static tech.pegasys.signers.aws.SecretsMaps.SECRET_NAME_PREFIX_A;
 
+import tech.pegasys.signers.common.SecretValueResult;
+
 import java.util.AbstractMap.SimpleEntry;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -146,7 +147,7 @@ class AwsSecretsManagerTest {
 
   @Test
   void emptyFiltersReturnAllSecrets() {
-    final Collection<SimpleEntry<String, String>> secretEntries =
+    final SecretValueResult<SimpleEntry<String, String>> secretValueResult =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(),
             Collections.emptyList(),
@@ -154,50 +155,50 @@ class AwsSecretsManagerTest {
             SimpleEntry::new);
 
     final Set<String> fetchedKeys =
-        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
+        secretValueResult.getValues().stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
     assertThat(fetchedKeys).containsAll(secretsMaps.getAllSecretsMap().keySet());
   }
 
   @Test
   void nonExistentTagFiltersReturnsEmpty() {
-    final Collection<SimpleEntry<String, String>> secretEntries =
+    SecretValueResult<SimpleEntry<String, String>> secretValueResult =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(),
             List.of("nonexistent-tag-key"),
             List.of("nonexistent-tag-value"),
             SimpleEntry::new);
 
-    assertThat(secretEntries).isEmpty();
+    assertThat(secretValueResult.getValues()).isEmpty();
   }
 
   @Test
   void nonExistentPrefixFilterReturnsEmpty() {
-    final Collection<SimpleEntry<String, String>> secretEntries =
+    final SecretValueResult<SimpleEntry<String, String>> secretValueResult =
         awsSecretsManagerExplicit.mapSecrets(
             List.of("nonexistent-secret-prefix"),
             Collections.emptyList(),
             Collections.emptyList(),
             SimpleEntry::new);
 
-    assertThat(secretEntries).isEmpty();
+    assertThat(secretValueResult.getValues()).isEmpty();
   }
 
   @Test
   void nonExistentPrefixFilterWithTagFilterReturnsEmpty() {
-    final Collection<SimpleEntry<String, String>> secretEntries =
+    final SecretValueResult<SimpleEntry<String, String>> secretValueResult =
         awsSecretsManagerExplicit.mapSecrets(
             List.of("nonexistent-secret-prefix"),
             List.of("tagKey1"),
             Collections.emptyList(),
             SimpleEntry::new);
 
-    assertThat(secretEntries).isEmpty();
+    assertThat(secretValueResult.getValues()).isEmpty();
   }
 
   @Test
   void listAndMapSecretsWithPrefix() {
-    final Collection<SimpleEntry<String, String>> secretEntries =
+    SecretValueResult<SimpleEntry<String, String>> secretValueResult =
         awsSecretsManagerExplicit.mapSecrets(
             List.of(SECRET_NAME_PREFIX_A),
             Collections.emptyList(),
@@ -205,7 +206,7 @@ class AwsSecretsManagerTest {
             SimpleEntry::new);
 
     final Set<String> fetchedKeys =
-        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
+        secretValueResult.getValues().stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
     assertThat(fetchedKeys).containsAll(secretsMaps.getPrefixASecretsMap().keySet());
     assertThat(fetchedKeys)
@@ -214,7 +215,7 @@ class AwsSecretsManagerTest {
 
   @Test
   void listAndMapSecretsWithPrefixAndTags() {
-    final Collection<SimpleEntry<String, String>> secretEntries =
+    SecretValueResult<SimpleEntry<String, String>> secretValueResult =
         awsSecretsManagerExplicit.mapSecrets(
             List.of(SECRET_NAME_PREFIX_A),
             List.of("tagKey1"),
@@ -222,7 +223,7 @@ class AwsSecretsManagerTest {
             SimpleEntry::new);
 
     final Set<String> fetchedKeys =
-        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
+        secretValueResult.getValues().stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
     final Map<Boolean, List<Map.Entry<String, AwsSecret>>> expectedSecrets =
         secretsMaps.getPrefixASecretsMap().entrySet().stream()
@@ -247,12 +248,13 @@ class AwsSecretsManagerTest {
   @Test
   void listAndMapSecretsWithMatchingTagKeys() {
     final Set<String> expectedTagKeys = Set.of("tagKey1");
-    final Collection<SimpleEntry<String, String>> secretEntries =
+
+    SecretValueResult<SimpleEntry<String, String>> secretValueResult =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(), expectedTagKeys, Collections.emptyList(), SimpleEntry::new);
 
     final Set<String> fetchedKeys =
-        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
+        secretValueResult.getValues().stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
     final Map<Boolean, List<Map.Entry<String, AwsSecret>>> expectedSecrets =
         secretsMaps.getAllSecretsMap().entrySet().stream()
@@ -276,11 +278,11 @@ class AwsSecretsManagerTest {
   void listAndMapSecretsWithMatchingTagValues() {
     final Set<String> expectedTagValues = Set.of("tagValB", "tagValC");
 
-    final Collection<SimpleEntry<String, String>> secretEntries =
+    SecretValueResult<SimpleEntry<String, String>> secretValueResult =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(), Collections.emptyList(), expectedTagValues, SimpleEntry::new);
     final Set<String> fetchedKeys =
-        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
+        secretValueResult.getValues().stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
     // expected tag values from both maps should have returned
     final Map<Boolean, List<Map.Entry<String, AwsSecret>>> expectedSecrets =
@@ -306,11 +308,11 @@ class AwsSecretsManagerTest {
     final Set<String> expectedTagKeys = Set.of("tagKey1");
     final Set<String> expectedTagValues = Set.of("tagValB");
 
-    final Collection<SimpleEntry<String, String>> secretEntries =
+    SecretValueResult<SimpleEntry<String, String>> secretValueResult =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(), expectedTagKeys, expectedTagValues, SimpleEntry::new);
     final Set<String> fetchedKeys =
-        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
+        secretValueResult.getValues().stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
     final Map<Boolean, List<Map.Entry<String, AwsSecret>>> expectedSecrets =
         secretsMaps.getAllSecretsMap().entrySet().stream()
@@ -337,7 +339,7 @@ class AwsSecretsManagerTest {
     final Map<String, AwsSecret> secretsMap = secretsMaps.getAllSecretsMap();
     final String expectedKey = secretsMap.keySet().stream().findAny().orElseThrow();
 
-    final Collection<SimpleEntry<String, String>> secretEntries =
+    SecretValueResult<SimpleEntry<String, String>> secretValueResult =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(),
             Collections.emptyList(),
@@ -349,7 +351,7 @@ class AwsSecretsManagerTest {
               return new SimpleEntry<>(name, value);
             });
     final Set<String> fetchedKeys =
-        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
+        secretValueResult.getValues().stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
     final Set<String> expectedKeys =
         secretsMap.keySet().stream()
@@ -364,7 +366,7 @@ class AwsSecretsManagerTest {
   void throwsAwayObjectsThatFailMapper() {
     final Map<String, AwsSecret> secretsMap = secretsMaps.getAllSecretsMap();
     final String expectedKey = secretsMap.keySet().stream().findAny().orElseThrow();
-    final Collection<SimpleEntry<String, String>> secretEntries =
+    SecretValueResult<SimpleEntry<String, String>> secretValueResult =
         awsSecretsManagerExplicit.mapSecrets(
             Collections.emptyList(),
             Collections.emptyList(),
@@ -377,7 +379,7 @@ class AwsSecretsManagerTest {
             });
 
     final Set<String> fetchedKeys =
-        secretEntries.stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
+        secretValueResult.getValues().stream().map(SimpleEntry::getKey).collect(Collectors.toSet());
 
     final Set<String> expectedKeys =
         secretsMap.keySet().stream()
@@ -386,6 +388,7 @@ class AwsSecretsManagerTest {
 
     assertThat(fetchedKeys).containsAll(expectedKeys);
     assertThat(fetchedKeys).doesNotContain(expectedKey);
+    assertThat(secretValueResult.getExceptions()).isNotEmpty();
   }
 
   private void initAwsSecretsManagers() {

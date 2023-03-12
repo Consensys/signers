@@ -14,6 +14,8 @@ package tech.pegasys.signers.aws;
 
 import static tech.pegasys.signers.common.SecretValueMapperUtil.mapSecretValue;
 
+import tech.pegasys.signers.common.SecretValueResult;
+
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiFunction;
 
 import org.apache.logging.log4j.LogManager;
@@ -103,40 +106,47 @@ public class AwsSecretsManager implements Closeable {
         listSecretsRequestBuilder.filters(filters).build());
   }
 
-  public <R> Collection<R> mapSecrets(
+  public <R> SecretValueResult<R> mapSecrets(
       final Collection<String> namePrefixes,
       final Collection<String> tagKeys,
       final Collection<String> tagValues,
       final BiFunction<String, String, R> mapper) {
     final Set<R> result = ConcurrentHashMap.newKeySet();
-    listSecrets(namePrefixes, tagKeys, tagValues)
-        .iterator()
-        .forEachRemaining(
-            listSecretsResponse -> {
-              listSecretsResponse
-                  .secretList()
-                  .parallelStream()
-                  .forEach(
-                      secretEntry -> {
-                        try {
-                          final Optional<String> secretValue = fetchSecret(secretEntry.name());
-                          if (secretValue.isEmpty()) {
+    final Collection<Exception> exceptions = new ConcurrentLinkedQueue<>();
+    try {
+      listSecrets(namePrefixes, tagKeys, tagValues)
+          .iterator()
+          .forEachRemaining(
+              listSecretsResponse -> {
+                listSecretsResponse
+                    .secretList()
+                    .parallelStream()
+                    .forEach(
+                        secretEntry -> {
+                          try {
+                            final Optional<String> secretValue = fetchSecret(secretEntry.name());
+                            if (secretValue.isEmpty()) {
+                              LOG.warn(
+                                  "Failed to fetch secret name '{}', and was discarded",
+                                  secretEntry.name());
+                            } else {
+                              result.addAll(
+                                  mapSecretValue(mapper, secretEntry.name(), secretValue.get()));
+                            }
+                          } catch (final Exception e) {
                             LOG.warn(
-                                "Failed to fetch secret name '{}', and was discarded",
-                                secretEntry.name());
-                          } else {
-                            result.addAll(
-                                mapSecretValue(mapper, secretEntry.name(), secretValue.get()));
+                                "Failed to map secret '{}' to requested object type due to: {}.",
+                                secretEntry.name(),
+                                e.getMessage());
+                            exceptions.add(e);
                           }
-                        } catch (final Exception e) {
-                          LOG.warn(
-                              "Failed to map secret '{}' to requested object type due to: {}.",
-                              secretEntry.name(),
-                              e.getMessage());
-                        }
-                      });
-            });
-    return result;
+                        });
+              });
+    } catch (final Exception e) {
+      LOG.warn("Unexpected error during AWS list-secrets operation", e);
+      exceptions.add(e);
+    }
+    return new SecretValueResult<>(result, exceptions);
   }
 
   @Override
