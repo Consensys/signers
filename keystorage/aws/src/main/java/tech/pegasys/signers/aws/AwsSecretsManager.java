@@ -17,6 +17,7 @@ import static tech.pegasys.signers.common.SecretValueMapperUtil.mapSecretValue;
 import tech.pegasys.signers.common.SecretValueResult;
 
 import java.io.Closeable;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -32,6 +33,7 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClientBuilder;
 import software.amazon.awssdk.services.secretsmanager.model.Filter;
 import software.amazon.awssdk.services.secretsmanager.model.FilterNameStringType;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
@@ -52,23 +54,31 @@ public class AwsSecretsManager implements Closeable {
   }
 
   static AwsSecretsManager createAwsSecretsManager(
-      final String accessKeyId, final String secretAccessKey, final String region) {
+      final String accessKeyId,
+      final String secretAccessKey,
+      final String region,
+      final Optional<URI> awsEndpointURI) {
     final AwsBasicCredentials awsBasicCredentials =
         AwsBasicCredentials.create(accessKeyId, secretAccessKey);
     final StaticCredentialsProvider credentialsProvider =
         StaticCredentialsProvider.create(awsBasicCredentials);
 
-    final SecretsManagerClient secretsManagerClient =
+    final SecretsManagerClientBuilder builder =
         SecretsManagerClient.builder()
             .credentialsProvider(credentialsProvider)
-            .region(Region.of(region))
-            .build();
+            .region(Region.of(region));
+
+    awsEndpointURI.ifPresent(builder::endpointOverride);
+
+    final SecretsManagerClient secretsManagerClient = builder.build();
 
     return new AwsSecretsManager(secretsManagerClient);
   }
 
-  static AwsSecretsManager createAwsSecretsManager() {
-    final SecretsManagerClient secretsManagerClient = SecretsManagerClient.builder().build();
+  static AwsSecretsManager createAwsSecretsManager(final Optional<URI> awsEndpointURI) {
+    final SecretsManagerClientBuilder builder = SecretsManagerClient.builder();
+    awsEndpointURI.ifPresent(builder::endpointOverride);
+    final SecretsManagerClient secretsManagerClient = builder.build();
 
     return new AwsSecretsManager(secretsManagerClient);
   }

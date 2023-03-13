@@ -18,6 +18,7 @@ import static tech.pegasys.signers.aws.SecretsMaps.SECRET_NAME_PREFIX_A;
 
 import tech.pegasys.signers.common.SecretValueResult;
 
+import java.net.URI;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +37,7 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClientBuilder;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretRequest;
 import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretResponse;
@@ -78,6 +80,12 @@ class AwsSecretsManagerTest {
   private static final String AWS_REGION =
       Optional.ofNullable(System.getenv("AWS_REGION")).orElse("us-east-2");
 
+  // can be pointed to localstack
+  private final Optional<URI> awsEndpointOverride =
+      System.getenv("AWS_ENDPOINT_OVERRIDE") != null
+          ? Optional.of(URI.create(System.getenv("AWS_ENDPOINT_OVERRIDE")))
+          : Optional.empty();
+
   private AwsSecretsManager awsSecretsManagerDefault;
   private AwsSecretsManager awsSecretsManagerExplicit;
   private AwsSecretsManager awsSecretsManagerInvalidCredentials;
@@ -87,6 +95,7 @@ class AwsSecretsManagerTest {
 
   @BeforeAll
   void setup() {
+    System.out.println("*** " + awsEndpointOverride.get());
     initAwsSecretsManagers();
     initTestSecretsManagerClient();
     createTestSecrets();
@@ -392,12 +401,14 @@ class AwsSecretsManagerTest {
   }
 
   private void initAwsSecretsManagers() {
-    awsSecretsManagerDefault = AwsSecretsManager.createAwsSecretsManager();
+
+    awsSecretsManagerDefault = AwsSecretsManager.createAwsSecretsManager(awsEndpointOverride);
     awsSecretsManagerExplicit =
         AwsSecretsManager.createAwsSecretsManager(
-            RO_AWS_ACCESS_KEY_ID, RO_AWS_SECRET_ACCESS_KEY, AWS_REGION);
+            RO_AWS_ACCESS_KEY_ID, RO_AWS_SECRET_ACCESS_KEY, AWS_REGION, awsEndpointOverride);
     awsSecretsManagerInvalidCredentials =
-        AwsSecretsManager.createAwsSecretsManager("invalid", "invalid", AWS_REGION);
+        AwsSecretsManager.createAwsSecretsManager(
+            "invalid", "invalid", AWS_REGION, Optional.empty());
   }
 
   private void initTestSecretsManagerClient() {
@@ -405,11 +416,13 @@ class AwsSecretsManagerTest {
         AwsBasicCredentials.create(RW_AWS_ACCESS_KEY_ID, RW_AWS_SECRET_ACCESS_KEY);
     final StaticCredentialsProvider credentialsProvider =
         StaticCredentialsProvider.create(awsBasicCredentials);
-    testSecretsManagerClient =
+    SecretsManagerClientBuilder builder =
         SecretsManagerClient.builder()
             .credentialsProvider(credentialsProvider)
-            .region(Region.of(AWS_REGION))
-            .build();
+            .region(Region.of(AWS_REGION));
+    awsEndpointOverride.ifPresent(builder::endpointOverride);
+
+    testSecretsManagerClient = builder.build();
   }
 
   private void closeClients() {
