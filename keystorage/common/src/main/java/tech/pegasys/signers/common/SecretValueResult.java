@@ -19,18 +19,18 @@ import java.util.Collection;
  */
 public class SecretValueResult<R> {
   private final Collection<R> values;
-  private final Collection<Exception> exceptions;
+  private final int errorCount;
 
-  public SecretValueResult(final Collection<R> values, final Collection<Exception> exceptions) {
+  public SecretValueResult(final Collection<R> values, final int errorCount) {
     this.values = values;
-    this.exceptions = exceptions;
+    this.errorCount = errorCount;
   }
 
   public Collection<R> getValues() {
     return values;
   }
 
-  public Collection<Exception> getExceptions() {
-    return exceptions;
+  public int getErrorCount() {
+    return errorCount;
   }
 }

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 
 import org.apache.logging.log4j.LogManager;
@@ -112,7 +112,7 @@ public class AwsSecretsManager implements Closeable {
       final Collection<String> tagValues,
       final BiFunction<String, String, R> mapper) {
     final Set<R> result = ConcurrentHashMap.newKeySet();
-    final Collection<Exception> exceptions = new ConcurrentLinkedQueue<>();
+    final AtomicInteger errorCount = new AtomicInteger(0);
     try {
       listSecrets(namePrefixes, tagKeys, tagValues)
           .iterator()
@@ -138,15 +138,15 @@ public class AwsSecretsManager implements Closeable {
                                 "Failed to map secret '{}' to requested object type due to: {}.",
                                 secretEntry.name(),
                                 e.getMessage());
-                            exceptions.add(e);
+                            errorCount.incrementAndGet();
                           }
                         });
               });
     } catch (final Exception e) {
       LOG.warn("Unexpected error during AWS list-secrets operation", e);
-      exceptions.add(e);
+      errorCount.incrementAndGet();
     }
-    return new SecretValueResult<>(result, exceptions);
+    return new SecretValueResult<>(result, errorCount.intValue());
   }
 
   @Override

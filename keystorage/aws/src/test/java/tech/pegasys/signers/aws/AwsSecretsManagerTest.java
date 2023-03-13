@@ -388,7 +388,7 @@ class AwsSecretsManagerTest {
 
     assertThat(fetchedKeys).containsAll(expectedKeys);
     assertThat(fetchedKeys).doesNotContain(expectedKey);
-    assertThat(secretValueResult.getExceptions()).isNotEmpty();
+    assertThat(secretValueResult.getErrorCount()).isGreaterThan(0);
   }
 
   private void initAwsSecretsManagers() {
