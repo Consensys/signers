@@ -14,6 +14,7 @@ package tech.pegasys.signers.common;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -24,21 +25,25 @@ import org.apache.logging.log4j.Logger;
 public class SecretValueMapperUtil {
   private static final Logger LOG = LogManager.getLogger();
 
-  public static <R> Set<R> mapSecretValue(
+  public static <R> SecretValueResult<R> mapSecretValue(
       BiFunction<String, String, R> mapper, String secretName, String secretValue) {
-    return Streams.mapWithIndex(
-            secretValue.lines(),
-            (value, index) -> {
-              final R obj = mapper.apply(secretName, value);
-              if (obj == null) {
-                LOG.warn(
-                    "Value from secret name {} at index {} was not mapped and discarded.",
-                    secretName,
-                    index);
-              }
-              return obj;
-            })
-        .filter(Objects::nonNull)
-        .collect(Collectors.toSet());
+    final AtomicInteger errorCount = new AtomicInteger(0);
+    final Set<R> result =
+        Streams.mapWithIndex(
+                secretValue.lines(),
+                (value, index) -> {
+                  final R obj = mapper.apply(secretName, value);
+                  if (obj == null) {
+                    LOG.warn(
+                        "Value from secret name {} at index {} was not mapped and discarded.",
+                        secretName,
+                        index);
+                    errorCount.incrementAndGet();
+                  }
+                  return obj;
+                })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+    return new SecretValueResult<>(result, errorCount.intValue());
   }
 }

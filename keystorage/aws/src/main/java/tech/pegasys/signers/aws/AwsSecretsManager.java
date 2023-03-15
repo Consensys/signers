@@ -139,9 +139,12 @@ public class AwsSecretsManager implements Closeable {
                               LOG.warn(
                                   "Failed to fetch secret name '{}', and was discarded",
                                   secretEntry.name());
+                              errorCount.incrementAndGet();
                             } else {
-                              result.addAll(
-                                  mapSecretValue(mapper, secretEntry.name(), secretValue.get()));
+                              SecretValueResult<R> multiResult =
+                                  mapSecretValue(mapper, secretEntry.name(), secretValue.get());
+                              result.addAll(multiResult.getValues());
+                              errorCount.addAndGet(multiResult.getErrorCount());
                             }
                           } catch (final Exception e) {
                             LOG.warn(
