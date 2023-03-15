@@ -16,6 +16,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static tech.pegasys.signers.azure.AzureKeyVault.createUsingClientSecretCredentials;
 
+import tech.pegasys.signers.common.SecretValueResult;
+
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.Optional;
@@ -88,8 +90,9 @@ public class AzureKeyVaultTest {
     final AzureKeyVault azureKeyVault =
         createUsingClientSecretCredentials(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
 
-    Collection<SimpleEntry<String, String>> entries = azureKeyVault.mapSecrets(SimpleEntry::new);
-
+    final SecretValueResult<SimpleEntry<String, String>> result =
+        azureKeyVault.mapSecrets(SimpleEntry::new);
+    final Collection<SimpleEntry<String, String>> entries = result.getValues();
     final Optional<SimpleEntry<String, String>> myBlsEntry =
         entries.stream().filter(e -> e.getKey().equals("MyBls")).findAny();
     assertThat(myBlsEntry).isPresent();
@@ -106,7 +109,7 @@ public class AzureKeyVaultTest {
     final AzureKeyVault azureKeyVault =
         createUsingClientSecretCredentials(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
 
-    Collection<SimpleEntry<String, String>> entries =
+    final SecretValueResult<SimpleEntry<String, String>> result =
         azureKeyVault.mapSecrets(
             (name, value) -> {
               if (name.equals("MyBls")) {
@@ -114,6 +117,7 @@ public class AzureKeyVaultTest {
               }
               return new SimpleEntry<>(name, value);
             });
+    final Collection<SimpleEntry<String, String>> entries = result.getValues();
 
     final Optional<SimpleEntry<String, String>> testKeyEntry =
         entries.stream().filter(e -> e.getKey().equals("TEST-KEY")).findAny();
@@ -130,7 +134,7 @@ public class AzureKeyVaultTest {
     final AzureKeyVault azureKeyVault =
         createUsingClientSecretCredentials(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
 
-    Collection<SimpleEntry<String, String>> entries =
+    final SecretValueResult<SimpleEntry<String, String>> result =
         azureKeyVault.mapSecrets(
             (name, value) -> {
               if (name.equals("TEST-KEY")) {
@@ -138,6 +142,7 @@ public class AzureKeyVaultTest {
               }
               return new SimpleEntry<>(name, value);
             });
+    final Collection<SimpleEntry<String, String>> entries = result.getValues();
     final Optional<SimpleEntry<String, String>> testKeyEntry =
         entries.stream().filter(e -> e.getKey().equals("TEST-KEY")).findAny();
     assertThat(testKeyEntry).isEmpty();
