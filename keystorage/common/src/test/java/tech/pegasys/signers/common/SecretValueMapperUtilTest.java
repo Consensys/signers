@@ -34,10 +34,12 @@ class SecretValueMapperUtilTest {
 
   @Test
   void newlinesValuesAreMapped() {
-    Collection<String> mappedValues = mapSecretValue((k, v) -> v, "key", "value1\nvalue2").getValues();
+    Collection<String> mappedValues =
+        mapSecretValue((k, v) -> v, "key", "value1\nvalue2").getValues();
     assertThat(mappedValues).containsOnly("value1", "value2");
 
-    Collection<String> mappedValues2 = mapSecretValue((k, v) -> v, "key", "value1\nvalue2\n").getValues();
+    Collection<String> mappedValues2 =
+        mapSecretValue((k, v) -> v, "key", "value1\nvalue2\n").getValues();
     assertThat(mappedValues2).containsOnly("value1", "value2");
   }
 
@@ -55,7 +57,8 @@ class SecretValueMapperUtilTest {
 
   @Test
   void nullMappedIsNotReturned() {
-    SecretValueResult<String> result = mapSecretValue(
+    SecretValueResult<String> result =
+        mapSecretValue(
             (k, v) -> {
               if (v.startsWith("err")) {
                 return null;
@@ -78,7 +81,8 @@ class SecretValueMapperUtilTest {
 
   @Test
   void sameValuesAreMappedOnce() {
-    SecretValueResult<String> result = mapSecretValue(
+    SecretValueResult<String> result =
+        mapSecretValue(
             (k, v) -> {
               if (v.startsWith("err")) {
                 return null;
@@ -87,8 +91,7 @@ class SecretValueMapperUtilTest {
             },
             "key",
             "ok\nerr1\nerr2\nok\nok1");
-    Collection<String> mappedValues =
-        result.getValues();
+    Collection<String> mappedValues = result.getValues();
 
     assertThat(mappedValues).containsOnly("ok", "ok1");
     assertThat(result.getErrorCount()).isEqualTo(2);
