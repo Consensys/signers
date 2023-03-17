@@ -12,6 +12,8 @@
  */
 package tech.pegasys.signers.aws;
 
+import static tech.pegasys.signers.common.SecretValueMapperUtil.mapSecretValue;
+
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -120,17 +122,11 @@ public class AwsSecretsManager implements Closeable {
                           final Optional<String> secretValue = fetchSecret(secretEntry.name());
                           if (secretValue.isEmpty()) {
                             LOG.warn(
-                                "Failed to fetch secret value '{}', and was discarded",
+                                "Failed to fetch secret name '{}', and was discarded",
                                 secretEntry.name());
                           } else {
-                            final R obj = mapper.apply(secretEntry.name(), secretValue.get());
-                            if (obj == null) {
-                              LOG.warn(
-                                  "Mapped '{}' to a null object, and was discarded",
-                                  secretEntry.name());
-                            } else {
-                              result.add(obj);
-                            }
+                            result.addAll(
+                                mapSecretValue(mapper, secretEntry.name(), secretValue.get()));
                           }
                         } catch (final Exception e) {
                           LOG.warn(
