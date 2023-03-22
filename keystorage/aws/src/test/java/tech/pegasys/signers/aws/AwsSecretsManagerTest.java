@@ -95,7 +95,6 @@ class AwsSecretsManagerTest {
 
   @BeforeAll
   void setup() {
-    System.out.println("*** " + awsEndpointOverride.get());
     initAwsSecretsManagers();
     initTestSecretsManagerClient();
     createTestSecrets();
@@ -400,12 +399,26 @@ class AwsSecretsManagerTest {
     assertThat(secretValueResult.getErrorCount()).isEqualTo(1);
   }
 
-  private void initAwsSecretsManagers() {
+  @Test
+  void mapSecretsWithInvalidCredentialsReturnsError() {
+    SecretValueResult<SimpleEntry<String, String>> result =
+        awsSecretsManagerInvalidCredentials.mapSecrets(
+            Collections.emptyList(),
+            Collections.emptyList(),
+            Collections.emptyList(),
+            SimpleEntry::new);
 
+    assertThat(result.getErrorCount()).isOne();
+    assertThat(result.getValues()).isEmpty();
+  }
+
+  private void initAwsSecretsManagers() {
     awsSecretsManagerDefault = AwsSecretsManager.createAwsSecretsManager(awsEndpointOverride);
     awsSecretsManagerExplicit =
         AwsSecretsManager.createAwsSecretsManager(
             RO_AWS_ACCESS_KEY_ID, RO_AWS_SECRET_ACCESS_KEY, AWS_REGION, awsEndpointOverride);
+
+    // don't override endpoint for invalid credentials as localstack doesn't perform authentication
     awsSecretsManagerInvalidCredentials =
         AwsSecretsManager.createAwsSecretsManager(
             "invalid", "invalid", AWS_REGION, Optional.empty());
