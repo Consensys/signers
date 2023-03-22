@@ -151,6 +151,8 @@ dependencyManagement {
      */
 
      dependency 'net.minidev:json-smart:2.4.10'
+     dependency 'com.nimbusds:nimbus-jose-jwt:9.31'
+
 
   }
 }
