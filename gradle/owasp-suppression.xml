@@ -11,16 +11,14 @@
         <packageUrl regex="true">^(?!pkg:maven/org\.json/json@).+$</packageUrl>
         <cpe>cpe:/a:json-java_project:json-java</cpe>
     </suppress>
-    <supress>
-        <Notes>
-            <![CDATA[
-            Suppress false positive for CVE-2020-8908 as it is only applicable for versions up to 30.0. We use 31.1.
+    <suppress>
+        <notes><![CDATA[
+        Suppress false positive for CVE-2020-8908 as it is only applicable for versions up to 30.0. We use 31.1.
             Our code does not use com.google.common.io.Files.createTempDir() as well.
             - https://nvd.nist.gov/vuln/detail/cve-2020-8908
             - https://github.com/jeremylong/DependencyCheck/issues/5526
             - https://github.com/google/guava/issues/4011
-            ]]>
-        </Notes>
+        ]]></notes>
         <cve>CVE-2020-8908</cve>
-    </supress>
+    </suppress>
 </suppressions>
