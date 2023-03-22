@@ -83,6 +83,13 @@ public class AwsSecretsManager implements Closeable {
     return new AwsSecretsManager(secretsManagerClient);
   }
 
+  /**
+   * Fetch single secret using name.
+   *
+   * @param secretName Secret Name
+   * @return Optional with secret value. Empty if secret name doesn't exist.
+   * @throws RuntimeException if AWS SDK throws SecretsManagerException.
+   */
   public Optional<String> fetchSecret(final String secretName) {
     try {
       final GetSecretValueRequest getSecretValueRequest =
@@ -116,6 +123,15 @@ public class AwsSecretsManager implements Closeable {
         listSecretsRequestBuilder.filters(filters).build());
   }
 
+  /**
+   * Bulk load secrets.
+   *
+   * @param namePrefixes Collection of name prefixes to filter.
+   * @param tagKeys Collection of tags names to filter
+   * @param tagValues Collection of tag values to filter
+   * @param mapper The mapper function that can convert secret value to appropriate type
+   * @return SecretValueResult with collection of secret values and error count if any.
+   */
   public <R> SecretValueResult<R> mapSecrets(
       final Collection<String> namePrefixes,
       final Collection<String> tagKeys,
