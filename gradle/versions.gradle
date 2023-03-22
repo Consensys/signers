@@ -24,11 +24,11 @@ dependencyManagement {
     }
     dependency 'com.google.guava:guava:31.1-jre'
 
-    dependencySet(group: 'com.azure', version: '4.5.2') {
+    dependencySet(group: 'com.azure', version: '4.6.0') {
       entry 'azure-security-keyvault-secrets'
       entry 'azure-security-keyvault-keys'
     }
-    dependency 'com.azure:azure-identity:1.7.2'
+    dependency 'com.azure:azure-identity:1.8.1'
 
     dependency 'commons-cli:commons-cli:1.5.0'
 
