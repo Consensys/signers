@@ -24,11 +24,11 @@ dependencyManagement {
     }
     dependency 'com.google.guava:guava:31.1-jre'
 
-    dependencySet(group: 'com.azure', version: '4.5.2') {
+    dependencySet(group: 'com.azure', version: '4.6.0') {
       entry 'azure-security-keyvault-secrets'
       entry 'azure-security-keyvault-keys'
     }
-    dependency 'com.azure:azure-identity:1.7.2'
+    dependency 'com.azure:azure-identity:1.8.1'
 
     dependency 'commons-cli:commons-cli:1.5.0'
 
@@ -140,5 +140,19 @@ dependencyManagement {
 
     // used in tests to assert log message
     dependency 'de.neuland-bfi:assertj-logging-log4j:0.5.0'
+
+    // manual overriding to avoid CVE-2023-1370
+    /*
+     +--- com.azure:azure-identity -> 1.8.1
+     |    +--- com.microsoft.azure:msal4j:1.13.5
+     |    |    +--- com.nimbusds:oauth2-oidc-sdk:9.35
+     |    |    |    +--- net.minidev:json-smart:[1.3.3,2.4.8] -> 2.4.8
+     |    |    +--- net.minidev:json-smart:2.4.8 (*)
+     */
+
+     dependency 'net.minidev:json-smart:2.4.10'
+     dependency 'com.nimbusds:nimbus-jose-jwt:9.31'
+
+
   }
 }
