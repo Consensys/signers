@@ -39,6 +39,10 @@ public class SecretValueResult<R> {
     this.errorCount += other.errorCount;
   }
 
+  public void mergeErrorCount(final int otherErrorCount) {
+    this.errorCount += otherErrorCount;
+  }
+
   public Collection<R> getValues() {
     return values;
   }
