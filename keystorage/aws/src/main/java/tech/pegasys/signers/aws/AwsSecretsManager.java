@@ -127,39 +127,38 @@ public class AwsSecretsManager implements Closeable {
       listSecrets(namePrefixes, tagKeys, tagValues)
           .iterator()
           .forEachRemaining(
-              listSecretsResponse -> {
-                listSecretsResponse
-                    .secretList()
-                    .parallelStream()
-                    .forEach(
-                        secretEntry -> {
-                          try {
-                            final Optional<String> secretValue = fetchSecret(secretEntry.name());
-                            if (secretValue.isEmpty()) {
+              listSecretsResponse ->
+                  listSecretsResponse
+                      .secretList()
+                      .parallelStream()
+                      .forEach(
+                          secretEntry -> {
+                            try {
+                              final Optional<String> secretValue = fetchSecret(secretEntry.name());
+                              if (secretValue.isEmpty()) {
+                                LOG.warn(
+                                    "Failed to fetch secret name '{}', and was discarded",
+                                    secretEntry.name());
+                                errorCount.incrementAndGet();
+                              } else {
+                                SecretValueResult<R> multiResult =
+                                    mapSecretValue(mapper, secretEntry.name(), secretValue.get());
+                                result.addAll(multiResult.getValues());
+                                errorCount.addAndGet(multiResult.getErrorCount());
+                              }
+                            } catch (final Exception e) {
                               LOG.warn(
-                                  "Failed to fetch secret name '{}', and was discarded",
-                                  secretEntry.name());
+                                  "Failed to map secret '{}' to requested object type due to: {}.",
+                                  secretEntry.name(),
+                                  e.getMessage());
                               errorCount.incrementAndGet();
-                            } else {
-                              SecretValueResult<R> multiResult =
-                                  mapSecretValue(mapper, secretEntry.name(), secretValue.get());
-                              result.addAll(multiResult.getValues());
-                              errorCount.addAndGet(multiResult.getErrorCount());
                             }
-                          } catch (final Exception e) {
-                            LOG.warn(
-                                "Failed to map secret '{}' to requested object type due to: {}.",
-                                secretEntry.name(),
-                                e.getMessage());
-                            errorCount.incrementAndGet();
-                          }
-                        });
-              });
+                          }));
     } catch (final Exception e) {
       LOG.warn("Unexpected error during AWS list-secrets operation", e);
       errorCount.incrementAndGet();
     }
-    return new SecretValueResult<>(result, errorCount.intValue());
+    return SecretValueResult.newInstance(result, errorCount.intValue());
   }
 
   @Override

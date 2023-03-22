@@ -44,6 +44,6 @@ public class SecretValueMapperUtil {
                 })
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
-    return new SecretValueResult<>(result, errorCount.intValue());
+    return SecretValueResult.newInstance(result, errorCount.intValue());
   }
 }

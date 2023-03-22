@@ -13,17 +13,30 @@
 package tech.pegasys.signers.common;
 
 import java.util.Collection;
+import java.util.Collections;
 
-/**
- * Contains Collection of Secret value result and collection of exceptions which may have raised.
- */
+/** Contains Collection of Secret value result and count of errors. */
 public class SecretValueResult<R> {
   private final Collection<R> values;
-  private final int errorCount;
+  private int errorCount;
 
-  public SecretValueResult(final Collection<R> values, final int errorCount) {
+  SecretValueResult(final Collection<R> values, final int errorCount) {
     this.values = values;
     this.errorCount = errorCount;
+  }
+
+  public static <R> SecretValueResult<R> errorResult() {
+    return new SecretValueResult<>(Collections.emptyList(), 1);
+  }
+
+  public static <R> SecretValueResult<R> newInstance(
+      final Collection<R> values, final int errorCount) {
+    return new SecretValueResult<>(values, errorCount);
+  }
+
+  public void merge(final SecretValueResult<R> other) {
+    this.values.addAll(other.values);
+    this.errorCount += other.errorCount;
   }
 
   public Collection<R> getValues() {

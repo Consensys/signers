@@ -147,6 +147,6 @@ public class AzureKeyVault {
       LOG.error("Unexpected error during Azure map-secrets", e);
       errorCount.incrementAndGet();
     }
-    return new SecretValueResult<>(result, errorCount.intValue());
+    return SecretValueResult.newInstance(result, errorCount.intValue());
   }
 }
