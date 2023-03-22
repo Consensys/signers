@@ -1,5 +1,7 @@
 # Changelog
-
+## 2.2.7
+- Update Azure SDK versions
+--- 
 ## 2.2.6
 - Updating jackson and aws sdk versions
 ---
