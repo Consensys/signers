@@ -144,7 +144,7 @@ class AwsSecretsManagerTest {
     final String key = secretsMap.keySet().stream().findAny().orElseThrow();
     assertThatExceptionOfType(RuntimeException.class)
         .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(key))
-        .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
+        .withMessageContaining("Failed to fetch secret from AWS Secrets Manager");
   }
 
   @Test
@@ -396,7 +396,10 @@ class AwsSecretsManagerTest {
 
     assertThat(fetchedKeys).containsAll(expectedKeys);
     assertThat(fetchedKeys).doesNotContain(expectedKey);
-    assertThat(mappedResults.getErrorCount()).isEqualTo(1);
+    // we don't know the exact error count since this test is loading all the secrets from our live
+    // secret manager and
+    // some values fails to load due to read-only user doesn't have authentication on them.
+    assertThat(mappedResults.getErrorCount()).isGreaterThanOrEqualTo(1);
   }
 
   @Test
