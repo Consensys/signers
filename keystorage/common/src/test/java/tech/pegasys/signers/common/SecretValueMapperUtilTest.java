@@ -57,7 +57,7 @@ class SecretValueMapperUtilTest {
 
   @Test
   void nullMappedIsNotReturned() {
-    SecretValueResult<String> result =
+    MappedResults<String> result =
         mapSecretValue(
             (k, v) -> {
               if (v.startsWith("err")) {
@@ -81,7 +81,7 @@ class SecretValueMapperUtilTest {
 
   @Test
   void sameValuesAreMappedOnce() {
-    SecretValueResult<String> result =
+    MappedResults<String> result =
         mapSecretValue(
             (k, v) -> {
               if (v.startsWith("err")) {

@@ -12,7 +12,7 @@
  */
 package tech.pegasys.signers.azure;
 
-import tech.pegasys.signers.common.SecretValueResult;
+import tech.pegasys.signers.common.MappedResults;
 
 import java.util.List;
 import java.util.Optional;
@@ -108,7 +108,7 @@ public class AzureKeyVault {
         .collect(Collectors.toList());
   }
 
-  public <R> SecretValueResult<R> mapSecrets(final BiFunction<String, String, R> mapper) {
+  public <R> MappedResults<R> mapSecrets(final BiFunction<String, String, R> mapper) {
     final Set<R> result = ConcurrentHashMap.newKeySet();
     final AtomicInteger errorCount = new AtomicInteger(0);
     try {
@@ -147,6 +147,6 @@ public class AzureKeyVault {
       LOG.error("Unexpected error during Azure map-secrets", e);
       errorCount.incrementAndGet();
     }
-    return SecretValueResult.newInstance(result, errorCount.intValue());
+    return MappedResults.newInstance(result, errorCount.intValue());
   }
 }

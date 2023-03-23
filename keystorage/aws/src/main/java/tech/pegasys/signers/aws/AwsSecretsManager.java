@@ -14,7 +14,7 @@ package tech.pegasys.signers.aws;
 
 import static tech.pegasys.signers.common.SecretValueMapperUtil.mapSecretValue;
 
-import tech.pegasys.signers.common.SecretValueResult;
+import tech.pegasys.signers.common.MappedResults;
 
 import java.io.Closeable;
 import java.net.URI;
@@ -132,7 +132,7 @@ public class AwsSecretsManager implements Closeable {
    * @param mapper The mapper function that can convert secret value to appropriate type
    * @return SecretValueResult with collection of secret values and error count if any.
    */
-  public <R> SecretValueResult<R> mapSecrets(
+  public <R> MappedResults<R> mapSecrets(
       final Collection<String> namePrefixes,
       final Collection<String> tagKeys,
       final Collection<String> tagValues,
@@ -157,7 +157,7 @@ public class AwsSecretsManager implements Closeable {
                                     secretEntry.name());
                                 errorCount.incrementAndGet();
                               } else {
-                                SecretValueResult<R> multiResult =
+                                MappedResults<R> multiResult =
                                     mapSecretValue(mapper, secretEntry.name(), secretValue.get());
                                 result.addAll(multiResult.getValues());
                                 errorCount.addAndGet(multiResult.getErrorCount());
@@ -174,7 +174,7 @@ public class AwsSecretsManager implements Closeable {
       LOG.warn("Unexpected error during AWS list-secrets operation", e);
       errorCount.incrementAndGet();
     }
-    return SecretValueResult.newInstance(result, errorCount.intValue());
+    return MappedResults.newInstance(result, errorCount.intValue());
   }
 
   @Override

@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static tech.pegasys.signers.azure.AzureKeyVault.createUsingClientSecretCredentials;
 
-import tech.pegasys.signers.common.SecretValueResult;
+import tech.pegasys.signers.common.MappedResults;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
@@ -90,7 +90,7 @@ public class AzureKeyVaultTest {
     final AzureKeyVault azureKeyVault =
         createUsingClientSecretCredentials(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
 
-    final SecretValueResult<SimpleEntry<String, String>> result =
+    final MappedResults<SimpleEntry<String, String>> result =
         azureKeyVault.mapSecrets(SimpleEntry::new);
     final Collection<SimpleEntry<String, String>> entries = result.getValues();
     final Optional<SimpleEntry<String, String>> myBlsEntry =
@@ -109,7 +109,7 @@ public class AzureKeyVaultTest {
     final AzureKeyVault azureKeyVault =
         createUsingClientSecretCredentials(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
 
-    final SecretValueResult<SimpleEntry<String, String>> result =
+    final MappedResults<SimpleEntry<String, String>> result =
         azureKeyVault.mapSecrets(
             (name, value) -> {
               if (name.equals("MyBls")) {
@@ -134,7 +134,7 @@ public class AzureKeyVaultTest {
     final AzureKeyVault azureKeyVault =
         createUsingClientSecretCredentials(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
 
-    final SecretValueResult<SimpleEntry<String, String>> result =
+    final MappedResults<SimpleEntry<String, String>> result =
         azureKeyVault.mapSecrets(
             (name, value) -> {
               if (name.equals("TEST-KEY")) {

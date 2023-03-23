@@ -25,7 +25,7 @@ import org.apache.logging.log4j.Logger;
 public class SecretValueMapperUtil {
   private static final Logger LOG = LogManager.getLogger();
 
-  public static <R> SecretValueResult<R> mapSecretValue(
+  public static <R> MappedResults<R> mapSecretValue(
       BiFunction<String, String, R> mapper, String secretName, String secretValue) {
     final AtomicInteger errorCount = new AtomicInteger(0);
     final Set<R> result =
@@ -44,6 +44,6 @@ public class SecretValueMapperUtil {
                 })
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
-    return SecretValueResult.newInstance(result, errorCount.intValue());
+    return MappedResults.newInstance(result, errorCount.intValue());
   }
 }
