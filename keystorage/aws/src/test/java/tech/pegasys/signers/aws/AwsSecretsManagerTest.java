@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterAll;
@@ -397,7 +396,8 @@ class AwsSecretsManagerTest {
 
     assertThat(fetchedKeys).containsAll(expectedKeys);
     assertThat(fetchedKeys).doesNotContain(expectedKey);
-    // we don't know the exact error count since this test is loading all the secrets from our live secret manager and
+    // we don't know the exact error count since this test is loading all the secrets from our live
+    // secret manager and
     // some values fails to load due to read-only user doesn't have authentication on them.
     assertThat(mappedResults.getErrorCount()).isGreaterThanOrEqualTo(1);
   }
