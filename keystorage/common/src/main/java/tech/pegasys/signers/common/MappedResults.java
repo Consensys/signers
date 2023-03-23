@@ -37,13 +37,12 @@ public class MappedResults<R> {
     return new MappedResults<>(new HashSet<>(), 0);
   }
 
-  public static <R> MappedResults<R> newInstance(
-      final Collection<R> values, final int errorCount) {
+  public static <R> MappedResults<R> newInstance(final Collection<R> values, final int errorCount) {
     return new MappedResults<>(values, errorCount);
   }
 
   public static <R> MappedResults<R> merge(
-          final MappedResults<R> first, final MappedResults<R> second) {
+      final MappedResults<R> first, final MappedResults<R> second) {
     final List<R> combinedList =
         Stream.concat(first.values.stream(), second.values.stream()).collect(Collectors.toList());
     final int errorCount = first.errorCount + second.errorCount;
