@@ -14,6 +14,10 @@ package tech.pegasys.signers.common;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Contains Collection of Secret value result and count of errors. */
 public class SecretValueResult<R> {
@@ -29,14 +33,21 @@ public class SecretValueResult<R> {
     return new SecretValueResult<>(Collections.emptyList(), 1);
   }
 
+  public static <R> SecretValueResult<R> newSetInstance() {
+    return new SecretValueResult<>(new HashSet<>(), 0);
+  }
+
   public static <R> SecretValueResult<R> newInstance(
       final Collection<R> values, final int errorCount) {
     return new SecretValueResult<>(values, errorCount);
   }
 
-  public void merge(final SecretValueResult<R> other) {
-    this.values.addAll(other.values);
-    this.errorCount += other.errorCount;
+  public static <R> SecretValueResult<R> merge(
+      final SecretValueResult<R> first, final SecretValueResult<R> second) {
+    final List<R> combinedList =
+        Stream.concat(first.values.stream(), second.values.stream()).collect(Collectors.toList());
+    final int errorCount = first.errorCount + second.errorCount;
+    return new SecretValueResult<>(combinedList, errorCount);
   }
 
   public void mergeErrorCount(final int otherErrorCount) {
