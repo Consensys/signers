@@ -1,4 +1,7 @@
 # Changelog
+## 2.2.8
+- AWS/Azure Secret mapping results reporting error count. This can be used as part of healthcheck service.
+
 ## 2.2.7
 - Update Azure SDK versions
 --- 
