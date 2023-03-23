@@ -144,7 +144,7 @@ class AwsSecretsManagerTest {
     final String key = secretsMap.keySet().stream().findAny().orElseThrow();
     assertThatExceptionOfType(RuntimeException.class)
         .isThrownBy(() -> awsSecretsManagerInvalidCredentials.fetchSecret(key))
-        .withMessageContaining("Failed to fetch secret from AWS Secrets Manager.");
+        .withMessageContaining("Failed to fetch secret from AWS Secrets Manager");
   }
 
   @Test
