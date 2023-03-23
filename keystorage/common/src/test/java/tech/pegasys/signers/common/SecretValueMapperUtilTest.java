@@ -15,7 +15,7 @@ package tech.pegasys.signers.common;
 import static org.assertj.core.api.Assertions.assertThat;
 import static tech.pegasys.signers.common.SecretValueMapperUtil.mapSecretValue;
 
-import java.util.Set;
+import java.util.Collection;
 
 import de.neuland.assertj.logging.ExpectedLogging;
 import de.neuland.assertj.logging.ExpectedLoggingAssertions;
@@ -28,34 +28,36 @@ class SecretValueMapperUtilTest {
 
   @Test
   void singleValueIsMapped() {
-    Set<String> mappedValues = mapSecretValue((k, v) -> v, "key", "value");
+    Collection<String> mappedValues = mapSecretValue((k, v) -> v, "key", "value").getValues();
     assertThat(mappedValues).containsOnly("value");
   }
 
   @Test
   void newlinesValuesAreMapped() {
-    Set<String> mappedValues = mapSecretValue((k, v) -> v, "key", "value1\nvalue2");
+    Collection<String> mappedValues =
+        mapSecretValue((k, v) -> v, "key", "value1\nvalue2").getValues();
     assertThat(mappedValues).containsOnly("value1", "value2");
 
-    Set<String> mappedValues2 = mapSecretValue((k, v) -> v, "key", "value1\nvalue2\n");
+    Collection<String> mappedValues2 =
+        mapSecretValue((k, v) -> v, "key", "value1\nvalue2\n").getValues();
     assertThat(mappedValues2).containsOnly("value1", "value2");
   }
 
   @Test
   void emptyStringResultsEmptyCollection() {
-    Set<String> mappedValues = mapSecretValue((k, v) -> v, "key", "");
+    Collection<String> mappedValues = mapSecretValue((k, v) -> v, "key", "").getValues();
     assertThat(mappedValues).isEmpty();
   }
 
   @Test
   void emptyLineTerminationsReturnsEmptyStrings() {
-    assertThat(mapSecretValue((k, v) -> v, "key", "\n")).containsOnly("");
-    assertThat(mapSecretValue((k, v) -> v, "key", "\nok\n\n")).containsOnly("", "ok");
+    assertThat(mapSecretValue((k, v) -> v, "key", "\n").getValues()).containsOnly("");
+    assertThat(mapSecretValue((k, v) -> v, "key", "\nok\n\n").getValues()).containsOnly("", "ok");
   }
 
   @Test
   void nullMappedIsNotReturned() {
-    Set<String> mappedValues =
+    MappedResults<String> result =
         mapSecretValue(
             (k, v) -> {
               if (v.startsWith("err")) {
@@ -65,6 +67,7 @@ class SecretValueMapperUtilTest {
             },
             "0xabc",
             "ok1\nerr1\nerr2\nok2");
+    Collection<String> mappedValues = result.getValues();
 
     assertThat(mappedValues).containsOnly("ok1", "ok2");
 
@@ -72,11 +75,13 @@ class SecretValueMapperUtilTest {
         .hasWarningMessage("Value from secret name 0xabc at index 1 was not mapped and discarded.");
     ExpectedLoggingAssertions.assertThat(logging)
         .hasWarningMessage("Value from secret name 0xabc at index 2 was not mapped and discarded.");
+
+    assertThat(result.getErrorCount()).isEqualTo(2);
   }
 
   @Test
   void sameValuesAreMappedOnce() {
-    Set<String> mappedValues =
+    MappedResults<String> result =
         mapSecretValue(
             (k, v) -> {
               if (v.startsWith("err")) {
@@ -86,7 +91,9 @@ class SecretValueMapperUtilTest {
             },
             "key",
             "ok\nerr1\nerr2\nok\nok1");
+    Collection<String> mappedValues = result.getValues();
 
     assertThat(mappedValues).containsOnly("ok", "ok1");
+    assertThat(result.getErrorCount()).isEqualTo(2);
   }
 }

@@ -14,6 +14,7 @@ package tech.pegasys.signers.aws;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.net.URI;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
@@ -53,30 +54,42 @@ class AwsSecretsManagerProviderTest {
   private final String DIFFERENT_AWS_SECRET_ACCESS_KEY = System.getenv("RW_AWS_SECRET_ACCESS_KEY");
   private final String DIFFERENT_AWS_REGION = "us-east-1";
 
+  // can be pointed to localstack
+  private final Optional<URI> awsEndpointOverride =
+      System.getenv("AWS_ENDPOINT_OVERRIDE") != null
+          ? Optional.of(URI.create(System.getenv("AWS_ENDPOINT_OVERRIDE")))
+          : Optional.empty();
+
   private AwsSecretsManagerProvider awsSecretsManagerProvider;
 
   private AwsSecretsManager createDefaultSecretsManager() {
-    return awsSecretsManagerProvider.createAwsSecretsManager();
+    return awsSecretsManagerProvider.createAwsSecretsManager(awsEndpointOverride);
   }
 
   private AwsSecretsManager createSpecifiedSecretsManager() {
     return awsSecretsManagerProvider.createAwsSecretsManager(
-        AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION);
+        AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, awsEndpointOverride);
   }
 
   private AwsSecretsManager createSecretsManagerDifferentKeys() {
     return awsSecretsManagerProvider.createAwsSecretsManager(
-        DIFFERENT_AWS_ACCESS_KEY_ID, DIFFERENT_AWS_SECRET_ACCESS_KEY, AWS_REGION);
+        DIFFERENT_AWS_ACCESS_KEY_ID,
+        DIFFERENT_AWS_SECRET_ACCESS_KEY,
+        AWS_REGION,
+        awsEndpointOverride);
   }
 
   private AwsSecretsManager createSecretsManagerDifferentRegion() {
     return awsSecretsManagerProvider.createAwsSecretsManager(
-        AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, DIFFERENT_AWS_REGION);
+        AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, DIFFERENT_AWS_REGION, awsEndpointOverride);
   }
 
   private AwsSecretsManager createSecretsManagerDifferentKeysDifferentRegion() {
     return awsSecretsManagerProvider.createAwsSecretsManager(
-        DIFFERENT_AWS_ACCESS_KEY_ID, DIFFERENT_AWS_SECRET_ACCESS_KEY, DIFFERENT_AWS_REGION);
+        DIFFERENT_AWS_ACCESS_KEY_ID,
+        DIFFERENT_AWS_SECRET_ACCESS_KEY,
+        DIFFERENT_AWS_REGION,
+        awsEndpointOverride);
   }
 
   @BeforeEach

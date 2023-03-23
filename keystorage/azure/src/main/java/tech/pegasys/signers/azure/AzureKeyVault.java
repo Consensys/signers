@@ -12,11 +12,13 @@
  */
 package tech.pegasys.signers.azure;
 
-import java.util.Collection;
+import tech.pegasys.signers.common.MappedResults;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -106,41 +108,45 @@ public class AzureKeyVault {
         .collect(Collectors.toList());
   }
 
-  public <R> Collection<R> mapSecrets(final BiFunction<String, String, R> mapper) {
-    final PagedIterable<SecretProperties> secretsPagedIterable;
-    try {
-      secretsPagedIterable = secretClient.listPropertiesOfSecrets();
-    } catch (final Exception e) {
-      throw new RuntimeException(
-          "Failed to connect to an Azure Keyvault with provided configuration.", e);
-    }
-
+  public <R> MappedResults<R> mapSecrets(final BiFunction<String, String, R> mapper) {
     final Set<R> result = ConcurrentHashMap.newKeySet();
-    secretsPagedIterable
-        .streamByPage()
-        .forEach(
-            keyPage ->
-                keyPage
-                    .getValue()
-                    .parallelStream()
-                    .forEach(
-                        sp -> {
-                          try {
-                            final KeyVaultSecret secret = secretClient.getSecret(sp.getName());
-                            final R obj = mapper.apply(sp.getName(), secret.getValue());
-                            if (obj != null) {
-                              result.add(obj);
-                            } else {
-                              LOG.warn(
-                                  "Mapped '{}' to a null object, and was discarded", sp.getName());
-                            }
-                          } catch (final Exception e) {
-                            LOG.warn(
-                                "Failed to map secret '{}' to requested object type.",
-                                sp.getName());
-                          }
-                        }));
+    final AtomicInteger errorCount = new AtomicInteger(0);
+    try {
+      final PagedIterable<SecretProperties> secretsPagedIterable =
+          secretClient.listPropertiesOfSecrets();
 
-    return result;
+      secretsPagedIterable
+          .streamByPage()
+          .forEach(
+              keyPage ->
+                  keyPage
+                      .getValue()
+                      .parallelStream()
+                      .forEach(
+                          sp -> {
+                            try {
+                              final KeyVaultSecret secret = secretClient.getSecret(sp.getName());
+                              final R obj = mapper.apply(sp.getName(), secret.getValue());
+                              if (obj != null) {
+                                result.add(obj);
+                              } else {
+                                LOG.warn(
+                                    "Mapped '{}' to a null object, and was discarded",
+                                    sp.getName());
+                                errorCount.incrementAndGet();
+                              }
+                            } catch (final Exception e) {
+                              LOG.warn(
+                                  "Failed to map secret '{}' to requested object type.",
+                                  sp.getName());
+                              errorCount.incrementAndGet();
+                            }
+                          }));
+
+    } catch (final Exception e) {
+      LOG.error("Unexpected error during Azure map-secrets", e);
+      errorCount.incrementAndGet();
+    }
+    return MappedResults.newInstance(result, errorCount.intValue());
   }
 }
