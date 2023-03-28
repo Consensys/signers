@@ -14,13 +14,12 @@ package tech.pegasys.signers.azure;
 
 import tech.pegasys.signers.common.MappedResults;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.exception.ResourceNotFoundException;
@@ -102,13 +101,16 @@ public class AzureKeyVault {
     return String.format("https://%s.vault.azure.net", keyVaultName);
   }
 
-  public List<String> getAvailableSecrets() {
-    return secretClient.listPropertiesOfSecrets().stream()
-        .map(SecretProperties::getName)
-        .collect(Collectors.toList());
-  }
-
-  public <R> MappedResults<R> mapSecrets(final BiFunction<String, String, R> mapper) {
+  /**
+   * Fetch multiple secrets from Azure. Apply mapper function to transform the secret values.
+   *
+   * @param mapper The mapper function to transform secret values to type R.
+   * @param tags Map of tags. Only secrets which contains all the tags entries are processed.
+   * @return Mapped results containing the converted secrets and error count.
+   * @param <R> The result type of mapper function.
+   */
+  public <R> MappedResults<R> mapSecrets(
+      final BiFunction<String, String, R> mapper, final Map<String, String> tags) {
     final Set<R> result = ConcurrentHashMap.newKeySet();
     final AtomicInteger errorCount = new AtomicInteger(0);
     try {
@@ -122,6 +124,7 @@ public class AzureKeyVault {
                   keyPage
                       .getValue()
                       .parallelStream()
+                      .filter(secretProperties -> secretPropertiesPredicate(tags, secretProperties))
                       .forEach(
                           sp -> {
                             try {
@@ -148,5 +151,15 @@ public class AzureKeyVault {
       errorCount.incrementAndGet();
     }
     return MappedResults.newInstance(result, errorCount.intValue());
+  }
+
+  private static boolean secretPropertiesPredicate(
+      final Map<String, String> tags, final SecretProperties secretProperties) {
+    if (tags == null || tags.isEmpty()) {
+      return true; // we don't want to filter if user-supplied tags map is empty
+    }
+
+    return secretProperties.getTags() != null // return false if remote secret doesn't have any tags
+        && secretProperties.getTags().entrySet().containsAll(tags.entrySet());
   }
 }

@@ -1,4 +1,7 @@
 # Changelog
+## 2.2.9
+- Azure bulk map secrets can now be filtered based on tags.
+
 ## 2.2.8
 - AWS/Azure Secret mapping results reporting error count. This can be used as part of healthcheck service.
 

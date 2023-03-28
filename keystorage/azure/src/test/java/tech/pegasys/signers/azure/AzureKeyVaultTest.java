@@ -20,6 +20,8 @@ import tech.pegasys.signers.common.MappedResults;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assumptions;
@@ -78,20 +80,12 @@ public class AzureKeyVaultTest {
   }
 
   @Test
-  void listSecretsProducesExpectedResult() {
-    final AzureKeyVault azureKeyVault =
-        createUsingClientSecretCredentials(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
-
-    assertThat(azureKeyVault.getAvailableSecrets()).contains(SECRET_NAME);
-  }
-
-  @Test
   void secretsCanBeMappedUsingCustomMappingFunction() {
     final AzureKeyVault azureKeyVault =
         createUsingClientSecretCredentials(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
 
     final MappedResults<SimpleEntry<String, String>> result =
-        azureKeyVault.mapSecrets(SimpleEntry::new);
+        azureKeyVault.mapSecrets(SimpleEntry::new, Collections.emptyMap());
     final Collection<SimpleEntry<String, String>> entries = result.getValues();
     final Optional<SimpleEntry<String, String>> myBlsEntry =
         entries.stream().filter(e -> e.getKey().equals("MyBls")).findAny();
@@ -102,6 +96,42 @@ public class AzureKeyVaultTest {
         entries.stream().filter(e -> e.getKey().equals("TEST-KEY")).findAny();
     assertThat(testKeyEntry).isPresent();
     assertThat(testKeyEntry.get().getValue()).isEqualTo(EXPECTED_KEY);
+  }
+
+  @Test
+  void mapSecretsUsingTags() {
+    final AzureKeyVault azureKeyVault =
+        createUsingClientSecretCredentials(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
+
+    final MappedResults<SimpleEntry<String, String>> result =
+        azureKeyVault.mapSecrets(SimpleEntry::new, Map.of("ENV", "TEST"));
+    // The Secrets vault is set up with one secret with this tag. Make sure that it is the only
+    // secret that is returned.
+    assertThat(result.getValues().size()).isOne();
+    Optional<SimpleEntry<String, String>> secretEntry =
+        result.getValues().stream()
+            .filter(entry -> "TEST-KEY-2".equals(entry.getKey()))
+            .findFirst();
+    assertThat(secretEntry).isPresent();
+    assertThat(secretEntry.get().getValue()).isEqualTo(EXPECTED_KEY);
+
+    // we should not encounter any error count
+    assertThat(result.getErrorCount()).isZero();
+  }
+
+  @Test
+  void mapSecretsWhenTagsDoesNotExist() {
+    final AzureKeyVault azureKeyVault =
+        createUsingClientSecretCredentials(CLIENT_ID, CLIENT_SECRET, TENANT_ID, VAULT_NAME);
+
+    final MappedResults<SimpleEntry<String, String>> result =
+        azureKeyVault.mapSecrets(SimpleEntry::new, Map.of("INVALID_TAG", "INVALID_TEST"));
+
+    // The secret vault is not expected to have any secrets with above tags.
+    assertThat(result.getValues()).isEmpty();
+
+    // we should not encounter any error count
+    assertThat(result.getErrorCount()).isZero();
   }
 
   @Test
@@ -116,7 +146,8 @@ public class AzureKeyVaultTest {
                 throw new RuntimeException("Arbitrary Failure");
               }
               return new SimpleEntry<>(name, value);
-            });
+            },
+            Collections.emptyMap());
     final Collection<SimpleEntry<String, String>> entries = result.getValues();
 
     final Optional<SimpleEntry<String, String>> testKeyEntry =
@@ -141,7 +172,8 @@ public class AzureKeyVaultTest {
                 return null;
               }
               return new SimpleEntry<>(name, value);
-            });
+            },
+            Collections.emptyMap());
     final Collection<SimpleEntry<String, String>> entries = result.getValues();
     final Optional<SimpleEntry<String, String>> testKeyEntry =
         entries.stream().filter(e -> e.getKey().equals("TEST-KEY")).findAny();
