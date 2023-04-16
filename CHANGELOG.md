@@ -1,5 +1,5 @@
 # Changelog
-## 2.3.10
+## 2.2.10
 - Cache Hashicorp connection for same host/port
 
 ## 2.2.9
