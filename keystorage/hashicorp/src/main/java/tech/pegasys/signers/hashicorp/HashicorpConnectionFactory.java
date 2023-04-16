@@ -70,6 +70,8 @@ public class HashicorpConnectionFactory implements AutoCloseable {
               new HttpClientOptions()
                   .setDefaultHost(serverHost)
                   .setDefaultPort(serverPort)
+                  .setKeepAlive(true)
+                  .setTcpKeepAlive(true)
                   .setShared(true);
 
           final HttpClient httpClient;
