@@ -15,6 +15,10 @@ package tech.pegasys.signers.hashicorp;
 import tech.pegasys.signers.hashicorp.config.ConnectionParameters;
 import tech.pegasys.signers.hashicorp.config.TlsOptions;
 
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
@@ -25,7 +29,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.net.tls.VertxTrustOptions;
 
-public class HashicorpConnectionFactory {
+/**
+ * Factory for Hashicorp connections. The HttpClient is cached for same host/port so that connection
+ * pooling provided by the vertx http client can be utilized.
+ */
+public class HashicorpConnectionFactory implements AutoCloseable {
 
   private static final Logger LOG = LogManager.getLogger();
 
@@ -34,32 +42,48 @@ public class HashicorpConnectionFactory {
   public static final Long DEFAULT_TIMEOUT_MILLISECONDS = 10_000L;
   public static final Integer DEFAULT_SERVER_PORT = 8200;
 
+  private final Map<String, HttpClient> httpClientMap = new HashMap<>();
+
   public HashicorpConnectionFactory(final Vertx vertx) {
     this.vertx = vertx;
   }
 
   public HashicorpConnection create(final ConnectionParameters connectionParameters) {
-    final int serverPort = connectionParameters.getServerPort().orElse(DEFAULT_SERVER_PORT);
-
-    final HttpClientOptions httpClientOptions =
-        new HttpClientOptions()
-            .setDefaultHost(connectionParameters.getServerHost())
-            .setDefaultPort(serverPort);
-
-    final HttpClient httpClient;
-    try {
-      if (connectionParameters.getTlsOptions().isPresent()) {
-        LOG.debug("Connection to hashicorp vault using TLS.");
-        setTlsOptions(httpClientOptions, connectionParameters.getTlsOptions().get());
-      }
-      httpClient = vertx.createHttpClient(httpClientOptions);
-    } catch (final Exception e) {
-      throw new HashicorpException("Unable to initialise connection to hashicorp vault.", e);
-    }
+    final HttpClient httpClient = getHttpClient(connectionParameters);
 
     return new HashicorpConnection(
         httpClient,
         connectionParameters.getTimeoutMilliseconds().orElse(DEFAULT_TIMEOUT_MILLISECONDS));
+  }
+
+  private HttpClient getHttpClient(ConnectionParameters connectionParameters) {
+    final String scheme = connectionParameters.getTlsOptions().isPresent() ? "https" : "http";
+    final String serverHost = connectionParameters.getServerHost();
+    final int serverPort = connectionParameters.getServerPort().orElse(DEFAULT_SERVER_PORT);
+    final String vaultURI =
+        String.format("%s://%s:%d", scheme, serverHost, serverPort).toLowerCase(Locale.ROOT);
+
+    return httpClientMap.computeIfAbsent(
+        vaultURI,
+        _key -> {
+          final HttpClientOptions httpClientOptions =
+              new HttpClientOptions()
+                  .setDefaultHost(serverHost)
+                  .setDefaultPort(serverPort)
+                  .setShared(true);
+
+          final HttpClient httpClient;
+          try {
+            if (connectionParameters.getTlsOptions().isPresent()) {
+              LOG.debug("Connection to hashicorp vault using TLS.");
+              setTlsOptions(httpClientOptions, connectionParameters.getTlsOptions().get());
+            }
+            httpClient = vertx.createHttpClient(httpClientOptions);
+          } catch (final Exception e) {
+            throw new HashicorpException("Unable to initialise connection to hashicorp vault.", e);
+          }
+          return httpClient;
+        });
   }
 
   private void setTlsOptions(
@@ -127,6 +151,13 @@ public class HashicorpConnectionFactory {
               "To use a %s trust store for TLS connections, "
                   + "the trustStore password must be set",
               trustStoreType.name()));
+    }
+  }
+
+  @Override
+  public void close() {
+    for (HttpClient httpClient : httpClientMap.values()) {
+      httpClient.close();
     }
   }
 }
