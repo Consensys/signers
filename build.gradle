@@ -232,7 +232,6 @@ allprojects {
       'java.base/java.util.concurrent=ALL-UNNAMED',
       '--add-exports',
       "java.base/sun.security.x509=ALL-UNNAMED"
-
     ]
     Set toImport = [
       'root.log.level',
@@ -374,7 +373,12 @@ subprojects {
     classpath = sourceSets.integrationTest.runtimeClasspath
     outputs.upToDateWhen { false }
 
-    jvmArgs = ['-Xms512m', '-Xmx1g', '--add-exports', 'java.base/sun.security.x509=ALL-UNNAMED']
+    jvmArgs = [
+      '-Xms512m',
+      '-Xmx1g',
+      '--add-exports',
+      'java.base/sun.security.x509=ALL-UNNAMED'
+    ]
 
     useJUnitPlatform()
   }
