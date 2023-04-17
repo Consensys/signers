@@ -32,7 +32,7 @@ public class HashicorpConnectionFactoryTest {
   final String CONFIGURED_HOST = "Host";
 
   final Vertx vertx = Vertx.vertx();
-  final HashicorpConnectionFactory connectionFactory = new HashicorpConnectionFactory(vertx);
+  final HashicorpConnectionFactory connectionFactory = new HashicorpConnectionFactory();
 
   @AfterEach
   void cleanup() {

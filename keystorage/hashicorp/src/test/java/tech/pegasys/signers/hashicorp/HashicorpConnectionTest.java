@@ -15,7 +15,6 @@ package tech.pegasys.signers.hashicorp;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import tech.pegasys.signers.hashicorp.config.ConnectionParameters;
-import tech.pegasys.signers.hashicorp.config.KeyDefinition;
 import tech.pegasys.signers.hashicorp.config.TlsOptions;
 
 import java.io.EOFException;
@@ -26,15 +25,12 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 import com.google.common.io.Resources;
-import io.vertx.core.Vertx;
 import org.junit.jupiter.api.Test;
 
 public class HashicorpConnectionTest {
 
   private static final String CONFIGURED_HOST = "Host";
-  private final Vertx vertx = Vertx.vertx();
-  private final HashicorpConnectionFactory connectionFactory =
-      new HashicorpConnectionFactory(vertx);
+  private final HashicorpConnectionFactory connectionFactory = new HashicorpConnectionFactory();
 
   @Test
   void missingJksTrustStoreFileThrowsHashicorpException() throws IOException {
@@ -48,11 +44,9 @@ public class HashicorpConnectionTest {
         new ConnectionParameters(
             CONFIGURED_HOST, Optional.empty(), Optional.of(tlsOptions), Optional.of(10L));
 
-    final KeyDefinition keyDefinition = new KeyDefinition("any/path", Optional.empty(), "anyName");
-    final HashicorpConnection connection = connectionFactory.create(params);
-    assertThatThrownBy(() -> connection.fetchKey(keyDefinition))
+    assertThatThrownBy(() -> connectionFactory.create(params))
         .isInstanceOf(HashicorpException.class)
-        .hasMessage("Error while waiting for response from Hashicorp Vault")
+        .hasMessage("Unable to initialise connection to hashicorp vault.")
         .getCause()
         .isInstanceOf(EOFException.class);
   }
@@ -71,11 +65,9 @@ public class HashicorpConnectionTest {
         new ConnectionParameters(
             CONFIGURED_HOST, Optional.empty(), Optional.of(tlsOptions), Optional.of(10L));
 
-    final KeyDefinition keyDefinition = new KeyDefinition("any/path", Optional.empty(), "anyName");
-    final HashicorpConnection connection = connectionFactory.create(params);
-    assertThatThrownBy(() -> connection.fetchKey(keyDefinition))
+    assertThatThrownBy(() -> connectionFactory.create(params))
         .isInstanceOf(HashicorpException.class)
-        .hasMessage("Error while waiting for response from Hashicorp Vault")
+        .hasMessage("Unable to initialise connection to hashicorp vault.")
         .getCause()
         .isInstanceOf(IOException.class)
         .hasMessage("keystore password was incorrect");

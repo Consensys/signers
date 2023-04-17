@@ -12,13 +12,18 @@
  */
 package tech.pegasys.signers.hashicorp.config;
 
+import java.net.URI;
 import java.util.Optional;
 
 public class ConnectionParameters {
-  private String serverHost;
-  private Optional<Integer> serverPort;
-  private Optional<TlsOptions> tlsOptions;
-  private Optional<Long> timeoutMs;
+  private static final Long DEFAULT_TIMEOUT_MILLISECONDS = 10_000L;
+  private static final Integer DEFAULT_SERVER_PORT = 8200;
+  private final String serverHost;
+  private final int serverPort;
+  private final Optional<TlsOptions> tlsOptions;
+  private final long timeoutMs;
+
+  private final URI vaultURI;
 
   /* Optional parameters will be set to their defaults when connecting */
   public ConnectionParameters(
@@ -27,16 +32,18 @@ public class ConnectionParameters {
       final Optional<TlsOptions> tlsOptions,
       final Optional<Long> timeoutMs) {
     this.serverHost = serverHost;
-    this.serverPort = serverPort;
+    this.serverPort = serverPort.orElse(DEFAULT_SERVER_PORT);
     this.tlsOptions = tlsOptions;
-    this.timeoutMs = timeoutMs;
+    this.timeoutMs = timeoutMs.orElse(DEFAULT_TIMEOUT_MILLISECONDS);
+    final String scheme = tlsOptions.isPresent() ? "https" : "http";
+    this.vaultURI = URI.create(String.format("%s://%s:%d", scheme, serverHost, this.serverPort));
   }
 
   public String getServerHost() {
     return serverHost;
   }
 
-  public Optional<Integer> getServerPort() {
+  public int getServerPort() {
     return serverPort;
   }
 
@@ -44,7 +51,11 @@ public class ConnectionParameters {
     return tlsOptions;
   }
 
-  public Optional<Long> getTimeoutMilliseconds() {
+  public long getTimeoutMilliseconds() {
     return timeoutMs;
+  }
+
+  public URI getVaultURI() {
+    return vaultURI;
   }
 }

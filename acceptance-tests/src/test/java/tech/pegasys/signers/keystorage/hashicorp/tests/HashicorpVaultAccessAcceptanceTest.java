@@ -28,7 +28,6 @@ import java.security.cert.CertificateEncodingException;
 import java.util.Collections;
 import java.util.Optional;
 
-import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterEach;
@@ -38,7 +37,6 @@ import org.junit.jupiter.api.io.TempDir;
 public class HashicorpVaultAccessAcceptanceTest {
 
   private static final Logger LOG = LogManager.getLogger();
-  private final Vertx vertx = Vertx.vertx();
 
   private HashicorpNode hashicorpNode;
 
@@ -48,12 +46,6 @@ public class HashicorpVaultAccessAcceptanceTest {
 
   @AfterEach
   void cleanup() {
-    try {
-      vertx.close();
-    } catch (final Exception e) {
-      LOG.error("Failed to close vertx.", e);
-    }
-
     try {
       if (hashicorpNode != null) {
         hashicorpNode.shutdown();
@@ -214,7 +206,7 @@ public class HashicorpVaultAccessAcceptanceTest {
   private String fetchSecretFromVault(final Path configFilePath) {
     final HashicorpKeyConfig config = TomlConfigLoader.fromToml(configFilePath, null);
 
-    final HashicorpConnectionFactory factory = new HashicorpConnectionFactory(vertx);
+    final HashicorpConnectionFactory factory = new HashicorpConnectionFactory();
     final HashicorpConnection connection = factory.create(config.getConnectionParams());
 
     return connection.fetchKey(config.getKeyDefinition());

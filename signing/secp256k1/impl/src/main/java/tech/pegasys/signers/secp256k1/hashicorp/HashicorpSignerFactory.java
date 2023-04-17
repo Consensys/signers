@@ -20,20 +20,14 @@ import tech.pegasys.signers.secp256k1.api.Signer;
 import tech.pegasys.signers.secp256k1.common.SignerInitializationException;
 import tech.pegasys.signers.secp256k1.filebased.CredentialSigner;
 
-import io.vertx.core.Vertx;
 import org.web3j.crypto.Credentials;
 
 public class HashicorpSignerFactory {
 
-  private Vertx vertx;
-
-  public HashicorpSignerFactory(final Vertx vertx) {
-    this.vertx = vertx;
-  }
+  public HashicorpSignerFactory() {}
 
   public Signer create(final HashicorpKeyConfig keyConfig) {
-    try {
-      final HashicorpConnectionFactory connectionFactory = new HashicorpConnectionFactory(vertx);
+    try (final HashicorpConnectionFactory connectionFactory = new HashicorpConnectionFactory()) {
       final HashicorpConnection connection =
           connectionFactory.create(keyConfig.getConnectionParams());
       final String secret = connection.fetchKey(keyConfig.getKeyDefinition());
@@ -44,10 +38,5 @@ public class HashicorpSignerFactory {
     }
   }
 
-  public void shutdown() {
-    if (vertx != null) {
-      vertx.close();
-      vertx = null;
-    }
-  }
+  public void shutdown() {}
 }
