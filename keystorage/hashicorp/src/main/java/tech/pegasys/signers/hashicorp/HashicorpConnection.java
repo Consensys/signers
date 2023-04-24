@@ -31,7 +31,8 @@ public class HashicorpConnection {
   private final HttpClient httpClient;
   private final ConnectionParameters connectionParameters;
 
-  HashicorpConnection(final HttpClient httpClient, ConnectionParameters connectionParameters) {
+  HashicorpConnection(
+      final HttpClient httpClient, final ConnectionParameters connectionParameters) {
     this.httpClient = httpClient;
     this.connectionParameters = connectionParameters;
   }
@@ -40,29 +41,35 @@ public class HashicorpConnection {
     final Map<String, String> kvMap = fetchKeyValuesFromVault(key);
     final String keyName = key.getKeyName().orElse(DEFAULT_HASHICORP_KEY_NAME);
     return Optional.ofNullable(kvMap.get(keyName))
-        .orElseThrow(() -> new HashicorpException("Requested Secret name does not exist."));
+        .orElseThrow(
+            () ->
+                new HashicorpException(
+                    "Error communicating with Hashicorp vault: Requested Secret name does not exist."));
   }
 
   private Map<String, String> fetchKeyValuesFromVault(final KeyDefinition keyDefinition) {
     final URI vaultReadURI =
         connectionParameters.getVaultURI().resolve(keyDefinition.getKeyPath()).normalize();
-    HttpRequest httpRequest =
+    final HttpRequest httpRequest =
         HttpRequest.newBuilder(vaultReadURI)
             .header("X-Vault-Token", keyDefinition.getToken())
             .header("Content-Type", "application/json")
             .timeout(Duration.ofMillis(connectionParameters.getTimeoutMilliseconds()))
             .GET()
             .build();
-    HttpResponse<String> response;
+    final HttpResponse<String> response;
     try {
       response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-    } catch (IOException | InterruptedException | RuntimeException e) {
-      throw new HashicorpException("Error communicating to Hashicorp vault: " + e.getMessage(), e);
+    } catch (final IOException | InterruptedException | RuntimeException e) {
+      throw new HashicorpException(
+          "Error communicating with Hashicorp vault: " + e.getMessage(), e);
     }
 
-    if (response.statusCode() < 200 || response.statusCode() > 299) {
+    if (response.statusCode() != 200 && response.statusCode() != 204) {
       throw new HashicorpException(
-          String.format("Invalid Http Status code %d", response.statusCode()));
+          String.format(
+              "Error communicating with Hashicorp vault: Received invalid Http status code %d.",
+              response.statusCode()));
     }
 
     return HashicorpKVResponseMapper.from(response.body());

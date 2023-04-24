@@ -75,7 +75,8 @@ public class HashicorpConnectionFactory implements AutoCloseable {
       return SSLContext.getDefault();
     }
 
-    final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+    // Hashicorp vault support TLSv1.3 by default, hence we default to TLSv1.3 being more secure.
+    final SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
     sslContext.init(
         null,
         TrustManagerFactoryProvider.getTrustManagerFactory(tlsOptions).getTrustManagers(),
