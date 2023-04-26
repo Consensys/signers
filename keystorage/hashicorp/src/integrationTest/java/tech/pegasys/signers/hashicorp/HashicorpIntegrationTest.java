@@ -158,6 +158,7 @@ class HashicorpIntegrationTest {
 
     assertThatThrownBy(() -> connection.fetchKey(keyConfig.getKeyDefinition()))
         .isInstanceOf(HashicorpException.class)
-        .hasMessage("Invalid Http Status code 500");
+        .hasMessage(
+            "Error communicating with Hashicorp vault: Received invalid Http status code 500.");
   }
 }
