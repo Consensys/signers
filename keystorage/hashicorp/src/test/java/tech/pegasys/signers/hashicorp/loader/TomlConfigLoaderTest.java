@@ -50,8 +50,8 @@ public class TomlConfigLoaderTest {
     final HashicorpKeyConfig config = TomlConfigLoader.fromToml(configFile, null);
 
     assertThat(config.getConnectionParams().getServerHost()).isEqualTo(HOST);
-    assertThat(config.getConnectionParams().getServerPort().get()).isEqualTo(PORT);
-    assertThat(config.getConnectionParams().getTimeoutMilliseconds().get()).isEqualTo(TIMEOUT);
+    assertThat(config.getConnectionParams().getServerPort()).isEqualTo(PORT);
+    assertThat(config.getConnectionParams().getTimeoutMilliseconds()).isEqualTo(TIMEOUT);
     assertThat(config.getConnectionParams().getTlsOptions()).isEmpty();
 
     assertThat(config.getKeyDefinition().getToken()).isEqualTo(TOKEN);
@@ -233,8 +233,8 @@ public class TomlConfigLoaderTest {
 
     final HashicorpKeyConfig config = TomlConfigLoader.fromToml(configFile, null);
 
-    assertThat(config.getConnectionParams().getServerPort()).isEmpty();
-    assertThat(config.getConnectionParams().getTimeoutMilliseconds()).isEmpty();
+    assertThat(config.getConnectionParams().getServerPort()).isEqualTo(8200);
+    assertThat(config.getConnectionParams().getTimeoutMilliseconds()).isEqualTo(10_000L);
     assertThat(config.getKeyDefinition().getKeyName()).isEmpty();
     assertThat(config.getConnectionParams().getTlsOptions()).isEmpty();
   }

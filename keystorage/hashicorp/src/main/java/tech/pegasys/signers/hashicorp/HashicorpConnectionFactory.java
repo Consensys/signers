@@ -15,96 +15,73 @@ package tech.pegasys.signers.hashicorp;
 import tech.pegasys.signers.hashicorp.config.ConnectionParameters;
 import tech.pegasys.signers.hashicorp.config.TlsOptions;
 
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.net.JksOptions;
-import io.vertx.core.net.PemTrustOptions;
-import io.vertx.core.net.PfxOptions;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.security.GeneralSecurityException;
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import javax.net.ssl.SSLContext;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.tuweni.net.tls.VertxTrustOptions;
 
-public class HashicorpConnectionFactory {
+/**
+ * Factory for Hashicorp connections. Uses Java's HttpClient implementation. Cache HttpClient for
+ * each host/port.
+ */
+public class HashicorpConnectionFactory implements AutoCloseable {
 
   private static final Logger LOG = LogManager.getLogger();
 
-  private final Vertx vertx;
+  private final Map<URI, HttpClient> httpClientMap = new ConcurrentHashMap<>();
 
-  public static final Long DEFAULT_TIMEOUT_MILLISECONDS = 10_000L;
-  public static final Integer DEFAULT_SERVER_PORT = 8200;
-
-  public HashicorpConnectionFactory(final Vertx vertx) {
-    this.vertx = vertx;
-  }
+  public HashicorpConnectionFactory() {}
 
   public HashicorpConnection create(final ConnectionParameters connectionParameters) {
-    final int serverPort = connectionParameters.getServerPort().orElse(DEFAULT_SERVER_PORT);
+    final HttpClient httpClient = getHttpClient(connectionParameters);
 
-    final HttpClientOptions httpClientOptions =
-        new HttpClientOptions()
-            .setDefaultHost(connectionParameters.getServerHost())
-            .setDefaultPort(serverPort);
-
-    final HttpClient httpClient;
-    try {
-      if (connectionParameters.getTlsOptions().isPresent()) {
-        LOG.debug("Connection to hashicorp vault using TLS.");
-        setTlsOptions(httpClientOptions, connectionParameters.getTlsOptions().get());
-      }
-      httpClient = vertx.createHttpClient(httpClientOptions);
-    } catch (final Exception e) {
-      throw new HashicorpException("Unable to initialise connection to hashicorp vault.", e);
-    }
-
-    return new HashicorpConnection(
-        httpClient,
-        connectionParameters.getTimeoutMilliseconds().orElse(DEFAULT_TIMEOUT_MILLISECONDS));
+    return new HashicorpConnection(httpClient, connectionParameters);
   }
 
-  private void setTlsOptions(
-      final HttpClientOptions httpClientOptions, final TlsOptions tlsOptions) {
-    httpClientOptions.setSsl(true);
-    setTrustOptions(httpClientOptions, tlsOptions);
+  private HttpClient getHttpClient(ConnectionParameters connectionParameters) {
+
+    return httpClientMap.computeIfAbsent(
+        connectionParameters.getVaultURI(),
+        _key -> {
+          final HttpClient.Builder httpClientBuilder =
+              HttpClient.newBuilder()
+                  .connectTimeout(Duration.ofMillis(connectionParameters.getTimeoutMilliseconds()));
+          try {
+            if (connectionParameters.getTlsOptions().isPresent()) {
+              LOG.debug("Connection to hashicorp vault using TLS.");
+              httpClientBuilder.sslContext(
+                  getCustomSSLContext(connectionParameters.getTlsOptions().get()));
+            }
+            return httpClientBuilder.build();
+          } catch (final Exception e) {
+            throw new HashicorpException("Unable to initialise connection to hashicorp vault.", e);
+          }
+        });
   }
 
-  private void setTrustOptions(
-      final HttpClientOptions httpClientOptions, final TlsOptions tlsOptions) {
+  private SSLContext getCustomSSLContext(final TlsOptions tlsOptions)
+      throws GeneralSecurityException, IOException {
 
     validateTlsTrustStoreOptions(tlsOptions);
 
     if (tlsOptions.getTrustStoreType().isEmpty()) {
-      LOG.debug("Hashicorp server to authenticate against system CA");
-      return;
+      return SSLContext.getDefault();
     }
 
-    final TrustStoreType trustStoreType = tlsOptions.getTrustStoreType().get();
-    switch (trustStoreType) {
-      case JKS:
-        httpClientOptions.setTrustStoreOptions(
-            new JksOptions()
-                .setPath(tlsOptions.getTrustStorePath().toString())
-                .setPassword(tlsOptions.getTrustStorePassword()));
-        break;
-      case PKCS12:
-        httpClientOptions.setPfxTrustOptions(
-            new PfxOptions()
-                .setPath(tlsOptions.getTrustStorePath().toString())
-                .setPassword(tlsOptions.getTrustStorePassword()));
-        break;
-      case PEM:
-        httpClientOptions.setPemTrustOptions(
-            new PemTrustOptions().addCertPath(tlsOptions.getTrustStorePath().toString()));
-        break;
-      case WHITELIST:
-      case ALLOWLIST:
-        // Tuweni throws an NPE if the trustStorePath has no directory prefix, thus requiring
-        // the use of absolutePath.
-        httpClientOptions.setTrustOptions(
-            VertxTrustOptions.allowlistServers(
-                tlsOptions.getTrustStorePath().toAbsolutePath(), false));
-        break;
-    }
+    // Hashicorp vault support TLSv1.3 by default, hence we default to TLSv1.3 being more secure.
+    final SSLContext sslContext = SSLContext.getInstance("TLSv1.3");
+    sslContext.init(
+        null,
+        TrustManagerFactoryProvider.getTrustManagerFactory(tlsOptions).getTrustManagers(),
+        null);
+    return sslContext;
   }
 
   private void validateTlsTrustStoreOptions(final TlsOptions tlsOptions) {
@@ -128,5 +105,10 @@ public class HashicorpConnectionFactory {
                   + "the trustStore password must be set",
               trustStoreType.name()));
     }
+  }
+
+  @Override
+  public void close() {
+    httpClientMap.clear();
   }
 }

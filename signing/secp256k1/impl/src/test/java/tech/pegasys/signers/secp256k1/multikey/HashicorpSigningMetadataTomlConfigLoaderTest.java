@@ -67,8 +67,8 @@ public class HashicorpSigningMetadataTomlConfigLoaderTest {
 
     final ConnectionParameters connectionParams = hashicorpConfig.getConnectionParams();
     assertThat(connectionParams.getServerHost()).isEqualTo("Host");
-    assertThat(connectionParams.getServerPort().get()).isEqualTo(9999);
-    assertThat(connectionParams.getTimeoutMilliseconds().get()).isEqualTo(10000);
+    assertThat(connectionParams.getServerPort()).isEqualTo(9999);
+    assertThat(connectionParams.getTimeoutMilliseconds()).isEqualTo(10000L);
     assertThat(connectionParams.getTlsOptions()).isNotEmpty();
     assertThat(connectionParams.getTlsOptions().get().getTrustStoreType()).isEmpty();
     assertThat(hashicorpConfig.getKeyDefinition().getKeyPath()).isEqualTo("/path/to/key");

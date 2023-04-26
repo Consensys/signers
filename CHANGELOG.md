@@ -1,4 +1,7 @@
 # Changelog
+## 2.2.10
+- Cache Hashicorp connection for same host/port
+
 ## 2.2.9
 - Azure bulk map secrets can now be filtered based on tags.
 

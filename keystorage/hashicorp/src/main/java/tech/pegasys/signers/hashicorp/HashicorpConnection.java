@@ -12,98 +12,66 @@
  */
 package tech.pegasys.signers.hashicorp;
 
-import static io.vertx.core.http.HttpMethod.GET;
-
+import tech.pegasys.signers.hashicorp.config.ConnectionParameters;
 import tech.pegasys.signers.hashicorp.config.KeyDefinition;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-import javax.net.ssl.SSLException;
-
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientResponse;
 
 public class HashicorpConnection {
-
-  private static final String ERROR_HTTP_CLIENT_CALL =
-      "Error while waiting for response from Hashicorp Vault";
 
   private static final String DEFAULT_HASHICORP_KEY_NAME = "value";
 
   private final HttpClient httpClient;
-  private final long requestTimeoutMs;
+  private final ConnectionParameters connectionParameters;
 
-  public HashicorpConnection(final HttpClient httpClient, final long requestTimeoutMs) {
+  HashicorpConnection(
+      final HttpClient httpClient, final ConnectionParameters connectionParameters) {
     this.httpClient = httpClient;
-    this.requestTimeoutMs = requestTimeoutMs;
+    this.connectionParameters = connectionParameters;
   }
 
   public String fetchKey(final KeyDefinition key) {
     final Map<String, String> kvMap = fetchKeyValuesFromVault(key);
     final String keyName = key.getKeyName().orElse(DEFAULT_HASHICORP_KEY_NAME);
     return Optional.ofNullable(kvMap.get(keyName))
-        .orElseThrow(() -> new HashicorpException("Requested Secret name does not exist."));
+        .orElseThrow(
+            () ->
+                new HashicorpException(
+                    "Error communicating with Hashicorp vault: Requested Secret name does not exist."));
   }
 
-  private Map<String, String> fetchKeyValuesFromVault(final KeyDefinition key) {
-    final CompletableFuture<Map<String, String>> futureResponse = new CompletableFuture<>();
-
-    httpClient
-        .request(GET, key.getKeyPath())
-        .onSuccess(
-            request -> {
-              request
-                  .response()
-                  .onSuccess(response -> responseHandler(futureResponse, response))
-                  .onFailure(futureResponse::completeExceptionally);
-              request.putHeader("X-Vault-Token", key.getToken());
-              request.setChunked(false);
-              request.exceptionHandler(futureResponse::completeExceptionally);
-              request.setTimeout(requestTimeoutMs);
-              request.end();
-            })
-        .onFailure(futureResponse::completeExceptionally);
-
+  private Map<String, String> fetchKeyValuesFromVault(final KeyDefinition keyDefinition) {
+    final URI vaultReadURI =
+        connectionParameters.getVaultURI().resolve(keyDefinition.getKeyPath()).normalize();
+    final HttpRequest httpRequest =
+        HttpRequest.newBuilder(vaultReadURI)
+            .header("X-Vault-Token", keyDefinition.getToken())
+            .header("Content-Type", "application/json")
+            .timeout(Duration.ofMillis(connectionParameters.getTimeoutMilliseconds()))
+            .GET()
+            .build();
+    final HttpResponse<String> response;
     try {
-      return futureResponse.get();
-    } catch (final ExecutionException e) {
-      final Throwable underlyingFailure = e.getCause();
-      if (underlyingFailure instanceof HashicorpException) {
-        throw (HashicorpException) e.getCause();
-      } else if (underlyingFailure instanceof TimeoutException) {
-        throw new HashicorpException(
-            "Hashicorp Vault failed to respond within expected timeout.", underlyingFailure);
-      } else if (underlyingFailure instanceof SSLException) {
-        throw new HashicorpException("Failed during SSL negotiation.", underlyingFailure);
-      }
-      throw new HashicorpException(ERROR_HTTP_CLIENT_CALL, underlyingFailure);
-    } catch (final InterruptedException e) {
-      throw new HashicorpException("Waiting for Hashicorp response was terminated unexpectedly");
+      response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+    } catch (final IOException | InterruptedException | RuntimeException e) {
+      throw new HashicorpException(
+          "Error communicating with Hashicorp vault: " + e.getMessage(), e);
     }
-  }
 
-  private void responseHandler(
-      final CompletableFuture<Map<String, String>> future, final HttpClientResponse response) {
-
-    final int statusCode = response.statusCode();
-    if (statusCode != HttpResponseStatus.OK.code()) {
-      future.completeExceptionally(
-          new HashicorpException(String.format("Invalid Http Status code %d", statusCode)));
-    } else {
-
-      response.bodyHandler(
-          buffer -> {
-            try {
-              final Map<String, String> kvMap = HashicorpKVResponseMapper.from(buffer.toString());
-              future.complete(kvMap);
-            } catch (final Exception e) {
-              future.completeExceptionally(e);
-            }
-          });
+    if (response.statusCode() != 200 && response.statusCode() != 204) {
+      throw new HashicorpException(
+          String.format(
+              "Error communicating with Hashicorp vault: Received invalid Http status code %d.",
+              response.statusCode()));
     }
+
+    return HashicorpKVResponseMapper.from(response.body());
   }
 }

@@ -26,8 +26,6 @@ import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.HttpsURLConnection;
 
-import io.vertx.core.Vertx;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.logging.MockServerLogger;
@@ -42,13 +40,7 @@ class HashicorpIntegrationTest {
       "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63";
   private static final int TIMEOUT_MILLISECONDS = 10_000;
 
-  private final Vertx vertx = Vertx.vertx();
-  private final HashicorpConnectionFactory factory = new HashicorpConnectionFactory(vertx);
-
-  @AfterEach
-  void cleanup() {
-    vertx.close();
-  }
+  private final HashicorpConnectionFactory factory = new HashicorpConnectionFactory();
 
   @Test
   void hashicorpVaultReturnsEncryptionKey() throws IOException {
@@ -140,7 +132,7 @@ class HashicorpIntegrationTest {
 
     assertThatThrownBy(() -> connection.fetchKey(keyConfig.getKeyDefinition()))
         .isInstanceOf(HashicorpException.class)
-        .hasMessage("Hashicorp Vault failed to respond within expected timeout.");
+        .hasMessageContaining("timed out");
   }
 
   @Test
@@ -166,6 +158,7 @@ class HashicorpIntegrationTest {
 
     assertThatThrownBy(() -> connection.fetchKey(keyConfig.getKeyDefinition()))
         .isInstanceOf(HashicorpException.class)
-        .hasMessage("Invalid Http Status code 500");
+        .hasMessage(
+            "Error communicating with Hashicorp vault: Received invalid Http status code 500.");
   }
 }

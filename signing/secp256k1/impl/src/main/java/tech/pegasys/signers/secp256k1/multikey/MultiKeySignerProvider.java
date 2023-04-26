@@ -38,7 +38,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.web3j.crypto.Credentials;
@@ -59,7 +58,7 @@ public class MultiKeySignerProvider implements SignerProvider, MultiSignerFactor
     final SigningMetadataTomlConfigLoader signingMetadataTomlConfigLoader =
         new SigningMetadataTomlConfigLoader(rootDir);
 
-    final HashicorpSignerFactory hashicorpSignerFactory = new HashicorpSignerFactory(Vertx.vertx());
+    final HashicorpSignerFactory hashicorpSignerFactory = new HashicorpSignerFactory();
 
     return new MultiKeySignerProvider(
         signingMetadataTomlConfigLoader,
